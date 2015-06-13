@@ -273,9 +273,10 @@ def plot_control_loops(data):
     plot_position_loops(data)
 
 def project_lat_lon(df):
-    gps_map = Basemap(lat_0=df.GPS_Lat.values[0], lon_0=df.GPS_Lon.values[0],
-                      width=11e-5, height=1e-5, projection='tmerc')
-    gps_x, gps_y = gps_map(df.GPS_Lon.values, df.GPS_Lat.values)
+    gps_map = Basemap(lat_0=df.GPS_Lat.values[0],
+            lon_0=df.GPS_Lon.values[0],
+            width=11e-5, height=1e-5, projection='tmerc')
+    gps_y, gps_x = gps_map(df.GPS_Lon.values, df.GPS_Lat.values)
     gps_z = df.GPS_Alt - df.GPS_Alt.values[0]
     df_new = pandas.DataFrame(pandas.DataFrame({
         'GPS_X': gps_x, 'GPS_Y': gps_y, 'GPS_Z': gps_z}, index=df.index))
@@ -328,6 +329,12 @@ def find_lpe_gains(df, printing=False):
 
 def new_sample(series):
     return series[pl.absolute(series.diff()) > 0]
+
+def all_new_sample(df):
+    df_new = pandas.DataFrame(df)
+    for key in df.keys():
+        df_new[key] = new_sample(df[key])
+    return df_new
 
 def find_meas_period(series):
     new = new_sample(series)

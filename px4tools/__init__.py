@@ -1,1 +1,1 @@
-from analysis import *
+from .analysis import *

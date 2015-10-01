@@ -61,8 +61,10 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     i0 = data.index[0]
     try:
         data.DIST_Distance.plot(legend=True)
-    except KeyError:
+    except AttributeError:
         data.DIST_Bottom.plot(legend=True)
+    except Exception:
+        pass
     (-1*data.LPSP_Z).plot()
     (data.SENS_BaroAlt - data.SENS_BaroAlt[i0]).plot()
     (data.GPS_Alt - data.GPS_Alt[i0]).plot()

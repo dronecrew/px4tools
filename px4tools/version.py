@@ -1,9 +1,9 @@
 
 # THIS FILE IS GENERATED FROM SETUP.PY
-short_version = '0.0.5'
-version = '0.0.5'
-full_version = '0.0.5'
-git_revision = '8119199aed2ad07bef83df12f6901c7d82cc366c'
+short_version = '0.0.6'
+version = '0.0.6'
+full_version = '0.0.6'
+git_revision = '014070f2f13c2017f6e1bf3982dab0e0ba054fe9'
 release = True
 
 if not release:

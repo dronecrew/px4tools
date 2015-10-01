@@ -287,14 +287,22 @@ def project_lat_lon(df):
 def statistics(df, keys=None, plot=False):
     data = {}
     for key in keys:
-        df_meas = new_sample(df[key])
-        dt = find_meas_period(df_meas)
-        stddev = pl.sqrt(df_meas.var())
-        mean = df_meas.mean()
+        try:
+            df_meas = new_sample(df[key])
+            dt = find_meas_period(df_meas)
+            stddev = pl.sqrt(df_meas.var())
+            mean = df_meas.mean()
+            noise_power = stddev**2*dt
+        except Exception:
+            df_meas = 0
+            dt = 0
+            stddev = 0
+            mean = 0
+            noise_power = 0
         data[key+'_stddev'] = stddev
         data[key+'_mean'] = mean
         data[key+'_dt'] = dt
-        data[key+'_noise_power'] = stddev**2/dt
+        data[key+'_noise_power'] = noise_power
         if plot:
             pl.figure()
             pl.title(key + ' statistics')

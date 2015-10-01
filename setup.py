@@ -6,7 +6,7 @@ This module allows you to do control and statistical analysis for the PX4.
 """
 MAJOR = 0
 MINOR = 0
-MICRO = 8
+MICRO = 9
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 

@@ -5,8 +5,8 @@ This module allows you to do control and statistical analysis for the PX4.
 
 """
 MAJOR = 0
-MINOR = 0
-MICRO = 9
+MINOR = 1
+MICRO = 0
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -59,7 +59,8 @@ def git_version():
     try:
         out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
         GIT_REVISION = out.strip().decode('ascii')
-    except OSError:
+    except OSError as e:
+        print e
         GIT_REVISION = "Unknown"
 
     return GIT_REVISION
@@ -76,8 +77,8 @@ def get_version_info():
         # must be a source distribution, use existing version file
         try:
             from px4tools.version import git_revision as GIT_REVISION
-        except ImportError:
-            raise ImportError("Unable to import git_revision. Try removing "
+        except ImportError as e:
+            raise ImportError(e + "Unable to import git_revision. Try removing "
                               "px4tools/version.py and the build directory "
                               "before building.")
     else:
@@ -135,7 +136,7 @@ def setup_package():
         license='BSD',
         classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-        install_requires=['scipy', 'numpy'],
+        install_requires=['scipy', 'numpy', 'pandas'],
         tests_require=['nose'],
         test_suite='nose.collector',
         entry_points = {

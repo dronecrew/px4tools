@@ -6,7 +6,6 @@ python:
   - "3.3"
   - "3.4"
 install:
-  - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then

@@ -1,7 +1,7 @@
 
 # px4tools
 
-[![Build Status](https://travis-ci.org/jgoppert/px4tools.svg)](https://travis-ci.org/jgoppert/px4tools)
+[![Build Status](https://travis-ci.org/dronecrew/px4tools.svg)](https://travis-ci.org/jgoppert/px4tools)
 
 Python tools for px4.
 

@@ -4,6 +4,9 @@
 This module allows you to do control and statistical analysis for the PX4.
 
 """
+
+from __future__ import print_function
+
 MAJOR = 0
 MINOR = 1
 MICRO = 0
@@ -12,7 +15,6 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 DOCLINES = __doc__.split("\n")
 
-from __future__ import print_function
 import os
 import sys
 import subprocess

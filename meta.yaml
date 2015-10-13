@@ -1,0 +1,12 @@
+package:
+    name: px4tools
+    version: 0.1.0
+build:
+    number: 1
+    script:
+        - echo "This is my anaconda build with conda"
+requirements:
+    run:
+        - python
+about:
+    summary: This is for px4 flight log analysis.

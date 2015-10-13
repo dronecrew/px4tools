@@ -10,12 +10,17 @@ Python tools for px4.
 
 ## Install
 
-1. Install conda
-2. Install basemap package in conda
+### Using Anaconda
+
+1. [Install anaconda](http://docs.continuum.io/anaconda/install)
+
+2. Install via conda (only linux 64-bit built)
 ```bash
-conda install basemap
+conda config --add channels http://conda.anaconda.org/dronecrew
+conda install px4tools
 ```
-3. Install using pip
+
+### Using PyPi
 ```bash
 pip install px4tools
 ```

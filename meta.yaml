@@ -1,12 +1,30 @@
 package:
-    name: px4tools
-    version: 0.1.0
+  name: px4tools
+  version: 0.1.1
+
 build:
-    number: 1
-    script:
-        - echo "This is my anaconda build with conda"
+  number: 1
+  script:
+    - nosetests -sv
+
 requirements:
-    run:
-        - python
+  build:
+    - nose
+    - python
+    - numpy
+    - scipy
+    - basemap
+    - pandas
+    - matplotlib
+  run:
+    - python
+    - numpy
+    - scipy
+    - basemap
+    - pandas
+    - matplotlib
+
 about:
-    summary: This is for px4 flight log analysis.
+  summary: This is for px4 flight log analysis.
+
+#  vim: set et fenc=utf-8 ff=unix sts=0 sw=2 ts=2 : 

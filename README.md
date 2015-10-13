@@ -12,3 +12,7 @@ Python tools for px4.
 ```bash
 conda install basemap
 ```
+3. Install using pip
+```bash
+pip install px4tools
+```

@@ -10,10 +10,18 @@ requirements:
     - cython
     - numpy
     - setuptools
+    - pandas
+    - matplotlib
+    - scipy
+    - basemap
 
   run:
     - python
     - numpy
+    - pandas
+    - matplotlib
+    - scipy
+    - basemap
 
 test:
     requires:

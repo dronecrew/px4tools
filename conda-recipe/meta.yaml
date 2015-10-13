@@ -1,0 +1,26 @@
+package:
+  name: px4tools
+  # version: "1.0"
+  # the version is actually being set by the __conda_version__.txt file
+  # http://conda.pydata.org/docs/build.html#post-build-version
+
+requirements:
+  build:
+    - python
+    - cython
+    - numpy
+    - setuptools
+
+  run:
+    - python
+    - numpy
+
+test:
+    requires:
+        - nose
+    commands:
+        - nosetests --exe pyappveyordemo
+
+about:
+  home: https://github.com/jgoppert/px4tools
+  license: BSD

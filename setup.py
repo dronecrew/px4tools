@@ -12,6 +12,7 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 DOCLINES = __doc__.split("\n")
 
+from __future__ import print_function
 import os
 import sys
 import subprocess
@@ -60,7 +61,7 @@ def git_version():
         out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
         GIT_REVISION = out.strip().decode('ascii')
     except OSError as e:
-        print e
+        print(e)
         GIT_REVISION = "Unknown"
 
     return GIT_REVISION

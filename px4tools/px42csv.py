@@ -3,6 +3,7 @@
 Converts px4logs to csv.
 """
 
+from __future__ import print_function
 import os
 import subprocess
 import re
@@ -43,7 +44,7 @@ def main():
                     if args.rm:
                         os.remove(file_path)
                 except Exception as e:
-                    print e
+                    print(e)
 
 
 if __name__ == "__main__":

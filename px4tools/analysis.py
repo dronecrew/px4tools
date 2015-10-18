@@ -8,6 +8,11 @@ from __future__ import print_function
 import pandas
 import pylab as pl
 
+try:
+    from .mapping import *
+except ImportError as e:
+    print(e)
+
 def filter_finite(data):
 
     return pl.all(data[pl.isfinite(data.values.astype(float))], axis=1)
@@ -89,23 +94,12 @@ def pos_analysis(data):
         pl.isfinite(data.GPSP_Lon.values)].values,
         data.GPSP_Lat[pl.isfinite(data.GPSP_Lat.values)].values)
 
-    #lp_x = data.LPOS_X + gpos_x[0]
-    #lp_y = data.LPOS_Y + gpos_y[0]
-    #lpsp_x = data.LPSP_X + gpos_x[0]
-    #lpsp_y = data.LPSP_Y + gpos_y[0]
-    #pl.plot(lp_y, lp_x, '-')
-
-
     pl.plot(gpos_y, gpos_x, '.', label='est')
 
     pl.plot(gps_y, gps_x, 'x', label='GPS')
 
     pl.plot(gpsp_y, gpsp_x, 'ro', label='cmd')
 
-    #pl.plot(lpsp_y, lpsp_x, 'k*')
-    #pl.quiver(lp_y, lp_x, lpsp_y - lp_y, lpsp_x - lp_x,
-              #angles='xy', pivot='tail', units='xy', scale=1, scale_units='xy',
-             #width=0.01, )
     pl.xlabel('E, m')
     pl.ylabel('N, m')
     pl.grid()
@@ -271,14 +265,18 @@ def statistics(df, keys=None, plot=False):
             dt = find_meas_period(df_meas)
             stddev = pl.sqrt(df_meas.var())
             mean = df_meas.mean()
-            noise_power = stddev**2*dt
+            variance = stddev**2
+            noise_power = variance*dt
         except Exception:
             df_meas = 0
             dt = 0
             stddev = 0
+            var = 0
             mean = 0
             noise_power = 0
+            variance = 0
         data[key+'_stddev'] = stddev
+        data[key+'_variance'] = variance
         data[key+'_mean'] = mean
         data[key+'_dt'] = dt
         data[key+'_noise_power'] = noise_power
@@ -313,7 +311,7 @@ def find_lpe_gains(df, printing=False):
 
     if printing:
         for key in params.keys():
-            print("{:s}\t=\t{:0.3f}".format(key, params[key]))
+            print("{:s}\t=\t{:0.3g}".format(key, params[key]))
     return params
 
 def new_sample(series):

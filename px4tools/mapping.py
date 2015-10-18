@@ -6,6 +6,7 @@ Mapping functions
 
 from __future__ import print_function
 from mpl_toolkits.basemap import Basemap
+import pandas
 
 
 def create_map(lon, lat):

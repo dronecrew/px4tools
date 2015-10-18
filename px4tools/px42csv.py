@@ -32,7 +32,7 @@ def main():
             action='store_true')
     parser.add_argument('--sdlog2',
             help='path to sdlog2_dump.py')
-    parser.set_defaults(rm=False)
+    parser.set_defaults(rm=False, sdlog2='sdlog2_dump.py')
     args = parser.parse_args()
     for root, dirs, files in os.walk(os.curdir):
         for filename in files:

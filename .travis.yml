@@ -1,19 +1,7 @@
-language: c
-
-env:
-  matrix:
-    - python=2.6  CONDA_PY=26  CONDA_NPY=18
-    - python=2.7  CONDA_PY=27  CONDA_NPY=18
-    - python=3.3  CONDA_PY=33  CONDA_NPY=18
-    - python=3.4  CONDA_PY=34  CONDA_NPY=18
-
-install:
-  - conda install scipy numpy pandas basemap
-
-script:
-  - conda build .
-
-#after_success:
-  #- python continuous-integration/move-conda-package.py conda-recipe
-  #- binstar -t $BINSTAR_TOKEN upload --force *.tar.bz2
-
+language: python
+python:
+  - "2.7"
+  - "3.2"
+  - "3.4"
+install: "pip install -r requirements.txt"
+script: nosetests

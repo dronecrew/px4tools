@@ -81,7 +81,7 @@ def get_version_info():
         try:
             from px4tools.version import git_revision as GIT_REVISION
         except ImportError as e:
-            raise ImportError(e + "Unable to import git_revision. Try removing "
+            raise ImportError(str(e) + " - Unable to import git_revision. Try removing "
                               "px4tools/version.py and the build directory "
                               "before building.")
     else:

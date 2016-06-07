@@ -1,5 +1,6 @@
 #!/bin/bash
 bdir=~/anaconda3/conda-bld
+rm -rf $bdir
 conda config --set anaconda_upload no
 conda build .
 conda convert --platform all $bdir/linux-64/px4tools*.tar.bz2 -o ~/anaconda3/conda-bld

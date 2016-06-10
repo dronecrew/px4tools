@@ -1,4 +1,5 @@
 #!/bin/bash
+python --version
 bdir=~/anaconda3/conda-bld
 rm -rf $bdir
 conda config --set anaconda_upload no

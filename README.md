@@ -22,5 +22,31 @@ conda install px4tools
 
 ### Using PyPi
 ```bash
-pip install px4tools
+pip install px4tools --user
 ```
+
+
+## Usage
+
+First use the sdlog2_dumpy.py program to convert the px4log to csv:
+
+```bash
+wget https://github.com/PX4/Firmware/raw/master/Tools/sdlog2/sdlog2_dump.py
+python sdlog2_dumpy.py your_log.px4log > your_log.csv
+```
+
+Install ipython notebook:
+
+```
+sudo apt-get install ipython-notebook
+```
+
+Start ipython notebook:
+
+```
+ipython notebook
+```
+
+## Example:
+
+https://github.com/jgoppert/lpe-analysis/blob/master/15-09-30%20Kabir%20Log.ipynb

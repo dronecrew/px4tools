@@ -1,11 +1,17 @@
 package:
   name: px4tools
-  version: 0.2.0
+  version: 0.2.1
+
+source:
+  git_rev: v0.2.1
+  git_url: https://github.com/dronecrew/px4tools
 
 build:
   number: 1
   script:
-    - nosetests -sv
+    - python setup.py install
+  entry_points:
+    - px42csv = px4tools.px42csv:main
 
 requirements:
   build:
@@ -26,5 +32,7 @@ requirements:
 
 about:
   summary: This is for px4 flight log analysis.
+  license: BSD
+  license_file: LICENSE
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=2 ts=2 : 

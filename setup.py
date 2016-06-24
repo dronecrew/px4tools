@@ -9,7 +9,7 @@ from __future__ import print_function
 
 MAJOR = 0
 MINOR = 2
-MICRO = 2
+MICRO = 4
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -131,8 +131,7 @@ def setup_package():
         maintainer="James Goppert",
         maintainer_email="james.goppert@gmail.com",
         description=DOCLINES[0],
-        long_description=read('README.md'),
-        long_description="\n".join(DOCLINES[2:]),
+        long_description=open('README.md').read(),
         url='https://github.com/dronecrew/px4tools',
         author='James Goppert',
         author_email='james.goppert@gmail.com',

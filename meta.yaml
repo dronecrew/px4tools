@@ -1,6 +1,6 @@
 package:
   name: px4tools
-  version: 0.2.6
+  version: 0.2.7
 
 build:
   number: 1

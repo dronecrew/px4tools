@@ -131,7 +131,7 @@ def setup_package():
         maintainer="James Goppert",
         maintainer_email="james.goppert@gmail.com",
         description=DOCLINES[0],
-        long_description=open('README.md').read(),
+        long_description="\n".join(DOCLINES[2:]),
         url='https://github.com/dronecrew/px4tools',
         author='James Goppert',
         author_email='james.goppert@gmail.com',

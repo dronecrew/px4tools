@@ -56,6 +56,6 @@ docs/_build/
 # PyBuilder
 target/
 
-pxtools/version.py
+px4tools/version.py
 
 .ipynb_checkpoints/

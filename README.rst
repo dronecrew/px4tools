@@ -10,6 +10,10 @@ Python tools for px4.
 
 ## Install
 
+### Dependencies
+
+1. See requirements.txt
+
 ### Using Anaconda (Recommended)
 
 1. [Install anaconda](http://docs.continuum.io/anaconda/install)

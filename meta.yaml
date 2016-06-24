@@ -1,11 +1,13 @@
 package:
   name: px4tools
-  version: 0.2.7
+  version: 0.2.8
 
 build:
   number: 1
   script:
     - nosetests -sv
+  entry_points:
+    - px42csv = px4tools.px42csv:main 
 
 requirements:
   build:

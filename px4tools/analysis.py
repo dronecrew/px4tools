@@ -298,9 +298,9 @@ def find_lpe_gains(df, printing=False):
     params = {
         'LPE_LDR_Z': stats['DIST_Distance_stddev'],
         'LPE_BAR_Z': stats['SENS_BaroAlt_stddev'],
-        'LPE_ACC_XY': pl.array([stats['IMU1_AccX_noise_power'],
+        'LPE_ACC_XY': pl.array([stats['IMU1_AccX_stddev'],
             stats['IMU1_AccX_noise_power']]).max(),
-        'LPE_ACC_Z': stats['IMU1_AccZ_noise_power'],
+        'LPE_ACC_Z': stats['IMU1_AccZ_stddev'],
         'LPE_GPS_XY': pl.array([stats['GPS_X_stddev'],
             stats['GPS_Y_stddev']]).max(),
         'LPE_GPS_Z': stats['GPS_Z_stddev'],

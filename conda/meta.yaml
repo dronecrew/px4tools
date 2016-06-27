@@ -6,7 +6,7 @@ source:
   path: ..
 
 build:
-  noarch_python: True
+  noarch_python: False
   number: 1
   script:
     - nosetests -sv

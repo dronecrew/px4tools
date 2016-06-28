@@ -3,7 +3,7 @@ import os
 import unittest
 import inspect
 
-from .. import analysis
+from px4tools import analysis
 
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))

@@ -1,5 +1,5 @@
 import unittest
-from .. import px42csv
+from px4tools import px42csv
 import sys
 
 import inspect, os

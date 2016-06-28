@@ -19,6 +19,20 @@ Python tools for px4.
 1. [Install anaconda](http://docs.continuum.io/anaconda/install)
 
 	* Python 3 version recommended
+	* Do not select add to path if you use ROS. ROS expects the standard python to be installed. You can create a script to source and add anaconda to your path. This is similar to setup.bash for ROS users.
+
+~/bin/conda_env:
+
+```bash
+#!/bin/bash
+export PATH=$HOME/anaconda3/bin:$PATH
+```
+
+Now you can source the script to start using anaconda instead of the sytem python:
+
+```bash
+. conda_env
+```
 
 2. Install via conda
 ```bash

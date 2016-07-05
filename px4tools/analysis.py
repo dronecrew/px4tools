@@ -328,4 +328,92 @@ def find_meas_period(series):
     return ((new.index[-1] - new.index[0])/
                 len(new))
 
+def plot_modes(data):
+    style = [
+        {'color': 'r', 'name': 'manual'},
+        {'color': 'c', 'name': '1'},
+        {'color': 'b', 'name': 'stab'},
+        {'color': 'g', 'name': 'auto'},
+        {'color': 'm', 'name': '4'},
+        {'color': 'y', 'name': '5'},
+        {'color': 'o', 'name': '6'},
+        {'color': 'k', 'name': '7'},
+    ]
+    for state_i in range(0, 7):
+        state_start = 0
+        count = 0
+        while count < 3:
+            count += 1
+            try:
+                state_start = data.STAT_MainState[state_start:][data.STAT_MainState[state_start:] == state_i].index[0]
+                try:
+                    state_stop = data.STAT_MainState[state_start:][data.STAT_MainState[state_start:] != state_i].index[0]
+                except:
+                    state_stop = data.index[-1]
+                w = state_stop - state_start
+                ax = gca()
+                if count == 1:
+                    ax.add_patch(
+                        patches.Rectangle(
+                            (state_start, -10000),   # (x,y)
+                            w,          # width
+                            20000,          # height
+                            alpha=0.1,
+                            color=style[state_i]['color'],
+                            label=style[state_i]['name']
+                        )
+                    )
+                else:
+                    ax.add_patch(
+                        patches.Rectangle(
+                            (state_start, -10000),   # (x,y)
+                            w,          # width
+                            20000,          # height
+                            alpha=0.1,
+                            color=style[state_i]['color']
+                        )
+                    )
+            except IndexError as e:
+                #print(e)
+                pass
+            except Exception as e:
+                #print(e)
+                pass
+            if state_stop == data.index[-1]:
+                #print('at end')
+                break
+            else:
+                state_start = state_stop
+
+def process_lpe_health(data):
+    try:
+        faults = array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
+            for j in range(7)]
+            for i in range(len(data.index))])
+        for i in range(7):
+            data['fault_' + names[i]] =  pandas.Series(
+                data=faults[:,i], index=data.index, name='fault ' + names[i])
+    except:
+        pass
+    try:
+        timeouts = array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
+            for j in range(7)]
+            for i in range(len(data.index))])
+        names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
+        for i in range(7):
+            data['timeout_' + names[i]] =  pandas.Series(
+                data=timeouts[:,i], index=data.index, name='timeout ' + names[i])
+    except:
+        pass
+    return data
+
+def plot_faults(data):
+    data.fault_sonar.plot(alpha=0.1)
+    data.fault_baro.plot()
+    data.fault_gps.plot()
+    data.fault_flow.plot()
+    data.fault_vision.plot()
+    data.fault_mocap.plot()
+    data.fault_lidar.plot()
+
 # vim: set et fenc= ff=unix sts=0 sw=4 ts=4 :

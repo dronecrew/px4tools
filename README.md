@@ -1,6 +1,9 @@
 
 # px4tools
 
+[![Coverage Status](https://coveralls.io/repos/github/dronecrew/px4tools/badge.svg?branch=master)](https://coveralls.io/github/dronecrew/px4tools?branch=master)
+[![Build Status](https://travis-ci.org/dronecrew/px4tools.svg?branch=master)](https://travis-ci.org/dronecrew/px4tools)
+
 [![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/version.svg)](https://anaconda.org/dronecrew/px4tools)
 [![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/license.svg)](https://anaconda.org/dronecrew/px4tools)
 [![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/downloads.svg)](https://anaconda.org/dronecrew/px4tools)

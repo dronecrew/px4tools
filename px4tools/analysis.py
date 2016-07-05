@@ -7,6 +7,7 @@ Analysis of px4 logs
 from __future__ import print_function
 import pandas
 import pylab as pl
+import matplotlib.patches as patches
 
 try:
     from .mapping import *
@@ -342,22 +343,26 @@ def plot_modes(data):
     for state_i in range(0, 7):
         state_start = 0
         count = 0
-        while count < 3:
+        while count < 100:
             count += 1
+            d = data.STAT_MainState[state_start:]
             try:
-                state_start = data.STAT_MainState[state_start:][data.STAT_MainState[state_start:] == state_i].index[0]
+                state_start = d[d == state_i].index[0]
                 try:
                     state_stop = data.STAT_MainState[state_start:][data.STAT_MainState[state_start:] != state_i].index[0]
                 except:
                     state_stop = data.index[-1]
                 w = state_stop - state_start
-                ax = gca()
+                y1 = pl.gca().get_ylim()[0]
+                y2 = pl.gca().get_ylim()[1]
+                h = y2-y1
+                ax = pl.gca()
                 if count == 1:
                     ax.add_patch(
                         patches.Rectangle(
-                            (state_start, -10000),   # (x,y)
+                            (state_start, y1),   # (x,y)
                             w,          # width
-                            20000,          # height
+                            h,          # height
                             alpha=0.1,
                             color=style[state_i]['color'],
                             label=style[state_i]['name']
@@ -366,9 +371,9 @@ def plot_modes(data):
                 else:
                     ax.add_patch(
                         patches.Rectangle(
-                            (state_start, -10000),   # (x,y)
+                            (state_start, y1),   # (x,y)
                             w,          # width
-                            20000,          # height
+                            h,          # height
                             alpha=0.1,
                             color=style[state_i]['color']
                         )
@@ -377,7 +382,7 @@ def plot_modes(data):
                 #print(e)
                 pass
             except Exception as e:
-                #print(e)
+                print(e)
                 pass
             if state_stop == data.index[-1]:
                 #print('at end')
@@ -387,24 +392,24 @@ def plot_modes(data):
 
 def process_lpe_health(data):
     try:
-        faults = array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
+        faults = pl.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
             for j in range(7)]
             for i in range(len(data.index))])
         for i in range(7):
             data['fault_' + names[i]] =  pandas.Series(
                 data=faults[:,i], index=data.index, name='fault ' + names[i])
-    except:
-        pass
+    except Exception as e:
+        print(e)
     try:
-        timeouts = array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
+        timeouts = pl.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
             for j in range(7)]
             for i in range(len(data.index))])
         names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
         for i in range(7):
             data['timeout_' + names[i]] =  pandas.Series(
                 data=timeouts[:,i], index=data.index, name='timeout ' + names[i])
-    except:
-        pass
+    except Exception as e:
+        print(e)
     return data
 
 def plot_faults(data):

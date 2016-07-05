@@ -24,7 +24,7 @@ install:
 
 # Run test
 script:
-  - nosetests --with-cov --cover-package px4tools --cov-config .coveragerc --logging-level=INFO
+  - nosetests --with-cov --cover-package px4tools --logging-level=INFO
 
 # Calculate coverage
 after_success:

@@ -59,3 +59,5 @@ target/
 px4tools/version.py
 
 .ipynb_checkpoints/
+
+.*.swp

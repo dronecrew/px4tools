@@ -413,12 +413,15 @@ def process_lpe_health(data):
     return data
 
 def plot_faults(data):
-    data.fault_sonar.plot(alpha=0.1)
-    data.fault_baro.plot()
-    data.fault_gps.plot()
-    data.fault_flow.plot()
-    data.fault_vision.plot()
-    data.fault_mocap.plot()
-    data.fault_lidar.plot()
+    try:
+        data.fault_sonar.plot(alpha=0.1)
+        data.fault_baro.plot()
+        data.fault_gps.plot()
+        data.fault_flow.plot()
+        data.fault_vision.plot()
+        data.fault_mocap.plot()
+        data.fault_lidar.plot()
+    except AttributeError as e:
+        print(e)
 
 # vim: set et fenc= ff=unix sts=0 sw=4 ts=4 :

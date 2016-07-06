@@ -26,7 +26,7 @@ before_install:
 # Install packages
 install:
   - pip install python-coveralls
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels coverage
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels coverage basemap
   - python setup.py install
 
 # Run test

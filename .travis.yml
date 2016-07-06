@@ -22,7 +22,7 @@ install:
 
   # Replace dep1 dep2 ... with your dependencies
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib
-        nose dateutil pandas statsmodel coverage basemap
+        nose pandas coverage basemap
   - pip install python-coveralls
   - source activate test-environment
   - python setup.py install

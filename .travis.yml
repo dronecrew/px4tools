@@ -1,24 +1,26 @@
 language: python
 
-env:
-  - PYTHON_VERSION=2.7
-  - PYTHON_VERSION=3.5
+matrix:
+    include:
+        - python: "2.7"
+          env:
+              PYTHON=2.7
+              PATH=/home/travis/miniconda2/bin:$PATH
+              CONDA_URL=wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+        - python: "3.5"
+          env:
+              PYTHON=3.5 PATH=/home/travis/miniconda3/bin:$PATH
+              PATH=/home/travis/miniconda3/bin:$PATH
+              CONDA_URL=wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
 notifications:
   email: false
 
 # Setup anaconda
 before_install:
-  - if [ ${PYTHON_VERSION:0:1} == "2" ];
-    then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
+  - wget $CONDA_URL -O miniconda.sh;
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - if [ ${PYTHON_VERSION:0:1} == "2" ];
-    then export PATH=/home/travis/miniconda2/bin:$PATH;
-    else export PATH=/home/travis/miniconda3/bin:$PATH;
-    fi
   - conda update --yes conda
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm

@@ -332,8 +332,8 @@ def find_meas_period(series):
 def plot_modes(data):
     style = [
         {'color': 'r', 'name': 'manual'},
-        {'color': 'c', 'name': '1'},
-        {'color': 'b', 'name': 'stab'},
+        {'color': 'c', 'name': 'alt-ctl'},
+        {'color': 'b', 'name': 'pos-ctl'},
         {'color': 'g', 'name': 'auto'},
         {'color': 'm', 'name': '4'},
         {'color': 'y', 'name': '5'},
@@ -391,6 +391,7 @@ def plot_modes(data):
                 state_start = state_stop
 
 def process_lpe_health(data):
+    names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
     try:
         faults = pl.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
             for j in range(7)]
@@ -404,7 +405,6 @@ def process_lpe_health(data):
         timeouts = pl.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
             for j in range(7)]
             for i in range(len(data.index))])
-        names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
         for i in range(7):
             data['timeout_' + names[i]] =  pandas.Series(
                 data=timeouts[:,i], index=data.index, name='timeout ' + names[i])

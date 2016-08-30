@@ -330,65 +330,11 @@ def find_meas_period(series):
                 len(new))
 
 def plot_modes(data):
-    style = [
-        {'color': 'r', 'name': 'manual'},
-        {'color': 'c', 'name': 'alt-ctl'},
-        {'color': 'b', 'name': 'pos-ctl'},
-        {'color': 'g', 'name': 'auto'},
-        {'color': 'm', 'name': '4'},
-        {'color': 'y', 'name': '5'},
-        {'color': 'o', 'name': '6'},
-        {'color': 'k', 'name': '7'},
-    ]
-    for state_i in range(0, 7):
-        state_start = 0
-        count = 0
-        while count < 100:
-            count += 1
-            d = data.STAT_MainState[state_start:]
-            try:
-                state_start = d[d == state_i].index[0]
-                try:
-                    state_stop = data.STAT_MainState[state_start:][data.STAT_MainState[state_start:] != state_i].index[0]
-                except:
-                    state_stop = data.index[-1]
-                w = state_stop - state_start
-                y1 = pl.gca().get_ylim()[0]
-                y2 = pl.gca().get_ylim()[1]
-                h = y2-y1
-                ax = pl.gca()
-                if count == 1:
-                    ax.add_patch(
-                        patches.Rectangle(
-                            (state_start, y1),   # (x,y)
-                            w,          # width
-                            h,          # height
-                            alpha=0.1,
-                            color=style[state_i]['color'],
-                            label=style[state_i]['name']
-                        )
-                    )
-                else:
-                    ax.add_patch(
-                        patches.Rectangle(
-                            (state_start, y1),   # (x,y)
-                            w,          # width
-                            h,          # height
-                            alpha=0.1,
-                            color=style[state_i]['color']
-                        )
-                    )
-            except IndexError as e:
-                #print(e)
-                pass
-            except Exception as e:
-                print(e)
-                pass
-            if state_stop == data.index[-1]:
-                #print('at end')
-                break
-            else:
-                state_start = state_stop
+    flight_modes = ['MANUAL', 'ALTCTL', 'POSCTL', 'AUTO_MISSION', 'AUTO_LOITER', 'AUTO_RTL', 'ACRO', 'OFFBOARD', 'STAB', 'RATTITUDE', 'AUTO_TAKEOFF', 'AUTO_LAND', 'AUTO_FOLLOW_TARGET', 'MAX']
+
+    data.STAT_MainState.plot()
+    pl.ylim([0,13])
+    pl.yticks(range(0,13), flight_modes)
 
 def process_lpe_health(data):
     names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']

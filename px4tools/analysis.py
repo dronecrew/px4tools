@@ -64,25 +64,25 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     Altitude analysis.
     """
 
-    i0 = data.index[0]
+    i0_Baro = data.SENS_BaroAlt.first_valid_index()
+    i0_GPS = data.GPS_Alt.first_valid_index()
+
     try:
         data.DIST_Distance.plot(legend=True)
     except AttributeError:
         data.DIST_Bottom.plot(legend=True)
     except Exception:
         pass
-    (-1*data.LPSP_Z).plot()
-    (data.SENS_BaroAlt - data.SENS_BaroAlt[i0]).plot()
-    (data.GPS_Alt - data.GPS_Alt[i0]).plot()
-    (-1*data).LPOS_Z.plot()
+    (-1*data.LPSP_Z).plot(legend=True)
+    (data.SENS_BaroAlt - data.SENS_BaroAlt[i0_Baro]).plot(legend=True)
+    (data.GPS_Alt - data.GPS_Alt[i0_GPS]).plot(legend=True)
+    (-1*data).LPOS_Z.plot(legend=True)
 
     if min_alt is not None and max_alt is not None:
         pl.axis([data.index[0], data.index[-1], min_alt, max_alt])
     pl.grid()
     pl.xlabel('t, sec')
     pl.ylabel('altitude, m')
-    return locals()
-
 
 def pos_analysis(data):
     """

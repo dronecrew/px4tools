@@ -8,11 +8,16 @@ from __future__ import print_function
 import pandas
 import pylab as pl
 import matplotlib.patches as patches
+import six
+from matplotlib import colors
 
 try:
     from .mapping import *
 except ImportError as e:
     print(e)
+
+FLIGHT_MODES = ['MANUAL', 'ALTCTL', 'POSCTL', 'AUTO_MISSION', 'AUTO_LOITER', 'AUTO_RTL', 'ACRO', 'OFFBOARD', 'STAB', 'RATTITUDE', 'AUTO_TAKEOFF', 'AUTO_LAND', 'AUTO_FOLLOW_TARGET', 'MAX']
+
 
 def filter_finite(data):
 
@@ -83,6 +88,7 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     pl.grid()
     pl.xlabel('t, sec')
     pl.ylabel('altitude, m')
+    background_flight_modes(data)
 
 def pos_analysis(data):
     """
@@ -160,18 +166,21 @@ def plot_attitude_loops(data):
     pl.rad2deg(data.ATSP_RollSP).plot()
     pl.ylabel('roll, deg')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(312)
     pl.rad2deg(data.ATT_Pitch).plot(legend=True)
     pl.rad2deg(data.ATSP_PitchSP).plot()
     pl.grid(True)
     pl.ylabel('pitch, deg')
+    background_flight_modes(data)
 
     pl.subplot(313)
     pl.rad2deg(data.ATT_Yaw).plot(legend=True)
     pl.rad2deg(data.ATSP_YawSP).plot()
     pl.grid(True)
     pl.ylabel('yaw, deg')
+    background_flight_modes(data)
 
 
 def plot_attitude_rate_loops(data):
@@ -185,12 +194,14 @@ def plot_attitude_rate_loops(data):
     pl.rad2deg(data.ARSP_RollRateSP).plot()
     pl.ylabel('roll, deg/s')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(312)
     pl.rad2deg(data.ATT_PitchRate).plot(legend=True)
     pl.rad2deg(data.ARSP_PitchRateSP).plot()
     pl.ylabel('pitch, deg/s')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(313)
     pl.rad2deg(data.ATT_YawRate).plot(legend=True)
@@ -198,6 +209,7 @@ def plot_attitude_rate_loops(data):
     pl.xlabel('t, sec')
     pl.ylabel('yaw, deg/s')
     pl.grid(True)
+    background_flight_modes(data)
 
 
 def plot_velocity_loops(data):
@@ -210,12 +222,14 @@ def plot_velocity_loops(data):
     data.LPSP_VX.plot()
     pl.ylabel('x, m/s')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(312)
     data.LPOS_VY.plot(legend=True)
     data.LPSP_VY.plot()
     pl.ylabel('y, m/s')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(313)
     data.LPOS_VZ.plot(legend=True)
@@ -223,6 +237,7 @@ def plot_velocity_loops(data):
     pl.xlabel('t, sec')
     pl.ylabel('z, m/s')
     pl.grid(True)
+    background_flight_modes(data)
 
 def plot_position_loops(data):
     """
@@ -234,18 +249,21 @@ def plot_position_loops(data):
     data.LPSP_X.plot()
     pl.ylabel('x, m')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(312)
     data.LPOS_Y.plot(legend=True)
     data.LPSP_Y.plot()
     pl.ylabel('y, m')
     pl.grid(True)
+    background_flight_modes(data)
 
     pl.subplot(313)
     data.LPOS_Z.plot(legend=True)
     data.LPSP_Z.plot()
     pl.ylabel('z, m')
     pl.grid(True)
+    background_flight_modes(data)
 
 
 def plot_control_loops(data):
@@ -330,11 +348,26 @@ def find_meas_period(series):
                 len(new))
 
 def plot_modes(data):
-    flight_modes = ['MANUAL', 'ALTCTL', 'POSCTL', 'AUTO_MISSION', 'AUTO_LOITER', 'AUTO_RTL', 'ACRO', 'OFFBOARD', 'STAB', 'RATTITUDE', 'AUTO_TAKEOFF', 'AUTO_LAND', 'AUTO_FOLLOW_TARGET', 'MAX']
 
     data.STAT_MainState.plot()
     pl.ylim([0,13])
-    pl.yticks(range(0,13), flight_modes)
+    pl.yticks(range(0,13), FLIGHT_MODES)
+    background_flight_modes(data)
+
+def background_flight_modes(data):
+    """
+    Overlays a background color for each flight mode. Can be called to style a graph.
+    """
+    modes = data.STAT_MainState.unique()
+    colors_ = list(six.iteritems(colors.cnames))
+    colors_.insert(0,'white')
+
+    for m in modes:
+        mode = data.STAT_MainState[data.STAT_MainState == m]
+        t_min = mode.index[0]
+        t_max = mode.index[mode.count() - 1]
+        pl.axvspan(t_min, t_max, alpha=0.3, color=colors_[int(m)][0], label=FLIGHT_MODES[int(m)])
+
 
 def process_lpe_health(data):
     names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']

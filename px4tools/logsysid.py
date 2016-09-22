@@ -124,7 +124,7 @@ def lqr_ofb_design(K_guess, ss_o, i_max=2000):
         args=(R, Q, X, ss_o),
         x0=K_guess,
         # jac=lqr_ofb_jac,
-        bounds=[[1e-6, 1], [1e-6, 1], [1e-6, 1]],
+        bounds=[[1e-6, 100], [1e-6, 100], [1e-6, 100]],
         constraints=constraints
         )
     K = np.matrix(res['x'])

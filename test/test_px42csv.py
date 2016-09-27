@@ -1,6 +1,9 @@
-import unittest
+import os
 import matplotlib
-matplotlib.use('Agg')
+if 'DISPLAY' not in os.environ:
+    matplotlib.use('Agg')
+    import matplotlib.pyplot
+import unittest
 from px4tools import px42csv
 import sys
 

@@ -1,13 +1,13 @@
-import pandas 
 import os
+import matplotlib
+if 'DISPLAY' not in os.environ:
+    matplotlib.use('Agg')
+    import matplotlib.pyplot
+import pandas 
 import unittest
 import inspect
-
 from px4tools.analysis import *
 from px4tools.mapping import *
-
-import matplotlib
-matplotlib.use('Agg')
 
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))

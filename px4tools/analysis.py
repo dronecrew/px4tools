@@ -6,10 +6,8 @@ Analysis of px4 logs
 
 from __future__ import print_function
 import pandas
-import pylab as pl
-import matplotlib.patches as patches
+import numpy as np
 import six
-from matplotlib import colors
 
 try:
     from .mapping import *
@@ -21,7 +19,7 @@ FLIGHT_MODES = ['MANUAL', 'ALTCTL', 'POSCTL', 'AUTO_MISSION', 'AUTO_LOITER', 'AU
 
 def filter_finite(data):
 
-    return pl.all(data[pl.isfinite(data.values.astype(float))], axis=1)
+    return np.all(data[np.isfinite(data.values.astype(float))], axis=1)
 
 def octa_cox_data_to_ss(data):
     """
@@ -53,7 +51,7 @@ def octa_cox_data_to_ss(data):
         'OUT0_Out3', 'OUT0_Out4', 'OUT0_Out5', 'OUT0_Out6',
               'OUT0_Out7']] - 1000.0)/1000.0).values,
         columns=['1', '2', '3', '4', '5', '6', '7', '8'], index=t)
-    C_mix_octo = pl.array([
+    C_mix_octo = np.array([
                            [1, 1, 1, 1, 1, 1, 1, 1], # thrust
                            [-1, 1, 1, -1, -1, 1, 1, -1], # roll
                            [-1, -1, 1, 1, -1, -1, 1, 1], # pitch
@@ -83,11 +81,13 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     (data.GPS_Alt - data.GPS_Alt[i0_GPS]).plot(legend=True)
     (-1*data).LPOS_Z.plot(legend=True)
 
+    import matplotlib.pyplot as plt
+
     if min_alt is not None and max_alt is not None:
-        pl.axis([data.index[0], data.index[-1], min_alt, max_alt])
-    pl.grid()
-    pl.xlabel('t, sec')
-    pl.ylabel('altitude, m')
+        plt.axis([data.index[0], data.index[-1], min_alt, max_alt])
+    plt.grid()
+    plt.xlabel('t, sec')
+    plt.ylabel('altitude, m')
     background_flight_modes(data)
 
 def pos_analysis(data):
@@ -98,20 +98,21 @@ def pos_analysis(data):
     gps_y, gps_x = tmerc_map(data.GPS_Lon.values, data.GPS_Lat.values)
     gpos_y, gpos_x = tmerc_map(data.GPOS_Lon.values, data.GPOS_Lat.values)
     gpsp_y, gpsp_x = tmerc_map(data.GPSP_Lon[
-        pl.isfinite(data.GPSP_Lon.values)].values,
-        data.GPSP_Lat[pl.isfinite(data.GPSP_Lat.values)].values)
+        np.isfinite(data.GPSP_Lon.values)].values,
+        data.GPSP_Lat[np.isfinite(data.GPSP_Lat.values)].values)
 
-    pl.plot(gpos_y, gpos_x, '.', label='est')
+    import matplotlib.pyplot as plt
+    plt.plot(gpos_y, gpos_x, '.', label='est')
 
-    pl.plot(gps_y, gps_x, 'x', label='GPS')
+    plt.plot(gps_y, gps_x, 'x', label='GPS')
 
-    pl.plot(gpsp_y, gpsp_x, 'ro', label='cmd')
+    plt.plot(gpsp_y, gpsp_x, 'ro', label='cmd')
 
-    pl.xlabel('E, m')
-    pl.ylabel('N, m')
-    pl.grid()
-    pl.autoscale(True, 'both', True)
-    pl.legend(loc='best')
+    plt.xlabel('E, m')
+    plt.ylabel('N, m')
+    plt.grid()
+    plt.autoscale(True, 'both', True)
+    plt.legend(loc='best')
     return locals()
 
 def isfloatarray(cell):
@@ -128,7 +129,7 @@ def get_float_data(dataframe):
     """
     Get float data out of dataframe.
     """
-    dataframe = dataframe[pl.isfinite(dataframe.TIME_StartTime)]
+    dataframe = dataframe[np.isfinite(dataframe.TIME_StartTime)]
     float_cols = [isfloatarray(col) for col in dataframe.values.T]
     return (dataframe.T[float_cols].T).astype(float)
 
@@ -137,8 +138,8 @@ def get_auto_data(data):
     Extract auto data.
     """
     data = data[data['STAT_MainState'] == 3]
-    data = data[pl.isfinite(data['GPSP_Lat'].astype(float))]
-    data = data[pl.isfinite(data['GPSP_Lon'].astype(float))]
+    data = data[np.isfinite(data['GPSP_Lat'].astype(float))]
+    data = data[np.isfinite(data['GPSP_Lon'].astype(float))]
     if len(data) == 0:
         raise RuntimeError('no auto mode detected')
     return data
@@ -160,26 +161,27 @@ def plot_attitude_loops(data):
     """
     Plot attitude loops.
     """
-    pl.subplot(311)
-    pl.title('attitude control')
-    pl.rad2deg(data.ATT_Roll).plot(legend=True)
-    pl.rad2deg(data.ATSP_RollSP).plot()
-    pl.ylabel('roll, deg')
-    pl.grid(True)
+    import matplotlib.pyplot as plt
+    plt.subplot(311)
+    plt.title('attitude control')
+    plt.rad2deg(data.ATT_Roll).plot(legend=True)
+    plt.rad2deg(data.ATSP_RollSP).plot()
+    plt.ylabel('roll, deg')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(312)
-    pl.rad2deg(data.ATT_Pitch).plot(legend=True)
-    pl.rad2deg(data.ATSP_PitchSP).plot()
-    pl.grid(True)
-    pl.ylabel('pitch, deg')
+    plt.subplot(312)
+    plt.rad2deg(data.ATT_Pitch).plot(legend=True)
+    plt.rad2deg(data.ATSP_PitchSP).plot()
+    plt.grid(True)
+    plt.ylabel('pitch, deg')
     background_flight_modes(data)
 
-    pl.subplot(313)
-    pl.rad2deg(data.ATT_Yaw).plot(legend=True)
-    pl.rad2deg(data.ATSP_YawSP).plot()
-    pl.grid(True)
-    pl.ylabel('yaw, deg')
+    plt.subplot(313)
+    plt.rad2deg(data.ATT_Yaw).plot(legend=True)
+    plt.rad2deg(data.ATSP_YawSP).plot()
+    plt.grid(True)
+    plt.ylabel('yaw, deg')
     background_flight_modes(data)
 
 
@@ -187,28 +189,29 @@ def plot_attitude_rate_loops(data):
     """
     Plot attitude rate control loops.
     """
-    pl.title('attitude rate control')
+    import matplotlib.pyplot as plt
+    plt.title('attitude rate control')
 
-    pl.subplot(311)
-    pl.rad2deg(data.ATT_RollRate).plot(legend=True)
-    pl.rad2deg(data.ARSP_RollRateSP).plot()
-    pl.ylabel('roll, deg/s')
-    pl.grid(True)
+    plt.subplot(311)
+    plt.rad2deg(data.ATT_RollRate).plot(legend=True)
+    plt.rad2deg(data.ARSP_RollRateSP).plot()
+    plt.ylabel('roll, deg/s')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(312)
-    pl.rad2deg(data.ATT_PitchRate).plot(legend=True)
-    pl.rad2deg(data.ARSP_PitchRateSP).plot()
-    pl.ylabel('pitch, deg/s')
-    pl.grid(True)
+    plt.subplot(312)
+    np.rad2deg(data.ATT_PitchRate).plot(legend=True)
+    np.rad2deg(data.ARSP_PitchRateSP).plot()
+    plt.ylabel('pitch, deg/s')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(313)
-    pl.rad2deg(data.ATT_YawRate).plot(legend=True)
-    pl.rad2deg(data.ARSP_YawRateSP).plot()
-    pl.xlabel('t, sec')
-    pl.ylabel('yaw, deg/s')
-    pl.grid(True)
+    plt.subplot(313)
+    np.rad2deg(data.ATT_YawRate).plot(legend=True)
+    np.rad2deg(data.ARSP_YawRateSP).plot()
+    plt.xlabel('t, sec')
+    plt.ylabel('yaw, deg/s')
+    plt.grid(True)
     background_flight_modes(data)
 
 
@@ -216,53 +219,55 @@ def plot_velocity_loops(data):
     """
     Plot velocity loops.
     """
-    pl.subplot(311)
-    pl.title('velocity control')
+    import matplotlib.pyplot as plt
+    plt.subplot(311)
+    plt.title('velocity control')
     data.LPOS_VX.plot(legend=True)
     data.LPSP_VX.plot()
-    pl.ylabel('x, m/s')
-    pl.grid(True)
+    plt.ylabel('x, m/s')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(312)
+    plt.subplot(312)
     data.LPOS_VY.plot(legend=True)
     data.LPSP_VY.plot()
-    pl.ylabel('y, m/s')
-    pl.grid(True)
+    plt.ylabel('y, m/s')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(313)
+    plt.subplot(313)
     data.LPOS_VZ.plot(legend=True)
     data.LPSP_VZ.plot()
-    pl.xlabel('t, sec')
-    pl.ylabel('z, m/s')
-    pl.grid(True)
+    plt.xlabel('t, sec')
+    plt.ylabel('z, m/s')
+    plt.grid(True)
     background_flight_modes(data)
 
 def plot_position_loops(data):
     """
     Plot position loops.
     """
-    pl.subplot(311)
-    pl.title('position control')
+    import matplotlib.pyplot as plt
+    plt.subplot(311)
+    plt.title('position control')
     data.LPOS_X.plot(legend=True)
     data.LPSP_X.plot()
-    pl.ylabel('x, m')
-    pl.grid(True)
+    plt.ylabel('x, m')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(312)
+    plt.subplot(312)
     data.LPOS_Y.plot(legend=True)
     data.LPSP_Y.plot()
-    pl.ylabel('y, m')
-    pl.grid(True)
+    plt.ylabel('y, m')
+    plt.grid(True)
     background_flight_modes(data)
 
-    pl.subplot(313)
+    plt.subplot(313)
     data.LPOS_Z.plot(legend=True)
     data.LPSP_Z.plot()
-    pl.ylabel('z, m')
-    pl.grid(True)
+    plt.ylabel('z, m')
+    plt.grid(True)
     background_flight_modes(data)
 
 
@@ -282,7 +287,7 @@ def statistics(df, keys=None, plot=False):
         try:
             df_meas = new_sample(df[key])
             dt = find_meas_period(df_meas)
-            stddev = pl.sqrt(df_meas.var())
+            stddev = np.sqrt(df_meas.var())
             mean = df_meas.mean()
             variance = stddev**2
             noise_power = variance*dt
@@ -300,11 +305,12 @@ def statistics(df, keys=None, plot=False):
         data[key+'_dt'] = dt
         data[key+'_noise_power'] = noise_power
         if plot:
-            pl.figure()
-            pl.title(key + ' statistics')
+            import matplotlib.pyplot as plt
+            plt.figure()
+            plt.title(key + ' statistics')
             df[key].plot(alpha=0.5)
-            pl.hlines(mean, df.index[0], df.index[-1], 'k')
-            pl.hlines([mean + stddev, mean - stddev],
+            plt.hlines(mean, df.index[0], df.index[-1], 'k')
+            plt.hlines([mean + stddev, mean - stddev],
                     df.index[0], df.index[-1], 'r')
     return data
 
@@ -317,13 +323,13 @@ def find_lpe_gains(df, printing=False):
     params = {
         'LPE_LDR_Z': stats['DIST_Distance_stddev'],
         'LPE_BAR_Z': stats['SENS_BaroAlt_stddev'],
-        'LPE_ACC_XY': pl.array([stats['IMU1_AccX_stddev'],
+        'LPE_ACC_XY': np.array([stats['IMU1_AccX_stddev'],
             stats['IMU1_AccX_noise_power']]).max(),
         'LPE_ACC_Z': stats['IMU1_AccZ_stddev'],
-        'LPE_GPS_XY': pl.array([stats['GPS_X_stddev'],
+        'LPE_GPS_XY': np.array([stats['GPS_X_stddev'],
             stats['GPS_Y_stddev']]).max(),
         'LPE_GPS_Z': stats['GPS_Z_stddev'],
-        'LPE_GPS_VXY':  pl.array([stats['GPS_VelN_stddev'],
+        'LPE_GPS_VXY':  np.array([stats['GPS_VelN_stddev'],
             stats['GPS_VelE_stddev']]).max(),
         'LPE_GPS_VZ':  stats['GPS_VelD_stddev']
     }
@@ -334,7 +340,7 @@ def find_lpe_gains(df, printing=False):
     return params
 
 def new_sample(series):
-    return series[pl.absolute(series.diff()) > 0]
+    return series[np.absolute(series.diff()) > 0]
 
 def all_new_sample(df):
     df_new = pandas.DataFrame(df)
@@ -348,10 +354,10 @@ def find_meas_period(series):
                 len(new))
 
 def plot_modes(data):
-
+    import matplotlib.pyplot as plt
     data.STAT_MainState.plot()
-    pl.ylim([0,13])
-    pl.yticks(range(0,13), FLIGHT_MODES)
+    plt.ylim([0,13])
+    plt.yticks(range(0,13), FLIGHT_MODES)
     background_flight_modes(data)
 
 def background_flight_modes(data):
@@ -359,6 +365,8 @@ def background_flight_modes(data):
     Overlays a background color for each flight mode. Can be called to style a graph.
     """
     modes = data.STAT_MainState.unique()
+    from matplotlib import colors
+    import matplotlib.pyplot as plt
     colors_ = list(six.iteritems(colors.cnames))
     colors_.insert(0,'white')
 
@@ -366,13 +374,13 @@ def background_flight_modes(data):
         mode = data.STAT_MainState[data.STAT_MainState == m]
         t_min = mode.index[0]
         t_max = mode.index[mode.count() - 1]
-        pl.axvspan(t_min, t_max, alpha=0.3, color=colors_[int(m)][0], label=FLIGHT_MODES[int(m)])
+        plt.axvspan(t_min, t_max, alpha=0.3, color=colors_[int(m)][0], label=FLIGHT_MODES[int(m)])
 
 
 def process_lpe_health(data):
     names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
     try:
-        faults = pl.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
+        faults = np.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
             for j in range(7)]
             for i in range(len(data.index))])
         for i in range(7):
@@ -381,7 +389,7 @@ def process_lpe_health(data):
     except Exception as e:
         print(e)
     try:
-        timeouts = pl.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
+        timeouts = np.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
             for j in range(7)]
             for i in range(len(data.index))])
         for i in range(7):

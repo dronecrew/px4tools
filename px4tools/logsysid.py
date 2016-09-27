@@ -6,7 +6,6 @@ import control
 import scipy.optimize
 import scipy.signal
 import time
-import pylab as pl
 import numpy as np
 from datetime import date
 
@@ -175,19 +174,20 @@ def attitude_rate_design(G, K_guess, d_tc):
     return K, G_comp, Gc_comp
 
 def plot_attitude_rate_design(name, G_ol, G_cl):
-    pl.figure()
-    pl.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
-    pl.title(name + ' rate step resposne')
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
+    plt.title(name + ' rate step resposne')
 
-    pl.figure()
+    plt.figure()
     control.bode(G_ol);
     print(control.margin(G_ol))
 
-    pl.figure()
+    plt.figure()
     control.rlocus(G_ol, np.logspace(-2, 0, 1000));
     for pole in G_cl.pole():
-        pl.plot(np.real(pole), np.imag(pole), 'rs')
-    pl.title(name + ' rate step root locus')
+        plt.plot(np.real(pole), np.imag(pole), 'rs')
+    plt.title(name + ' rate step root locus')
 
 def control_design():
 

@@ -6,6 +6,9 @@ import inspect
 from px4tools.analysis import *
 from px4tools.mapping import *
 
+import matplotlib
+matplotlib.use('Agg')
+
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
 

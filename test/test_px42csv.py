@@ -1,4 +1,6 @@
 import unittest
+import matplotlib
+matplotlib.use('Agg')
 from px4tools import px42csv
 import sys
 

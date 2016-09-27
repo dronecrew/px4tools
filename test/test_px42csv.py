@@ -1,13 +1,8 @@
 import os
-import matplotlib
-if 'DISPLAY' not in os.environ:
-    matplotlib.use('Agg')
-    import matplotlib.pyplot
+import inspect
 import unittest
 from px4tools import px42csv
 import sys
-
-import inspect, os
 
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))

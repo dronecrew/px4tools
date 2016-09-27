@@ -136,7 +136,7 @@ def setup_package():
         author='James Goppert',
         author_email='james.goppert@gmail.com',
         download_url='https://github.com/dronecrew/px4tools',
-        license='BSD',
+        license='BSD 3-Clause',
         classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
         install_requires=['scipy', 'numpy', 'pandas'],

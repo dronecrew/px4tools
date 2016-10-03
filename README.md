@@ -1,15 +1,21 @@
-
 # px4tools
+
+Python tools for px4.
 
 [![Coverage Status](https://coveralls.io/repos/github/dronecrew/px4tools/badge.svg?branch=master)](https://coveralls.io/github/dronecrew/px4tools?branch=master)
 [![Build Status](https://travis-ci.org/dronecrew/px4tools.svg?branch=master)](https://travis-ci.org/dronecrew/px4tools)
 
-[![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/version.svg)](https://anaconda.org/dronecrew/px4tools)
-[![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/license.svg)](https://anaconda.org/dronecrew/px4tools)
-[![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/downloads.svg)](https://anaconda.org/dronecrew/px4tools)
-[![Anaconda-Server Badge](https://anaconda.org/dronecrew/px4tools/badges/installer/conda.svg)](https://conda.anaconda.org/dronecrew)
+Current build status
+====================
 
-Python tools for px4.
+Linux: [![Circle CI](https://circleci.com/gh/conda-forge/px4tools-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/px4tools-feedstock)
+OSX: [![TravisCI](https://travis-ci.org/conda-forge/px4tools-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/px4tools-feedstock)
+Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/px4tools-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/px4tools-feedstock/branch/master)
+
+Current release info
+====================
+Version: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/badges/version.svg)](https://anaconda.org/conda-forge/px4tools)
+Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/badges/downloads.svg)](https://anaconda.org/conda-forge/px4tools)
 
 ## Install
 
@@ -38,8 +44,9 @@ Python tools for px4.
 	```
 
 2. Install via conda
+
 ```bash
-conda config --add channels http://conda.anaconda.org/dronecrew
+conda config --add channels conda-forge
 conda install px4tools jupyter
 ```
 

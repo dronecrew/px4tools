@@ -1,5 +1,4 @@
 from __future__ import print_function
-import sysid
 import pandas
 import px4tools
 import control

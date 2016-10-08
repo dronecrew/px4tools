@@ -25,7 +25,7 @@ CLASSIFIERS = """\
 Development Status :: 1 - Planning
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-License :: OSI Approved :: BSD 3-Clause
+License :: OSI Approved :: BSD License
 Programming Language :: Python
 Programming Language :: Python :: 3
 Programming Language :: Other

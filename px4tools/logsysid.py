@@ -20,8 +20,7 @@ def setup_data(df):
                           columns=df.columns, index=t, dtype=float)
     
     # resample dataframe at 1 millisecond
-    df_rs = df['2016-01-01 00:00:00':
-               '2016-01-01 00:01:04'].resample('1L').mean().interpolate()
+    df_rs = resample('1L').mean().interpolate()
 
     dt = 1.0/1000.0 # resampled at 1 millisecond
     df_rs.index = [ i/1.0e3 for i in range(len(df_rs.index))]
@@ -188,16 +187,56 @@ def plot_attitude_rate_design(name, G_ol, G_cl):
         plt.plot(np.real(pole), np.imag(pole), 'rs')
     plt.title(name + ' rate step root locus')
 
-def control_design():
+def attitude_control_design(name, y, u, rolling_mean_window=100, do_plot=True):
+    K_guess = np.matrix([[0.01, 0.01, 0.001]]).T
+
+    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+
+    #-----------------------------------------------------
+    # roll axis
+
+    # remove bias
+    y_bias = y.rolling(rolling_mean_window).mean()
+    y_debiased = y - y_bias
+    u_bias = u.rolling(rolling_mean_window).mean()
+    u_debiased = u - u_bias
+
+    plt.figure()
+    u_debiased.plot(label='debiased input')
+    u.plot(label='input')
+    legend()
+    xlabel('t, sec')
+
+    plt.figure()
+    y_debiased.plot(label='debiased output')
+    y.plot(label='output')
+    legend()
+    xlabel('t, sec')
+
+    G_ol, delay, k = logsysid.attitude_sysid(y, u)
+
+    logsysid.plot_delay_and_gain_fit(k, delay, y, u)
+    y.plot()
+    gca().set_xlim([11, 12])
 
 
-    # load log file data, resample at 1 millisecond
-    data, dt = setup_data(pandas.read_csv('./sess052/log001.csv'))
+    K, G_ol_rate, G_cl_rate = logsysid.attitude_rate_design(
+        G_ol, K_guess, d_tc)
 
-    K_roll, G_ol_roll_rate, G_cl_roll_rate = attitude_rate_design(
-        data.ATT_RollRate.diff()/dt, data.ATTC_Roll)
-    plot_attitude_rate_design('roll', G_ol_roll_rate, G_cl_roll_rate)
+    logsysid.plot_attitude_rate_design(name, G_ol_rate, G_cl_rate)
 
-    K_pitch, G_ol_pitch_rate, G_cl_pitch_rate = attitude_rate_design(
-        data.ATT_PitchRate.diff()/dt, data.ATTC_Pitch)
-    plot_attitude_rate_design('pitch', G_ol_pitch_rate, G_cl_pitch_rate)
+    return K
+
+def control_degin(raw_data):
+    data, dt = logsysid.setup_data(raw_data)
+
+    roll_acc = data.ATT_RollRate.diff()/dt
+    K_roll =  attitude_control_design('roll', roll_acc, data.ATTC_Roll)
+
+    pitch_acc = data.ATT_PitchRate.diff()/dt
+    K_pitch = attitude_control_design('pitch', pitch_acc, data.ATTC_Pitch)
+
+    return {
+        'K_roll': K_roll,
+        'K_pitch': K_pitch
+    }

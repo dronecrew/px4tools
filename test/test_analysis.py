@@ -4,6 +4,7 @@ import unittest
 import inspect
 from px4tools.analysis import *
 from px4tools.mapping import *
+from px4tools.logsysid import *
 
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
@@ -30,6 +31,13 @@ class Test(unittest.TestCase):
             octa_cox_data_to_ss(data)
             # fails on miniconda, windows
             # filter_finite(data)
+
+    def test_logsysid(self):
+        filename = os.path.join(TEST_PATH, 'log', '01_07_59.csv')
+        print("filename: {:s}".format(filename))
+        with open(filename, 'r') as f:
+            log_data = pandas.read_csv(f)
+            gains = control_design(log_data)
 
     @unittest.skip("skip plotting test for CI")
     def test_plotting(self):

@@ -9,6 +9,7 @@ import control
 import scipy.optimize
 import scipy.signal
 import numpy as np
+import matplotlib.pyplot as plt
 
 import px4tools
 
@@ -197,7 +198,7 @@ def lqr_ofb_design(K_guess, ss_o, verbose=False):
         args=(R, Q, X, ss_o),
         x0=K_guess,
         # jac=lqr_ofb_jac,
-        bounds=[[1e-6, 100], [1e-6, 100], [1e-6, 100]],
+        bounds=len(K_guess)*[[1e-6, 100]],
         constraints=constraints
         )
     K = np.matrix(res['x'])
@@ -216,13 +217,13 @@ def lqr_ofb_design(K_guess, ss_o, verbose=False):
 def attitude_sysid(y_acc, u_mix, verbose=False):
     """
     roll/pitch system id assuming delay/gain model
-    @y_acc (roll or pitch acceleration)
-    @u_mix (roll or pitch acceleration command)
+    :param y_acc: (roll or pitch acceleration)
+    :param u_mix: (roll or pitch acceleration command)
 
-    G_ol: open loop plant
-    delay: time delay (sec)
-    k: gain
-    @return (G_ol, delay, k)
+    :return: (G_ol, delay, k)
+        G_ol: open loop plant
+        delay: time delay (sec)
+        k: gain
     """
     if verbose:
         print('solving for plant model ', end='')
@@ -240,24 +241,35 @@ def attitude_sysid(y_acc, u_mix, verbose=False):
     return G_ol, delay, k
 
 
-def attitude_rate_design(G, K_guess, d_tc, verbose=False):
+def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=True):
     """
-    @G transfer function
-    @K_guess gain matrix guess
-    @d_tc time constant for derivative
+    :param G: transfer function
+    :param K_guess: gain matrix guess
+    :param d_tc: time constant for derivative
+    :param use_P: use p gain in design
+    :param use_I: use i gain in design
+    :param use_D: use d gain in design
 
-    K: gain matrix
-    G_comp: open loop compensated plant
-    Gc_comp: closed loop compensated plant
-    @return (K, G_comp, Gc_comp)
+    :return: (K, G_comp, Gc_comp)
+        K: gain matrix
+        G_comp: open loop compensated plant
+        Gc_comp: closed loop compensated plant
     """
     # compensator transfer function
-    H = np.array([[
-        control.tf(1, 1),
-        control.tf((1), (1, 0)), control.tf((1, 0), (d_tc, 1))]]).T
+    H = []
+    if use_P:
+        H += [control.tf(1, 1)]
+    if use_I:
+        H += [control.tf((1), (1, 0))]
+    if use_D:
+        H += [control.tf((1, 0), (d_tc, 1))]
+    H = np.array([H]).T
     H_num = [[H[i][j].num[0][0] for i in range(H.shape[0])] for j in range(H.shape[1])]
     H_den = [[H[i][j].den[0][0] for i in range(H.shape[0])] for j in range(H.shape[1])]
     H = control.tf(H_num, H_den)
+
+    # print('G', G)
+    # print('H', H)
 
     ss_open = control.tf2ss(G*H)
 
@@ -267,19 +279,20 @@ def attitude_rate_design(G, K_guess, d_tc, verbose=False):
     if verbose:
         print('done')
 
+    # print('K', K)
+    # print('H', H)
     G_comp = control.series(G, H*K)
-    Gc_comp = G_comp/(1 + G_comp)
+    Gc_comp = control.feedback(G_comp, 1)
 
     return K, G_comp, Gc_comp
 
-def plot_attitude_rate_design(name, G_ol, G_cl):
+def plot_loops(name, G_ol, G_cl):
     """
-    Plot attitude rate design
-    @name Name of axis (e.g. roll/pitch)
-    @G_ol open loop transfer function
-    @G_cl closed loop transfer function
+    Plot loops
+    :param name: Name of axis
+    :param G_ol: open loop transfer function
+    :param G_cl: closed loop transfer function
     """
-    import matplotlib.pyplot as plt
     plt.figure()
     plt.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
     plt.title(name + ' step resposne')
@@ -287,7 +300,7 @@ def plot_attitude_rate_design(name, G_ol, G_cl):
 
     plt.figure()
     control.bode(G_ol)
-    print('margins', control.margin(G_ol))
+    # print('margins', control.margin(G_ol))
     plt.subplot(211)
     plt.title(name + ' open loop bode plot')
 
@@ -300,13 +313,11 @@ def plot_attitude_rate_design(name, G_ol, G_cl):
 
 def attitude_control_design(
         name, y, u, rolling_mean_window=100,
-        do_plot=False, verbose=False):
+        do_plot=False, verbose=False, d_tc=1.0/125):
     """
     Do sysid and control design for roll/pitch rate loops.
     """
-    K_guess = np.matrix([[0.01, 0.01, 0.001]]).T
-
-    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+    K_guess = np.matrix([[0.1, 0.1, 0.001]]).T
 
     # remove bias
     y_bias = y.rolling(rolling_mean_window).mean()
@@ -317,11 +328,10 @@ def attitude_control_design(
     G_ol, delay, k = attitude_sysid(
         y_debiased, u_debiased, verbose)
 
-    K, G_ol_rate, G_cl_rate = attitude_rate_design(
+    K, G_ol_rate, G_cl_rate = pid_design(
         G_ol, K_guess, d_tc, verbose)
 
     if do_plot:
-        import matplotlib.pyplot as plt
 
         plt.figure()
         u_debiased.plot(label='debiased input')
@@ -345,31 +355,63 @@ def attitude_control_design(
         plt.grid()
 
         plt.figure()
-        plot_attitude_rate_design(name, G_ol_rate, G_cl_rate)
+        plot_loops(name, G_ol_rate, G_cl_rate)
 
-    return K
+    return K, G_cl_rate
 
-def control_design(raw_data, do_plot=False, rolling_mean_window=100):
+def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):
     """
     Design a PID controller from log file.
     """
     data, dt = setup_data(raw_data)
+    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+    K_guess_att = np.matrix([[1.0]]).T
 
     roll_acc = data.ATT_RollRate.diff()/dt
-    K_roll = attitude_control_design(
+    K_rollrate, G_cl_rollrate = attitude_control_design(
         'roll rate', roll_acc, data.ATTC_Roll,
-        rolling_mean_window=rolling_mean_window, do_plot=do_plot)
+        rolling_mean_window=rolling_mean_window,
+        do_plot=do_plot, verbose=verbose, d_tc=d_tc)
+
+    tf_integrator = control.tf((1), (1, 0))
+
+    K_roll, G_roll, G_cl_roll = pid_design(
+        G_cl_rollrate*tf_integrator, K_guess_att, d_tc,
+        verbose=verbose, use_I=False, use_D=False)
+
+    if do_plot:
+        plt.figure()
+        plot_loops('roll', G_roll, G_cl_roll)
 
     pitch_acc = data.ATT_PitchRate.diff()/dt
-    K_pitch = attitude_control_design(
+    K_pitchrate, G_cl_pitchrate = attitude_control_design(
         'pitch rate', pitch_acc, data.ATTC_Pitch,
-        rolling_mean_window=rolling_mean_window, do_plot=do_plot)
+        rolling_mean_window=rolling_mean_window,
+        do_plot=do_plot, d_tc=d_tc, verbose=verbose)
+
+    K_pitch, G_pitch, G_cl_pitch = pid_design(
+        G_cl_pitchrate*tf_integrator, K_guess_att, d_tc,
+        verbose=verbose, use_I=False, use_D=False)
+
+    if do_plot:
+        plt.figure()
+        plot_loops('pitch', G_pitch, G_cl_pitch)
+
+    if verbose:
+        print('G_roll', G_roll)
+        print('G_cl_roll', G_cl_roll)
+        print('G_cl_rollrate', G_cl_rollrate)
+        print('G_pitch', G_pitch)
+        print('G_cl_pitch', G_cl_pitch)
+        print('G_cl_pitchrate', G_cl_pitchrate)
 
     return OrderedDict([
-        ('MC_ROLLRATE_P', round(K_roll[0, 0], 3)),
-        ('MC_ROLLRATE_I', round(K_roll[1, 0], 3)),
-        ('MC_ROLLRATE_D', round(K_roll[2, 0], 3)),
-        ('MC_PITCHRATE_P', round(K_pitch[0, 0], 3)),
-        ('MC_PITCHRATE_I', round(K_pitch[1, 0], 3)),
-        ('MC_PITCHRATE_D', round(K_pitch[2, 0], 3)),
-    ])
+        ('MC_ROLL_P', round(K_roll[0, 0], 3)),
+        ('MC_ROLLRATE_P', round(K_rollrate[0, 0], 3)),
+        ('MC_ROLLRATE_I', round(K_rollrate[1, 0], 3)),
+        ('MC_ROLLRATE_D', round(K_rollrate[2, 0], 3)),
+        ('MC_PITCH_P', round(K_pitch[0, 0], 3)),
+        ('MC_PITCHRATE_P', round(K_pitchrate[0, 0], 3)),
+        ('MC_PITCHRATE_I', round(K_pitchrate[1, 0], 3)),
+        ('MC_PITCHRATE_D', round(K_pitchrate[2, 0], 3)),
+    ]), locals()

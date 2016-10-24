@@ -66,5 +66,5 @@ jupyter notebook
 
 ## Examples:
 
-https://github.com/dronecrew/px4tools/blob/master/examples/Log%20based%20System%20Identification%20and%20Control%20Design.ipynb
-https://github.com/jgoppert/lpe-analysis/blob/master/15-09-30%20Kabir%20Log.ipynb
+1. https://github.com/dronecrew/px4tools/blob/master/examples/Log%20based%20System%20Identification%20and%20Control%20Design.ipynb
+1. https://github.com/jgoppert/lpe-analysis/blob/master/15-09-30%20Kabir%20Log.ipynb

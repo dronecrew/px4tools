@@ -139,7 +139,7 @@ def setup_package():
         license='BSD 3-Clause',
         classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-        install_requires=['scipy', 'numpy', 'pandas', 'control'],
+        install_requires=['scipy', 'numpy', 'pandas'],
         tests_require=['nose'],
         test_suite='nose.collector',
         entry_points = {

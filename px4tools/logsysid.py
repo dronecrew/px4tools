@@ -300,7 +300,7 @@ def plot_loops(name, G_ol, G_cl):
 
     plt.figure()
     control.bode(G_ol)
-    # print('margins', control.margin(G_ol))
+    print('margins', control.margin(G_ol))
     plt.subplot(211)
     plt.title(name + ' open loop bode plot')
 

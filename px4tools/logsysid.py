@@ -87,13 +87,26 @@ def delay_and_gain_sysid(y, u, verbose=False):
         raise RuntimeError('optimization failed')
     k = res['x'][0]
     delay = res['x'][1]
+    fit = calculate_fitness(k, delay, y, u, dt)
+    print('fit quality', fit*100, '%')
+    if fit < 0.75:
+        print('WARNING: poor sysid fit')
     return k, delay
+
+def calculate_fitness(k, delay, y, u, dt):
+    """
+    Find how well the function fits the data
+    """
+    delay_periods = int(delay/dt)
+    e = y - k*u.shift(delay_periods)
+    fit = 1 - np.sqrt(e.var()/y.var())
+    return fit
 
 def plot_delay_and_gain_fit(k, delay, y, u, dt=0.001):
     """
     Plot the delay and gain fit vs the actual output.
     """
-    delay_periods = delay/dt
+    delay_periods = int(delay/dt)
     uf = k*u.shift(delay_periods)
     y.plot()
     uf.plot()

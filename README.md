@@ -1,6 +1,7 @@
 # px4tools
 [![Build Status](https://travis-ci.org/dronecrew/px4tools.svg?branch=master)](https://travis-ci.org/dronecrew/px4tools)
 [![Coverage Status](https://coveralls.io/repos/github/dronecrew/px4tools/badge.svg?branch=master)](https://coveralls.io/github/dronecrew/px4tools?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/px4tools/badge/?version=latest)](http://px4tools.readthedocs.io/en/latest/?badge=latest)
 
 A log analysis toolbox for the [PX4 autopilot](http://px4.io/) written in python.
 

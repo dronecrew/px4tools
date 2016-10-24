@@ -6,12 +6,12 @@ A log analysis toolbox for the [PX4 autopilot](http://px4.io/) written in python
 
 ## Features
 
-* *Flight plotting* using standard python libraries.
-* Automatic *system identification* from log data.
-* Automatic *control design* from log data.
-* *Cross-platform* deployment, testing, and support (Windows/OSX/Linux).
-* Well *integrated* with Jupyter notebook and pandas.
-* Natively uses pandas *CSV format* so easily integrated with all log formats.
+* **Flight Plotting** using standard python libraries.
+* Automatic **System Identification** from log data.
+* Automatic **Control Design** from log data.
+* **Cross-Platform** deployment, testing, and support (Windows/OSX/Linux).
+* Well integrated with **Jupyter** notebook and **Pandas**.
+* Natively uses pandas **CSV format** so easily integrated with all log formats.
 
 ### Anaconda
 Linux: [![Circle CI](https://circleci.com/gh/conda-forge/px4tools-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/px4tools-feedstock)

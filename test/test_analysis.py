@@ -4,7 +4,6 @@ import unittest
 import inspect
 from px4tools.analysis import *
 from px4tools.mapping import *
-from px4tools.logsysid import *
 
 TEST_PATH = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
@@ -34,6 +33,7 @@ class Test(unittest.TestCase):
 
     @unittest.skip("skip sysid test for CI, depends on python control")
     def test_logsysid(self):
+        from px4tools.logsysid import *
         filename = os.path.join(TEST_PATH, 'log', '01_07_59.csv')
         print("filename: {:s}".format(filename))
         with open(filename, 'r') as f:

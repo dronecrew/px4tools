@@ -2,16 +2,17 @@
 Analyze a PX4 log to perform sysid and control design.
 """
 from __future__ import print_function
+from collections import OrderedDict
+
 import pandas
 import control
 import scipy.optimize
 import scipy.signal
 import numpy as np
-from collections import OrderedDict
 
 import px4tools
 
-# pylint: disable=invalid-name, no-member, too-many-locals
+# pylint: disable=invalid-name, no-member, too-many-locals, too-many-arguments
 
 def setup_data(df):
     """
@@ -81,14 +82,16 @@ def delay_and_gain_sysid(y, u, verbose=False):
         x0=[k_guess, delay_guess],
         bounds=[[0, 1000], [0.001, 0.050]],
         args=(y, u, dt))
-    if verbose:
-        print(res)
     if res['success'] != True:
+        print(res)
         raise RuntimeError('optimization failed')
+    elif verbose:
+        print(res)
+
     k = res['x'][0]
     delay = res['x'][1]
     fit = calculate_fitness(k, delay, y, u, dt)
-    print('fit quality', fit*100, '%')
+    print('fit quality', round(fit*100, 2), '%')
     if fit < 0.75:
         print('WARNING: poor sysid fit')
     return k, delay
@@ -99,7 +102,9 @@ def calculate_fitness(k, delay, y, u, dt):
     """
     delay_periods = int(delay/dt)
     e = y - k*u.shift(delay_periods)
-    fit = 1 - np.sqrt(e.var()/y.var())
+    # print('e var', e.var())
+    # print('y var', y.var())
+    fit = 1 - (e.var()/y.var())**2
     return fit
 
 def plot_delay_and_gain_fit(k, delay, y, u, dt=0.001):
@@ -277,19 +282,25 @@ def plot_attitude_rate_design(name, G_ol, G_cl):
     import matplotlib.pyplot as plt
     plt.figure()
     plt.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
-    plt.title(name + ' rate step resposne')
+    plt.title(name + ' step resposne')
+    plt.grid()
 
     plt.figure()
     control.bode(G_ol)
-    print(control.margin(G_ol))
+    print('margins', control.margin(G_ol))
+    plt.subplot(211)
+    plt.title(name + ' open loop bode plot')
 
     plt.figure()
     control.rlocus(G_ol, np.logspace(-2, 0, 1000))
     for pole in G_cl.pole():
         plt.plot(np.real(pole), np.imag(pole), 'rs')
-    plt.title(name + ' rate step root locus')
+    plt.title(name + ' root locus')
+    plt.grid()
 
-def attitude_control_design(name, y, u, rolling_mean_window=100, do_plot=False, verbose=False):
+def attitude_control_design(
+        name, y, u, rolling_mean_window=100,
+        do_plot=False, verbose=False):
     """
     Do sysid and control design for roll/pitch rate loops.
     """
@@ -304,7 +315,7 @@ def attitude_control_design(name, y, u, rolling_mean_window=100, do_plot=False, 
     u_debiased = u - u_bias
 
     G_ol, delay, k = attitude_sysid(
-            y_debiased, u_debiased, verbose)
+        y_debiased, u_debiased, verbose)
 
     K, G_ol_rate, G_cl_rate = attitude_rate_design(
         G_ol, K_guess, d_tc, verbose)
@@ -317,33 +328,42 @@ def attitude_control_design(name, y, u, rolling_mean_window=100, do_plot=False, 
         u.plot(label='input')
         plt.legend()
         plt.xlabel('t, sec')
+        plt.title(name + ' input')
+        plt.grid()
 
         plt.figure()
         y_debiased.plot(label='debiased output')
         y.plot(label='output')
         plt.legend()
         plt.xlabel('t, sec')
+        plt.title(name + ' output')
+        plt.grid()
 
         plt.figure()
-        plot_delay_and_gain_fit(k, delay, y, u)
-        y.plot()
+        plot_delay_and_gain_fit(k, delay, y_debiased, u_debiased)
+        plt.title(name + ' fit')
+        plt.grid()
 
         plt.figure()
         plot_attitude_rate_design(name, G_ol_rate, G_cl_rate)
 
     return K
 
-def control_design(raw_data, do_plot=False):
+def control_design(raw_data, do_plot=False, rolling_mean_window=100):
     """
     Design a PID controller from log file.
     """
     data, dt = setup_data(raw_data)
 
     roll_acc = data.ATT_RollRate.diff()/dt
-    K_roll = attitude_control_design('roll', roll_acc, data.ATTC_Roll, do_plot=do_plot)
+    K_roll = attitude_control_design(
+        'roll rate', roll_acc, data.ATTC_Roll,
+        rolling_mean_window=rolling_mean_window, do_plot=do_plot)
 
     pitch_acc = data.ATT_PitchRate.diff()/dt
-    K_pitch = attitude_control_design('pitch', pitch_acc, data.ATTC_Pitch, do_plot=do_plot)
+    K_pitch = attitude_control_design(
+        'pitch rate', pitch_acc, data.ATTC_Pitch,
+        rolling_mean_window=rolling_mean_window, do_plot=do_plot)
 
     return OrderedDict([
         ('MC_ROLLRATE_P', round(K_roll[0, 0], 3)),

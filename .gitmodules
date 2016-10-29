@@ -1,3 +1,0 @@
-[submodule "px4tools/pyulog"]
-	path = px4tools/pyulog
-	url = https://github.com/PX4/pyulog.git

@@ -145,10 +145,7 @@ def setup_package():
         entry_points = {
             'console_scripts': ['px42csv=px4tools.px42csv:main'],
         },
-        packages=find_packages(
-            # choosing to distribute tests
-            # exclude=['*.test']
-        ),
+        packages=find_packages(),
     )
 
     FULLVERSION, GIT_REVISION = get_version_info()

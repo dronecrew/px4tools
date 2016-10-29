@@ -57,4 +57,8 @@ def ulog2pandas(ulog_filename, verbose=False):
     print(log_name, 'data loaded')
     return df
 
+def time_range(data, t1, t2):
+    d1 = data[data.index >= t1]
+    return d1[d1.index <= t2]
+
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 : 

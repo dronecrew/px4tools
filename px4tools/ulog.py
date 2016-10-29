@@ -2,7 +2,17 @@
 ulog2pandas converter
 """
 
+import os
+import tempfile
+
+import pandas
+import pyulog
+
 def ulog2pandas(ulog_filename, verbose=False):
+    """
+    Convert ulog to pandas dataframe.
+    """
+
     pyulog.ulog2csv.convert_ulog2csv(
         ulog_filename, '', tempfile.tempdir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
@@ -46,3 +56,5 @@ def ulog2pandas(ulog_filename, verbose=False):
     df.index_name = 't, sec'
     print(log_name, 'data loaded')
     return df
+
+#  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 : 

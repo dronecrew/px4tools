@@ -4,6 +4,9 @@ ulog2pandas converter
 
 import os
 import tempfile
+import re
+import glob
+import numpy as np
 
 import pandas
 import pyulog
@@ -54,7 +57,8 @@ def ulog2pandas(ulog_filename, verbose=False):
 
     df.index = np.array(df.index/1.0e6, dtype=np.float32)
     df.index_name = 't, sec'
-    print(log_name, 'data loaded')
+    if verbose:
+        print(log_name, 'data loaded')
     return df
 
 def time_range(data, t1, t2):

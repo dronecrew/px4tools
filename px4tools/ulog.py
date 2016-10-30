@@ -6,7 +6,7 @@ import os
 import tempfile
 import re
 import glob
-import numpy as np
+import collections
 
 import pandas
 import pyulog
@@ -21,7 +21,8 @@ def ulog2pandas(ulog_filename, verbose=False):
     pyulog.ulog2csv.convert_ulog2csv(
         ulog_filename, '', tempfile.tempdir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
-    data = None
+    data = []
+    topic_names = []
     glob_expr = '{:s}*.csv'.format(
         os.path.join(tempfile.gettempdir(), log_name))
 
@@ -41,24 +42,22 @@ def ulog2pandas(ulog_filename, verbose=False):
 
         # read data
         data_new = pandas.read_csv(file, index_col=0)
+        data_new.index = pandas.to_datetime(data_new.index, unit='us')
         data_new.columns = [
-            topic_name + '_' + col_rename_pattern.sub(
+            'f_' + col_rename_pattern.sub(
                 lambda x: d_col_rename[x.group()], col)
             for col in data_new.columns
         ]
 
-        # append
-        if data is None:
-            data = data_new
-        else:
-            data = data.append(data_new)
+        data += [data_new]
+        topic_names += [topic_name]
 
-    # indexing
-    data.index = np.array(data.index/1.0e6, dtype=np.float32)
-    data.index_name = 't, sec'
     if verbose:
         print(log_name, 'data loaded')
-    return data
+
+    return collections.namedtuple(
+        'px4log',
+        ['t_' + tn for tn in topic_names])(*data)
 
 def time_range(data, time_start, time_end):
     """

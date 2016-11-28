@@ -16,7 +16,7 @@ import pandas
 import pyulog
 
 try:
-    import transforms3d as tf
+    import transforms3d.taitbryan as tf
 except ImportError as ex:
     print(ex)
     print('please install transforms3d: pip install transforms3d')

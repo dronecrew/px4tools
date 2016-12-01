@@ -12,7 +12,7 @@ import collections
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas
+import pandas as pd
 import pyulog
 
 try:
@@ -21,7 +21,92 @@ except ImportError as ex:
     print(ex)
     print('please install transforms3d: pip install transforms3d')
 
-def ulog2pandas(ulog_filename, verbose=False):
+class PX4DataFrame(object):
+
+    def __init__(self, dataframe):
+        self.df = dataframe
+        self.compute_data()
+        
+    def compute_data(self):
+        df = self.df
+        series = [df]
+        msg = 't_vehicle_attitude_0'
+        roll, pitch, yaw = self.series_quat2euler(
+            df.t_vehicle_attitude_0__f_q_0_,
+            df.t_vehicle_attitude_0__f_q_1_,
+            df.t_vehicle_attitude_0__f_q_2_,
+            df.t_vehicle_attitude_0__f_q_3_, msg)
+        series += [roll, pitch, yaw]
+
+        try:
+            msg_gt = 't_vehicle_attitude_groundtruth_0'
+            roll_gt, pitch_gt, yaw_gt = self.series_quat2euler(
+                df.t_vehicle_attitude_groundtruth_0__f_q_0_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_1_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_2_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
+
+            e_roll = pd.Series(roll - roll_gt, name=msg + '__f_roll_error')
+            e_pitch = pd.Series(pitch - pitch_gt, name=msg + '__f_pitch_error')
+            e_yaw = pd.Series(yaw - yaw_gt, name=msg + '__f_yaw_error')
+
+            series += [roll_gt, pitch_gt, yaw_gt, e_roll, e_pitch, e_yaw]
+        except Exception as ex:
+            print(ex)
+
+        self.df = pd.concat(series, axis=1)
+
+    def plot_euler(self):
+        self.df.t_vehicle_attitude_0__f_roll.plot(label='roll', style='r-')
+        self.df.t_vehicle_attitude_0__f_pitch.plot(label='pitch', style='g-')
+        self.df.t_vehicle_attitude_0__f_yaw.plot(label='yaw', style='b-')
+    
+    def plot_euler_groundtruth(self):
+        self.df.t_vehicle_attitude_groundtruth_0__f_roll.plot(label='roll true', style='r--')
+        self.df.t_vehicle_attitude_groundtruth_0__f_pitch.plot(label='pitch true', style='g--')
+        self.df.t_vehicle_attitude_groundtruth_0__f_yaw.plot(label='yaw true', style='b--')
+
+    def plot_euler_error(self):
+        self.df.t_vehicle_attitude_0__f_roll_error.plot(label='roll error', style='r-')
+        self.df.t_vehicle_attitude_0__f_pitch_error.plot(label='pitch error', style='g-')
+        self.df.t_vehicle_attitude_0__f_yaw_error.plot(label='yaw error', style='b-')
+   
+    @staticmethod
+    def series_quat2euler(q0, q1, q2, q3, msg_name):
+        yaw, pitch, roll = np.array([ tf.quat2euler([q0i, q1i, q2i, q3i]) for
+            q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3) ]).T
+        yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
+        pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
+        roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
+        return roll, pitch, yaw
+    
+    def __repr__(self):
+        return self.df.__repr__()
+
+
+class PX4MessageDict(dict):
+
+    def __init__(self, d):
+        super(PX4MessageDict, self).__init__(d)
+    
+    def resample(self, period):
+        msg_dict_rs = {}
+        for key in self.keys():
+            try:
+                msg_dict_rs[key] = self[key].resample(period).ffill().bfill()
+            except ValueError as ex:
+                print(key, ex)
+        return PX4MessageDict(msg_dict_rs)
+
+    def concat(self):
+        return PX4DataFrame(pd.concat([
+            pd.DataFrame(data=self[msg].values,
+                         index=self[msg].index,
+                         columns=[ msg + '__' + key for key in self[msg].columns ])
+            for msg in self.keys() ], axis=1))
+
+
+def read_ulog(ulog_filename, verbose=False):
     """
     Convert ulog to pandas dataframe.
     """
@@ -29,8 +114,7 @@ def ulog2pandas(ulog_filename, verbose=False):
     pyulog.ulog2csv.convert_ulog2csv(
         ulog_filename, '', tempfile.tempdir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
-    data = []
-    topic_names = []
+    data = {}
     glob_expr = '{:s}*.csv'.format(
         os.path.join(tempfile.gettempdir(), log_name))
 
@@ -49,121 +133,20 @@ def ulog2pandas(ulog_filename, verbose=False):
         topic_name = file_name.replace(log_name + '_', '')
 
         # read data
-        data_new = pandas.read_csv(file, index_col=0)
-        data_new.index = pandas.to_datetime(data_new.index, unit='us')
+        data_new = pd.read_csv(file, index_col=0)
+        data_new.index = pd.to_datetime(data_new.index, unit='us')
         data_new.columns = [
             'f_' + col_rename_pattern.sub(
                 lambda x: d_col_rename[x.group()], col)
             for col in data_new.columns
         ]
 
-        data += [data_new]
-        topic_names += [topic_name]
+        data['t_' + topic_name] = data_new
 
     if verbose:
         print(log_name, 'data loaded')
 
-    return collections.namedtuple(
-        'px4log',
-        ['t_' + tn for tn in topic_names])(*data)
+    return PX4MessageDict(data)
 
-def plot_euler_angles(df):
-    """
-    Plot euler angles
-    """
-
-    q0 = df.t_vehicle_attitude_0.f_q_0_
-    q1 = df.t_vehicle_attitude_0.f_q_1_
-    q2 = df.t_vehicle_attitude_0.f_q_2_
-    q3 = df.t_vehicle_attitude_0.f_q_3_
-
-    have_gt = False
-    try:
-        q0_gt = df.t_vehicle_attitude_groundtruth_0.f_q_0_
-        q1_gt = df.t_vehicle_attitude_groundtruth_0.f_q_1_
-        q2_gt = df.t_vehicle_attitude_groundtruth_0.f_q_2_
-        q3_gt = df.t_vehicle_attitude_groundtruth_0.f_q_3_
-        psi_gt, theta_gt, phi_gt = np.array([
-            tf.quat2euler([q0i, q1i, q2i, q3i]) for
-            q0i, q1i, q2i, q3i in zip(q0_gt, q1_gt, q2_gt, q3_gt)]).T
-        have_gt = True
-    except Exception:
-        pass
-
-    t = q0.index
-    psi, theta, phi = np.array([
-        tf.quat2euler([q0i, q1i, q2i, q3i]) for
-        q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
-
-    plt.plot(t, np.rad2deg(phi), label='roll', color='r')
-    if have_gt:
-        plt.plot(t, np.rad2deg(phi_gt), label='roll-true', color='r', linestyle='--')
-    plt.plot(t, np.rad2deg(theta), label='pitch', color='g')
-    if have_gt:
-        plt.plot(t, np.rad2deg(theta_gt), label='pitch-true', color='g', linestyle='--')
-    plt.plot(t, np.rad2deg(psi), label='yaw', color='b')
-    if have_gt:
-        plt.plot(t, np.rad2deg(psi_gt), label='yaw-true', color='b', linestyle='--')
-    plt.legend(ncol=3, loc='best')
-    plt.grid()
-
-def plot_quaternions(df):
-    """
-    Plot quaternions and groundtruth
-    """
-
-    q0 = df.t_vehicle_attitude_0.f_q_0_
-    q0.plot(color='r', label='q0')
-    try:
-        q0_gt = df.t_vehicle_attitude_groundtruth_0.f_q_0_
-        q0_gt.plot(color='r', style='--', label='q0-true')
-    except Exception:
-        pass
-
-    q1 = df.t_vehicle_attitude_0.f_q_1_
-    q1.plot(color='g', label='q1')
-    try:
-        q1_gt = df.t_vehicle_attitude_groundtruth_0.f_q_1_
-        q1_gt.plot(color='g', style='--', label='q1-true')
-    except Exception:
-        pass
-
-    q2 = df.t_vehicle_attitude_0.f_q_2_
-    q2.plot(color='b', label='q2')
-    try:
-        q2_gt = df.t_vehicle_attitude_groundtruth_0.f_q_2_
-        q2_gt.plot(color='b', style='--', label='q2-true')
-    except Exception:
-        pass
-
-    q3 = df.t_vehicle_attitude_0.f_q_3_
-    q3.plot(color='k', label='q3')
-    try:
-        q3_gt = df.t_vehicle_attitude_groundtruth_0.f_q_3_
-        q3_gt.plot(color='k', style='--', label='q3-true')
-    except Exception:
-        pass
-
-    plt.legend(ncol=4, loc='best')
-    plt.xlabel('time')
-    plt.ylabel('q')
-    plt.title('quaternions')
-    plt.grid()
-
-def plot_quaternion_normal(df):
-    """
-    plot the quaternion normal
-    """
-    q0 = df.t_vehicle_attitude_0.f_q_0_
-    q1 = df.t_vehicle_attitude_0.f_q_1_
-    q2 = df.t_vehicle_attitude_0.f_q_2_
-    q3 = df.t_vehicle_attitude_0.f_q_3_
-
-    plt.figure(figsize=(10, 10))
-    np.sqrt(q0**2 + q1**2 + q2**2 + q3**2).plot()
-    plt.title('quaternion norm')
-    plt.grid()
-    plt.xlabel('time')
-    plt.ylabel('magnitude')
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

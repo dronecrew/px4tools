@@ -30,11 +30,11 @@ FLIGHT_MODE_COLOR = {
     'AUTO_RTL': 'magenta',
     'ACRO' : 'yellow',
     'OFFBOARD' : 'black',
-    'STAB' : 'orange',
+    'STAB' : 'grey',
     'RATTITUDE' : 'brown',
     'AUTO_TAKEOFF' : 'lime',
     'AUTO_LAND' : 'violet',
-    'AUTO_FOLLOW_TARGET' : 'grey',
+    'AUTO_FOLLOW_TARGET' : 'orange',
 }
 
 

@@ -403,7 +403,7 @@ def background_flight_modes(data):
         t_min = mode_data.index[0]
         t_max = mode_data.index[mode_data.count() - 1]
         plt.axvspan(
-            t_min, t_max, alpha=0.3, color=mode_color,
+            t_min, t_max, alpha=0.1, color=mode_color,
             label=mode_name, zorder=0)
 
 def process_all(data_frame, project_lat_lon=True, lpe_health=True):

@@ -2,19 +2,40 @@
 Analysis of px4 logs
 """
 
-#pylint: disable=invalid-name, missing-docstring, no-member
+#pylint: disable=invalid-name, missing-docstring, no-member, broad-except
+#pylint: disable=wildcard-import, unused-wildcard-import
 
 from __future__ import print_function
 import pandas
 import numpy as np
-import six
 
 try:
-    from .mapping import *
+    from . import mapping
 except ImportError as e:
     print(e)
 
-FLIGHT_MODES = ['MANUAL', 'ALTCTL', 'POSCTL', 'AUTO_MISSION', 'AUTO_LOITER', 'AUTO_RTL', 'ACRO', 'OFFBOARD', 'STAB', 'RATTITUDE', 'AUTO_TAKEOFF', 'AUTO_LAND', 'AUTO_FOLLOW_TARGET', 'MAX']
+FLIGHT_MODES = [
+    'MANUAL', 'ALTCTL', 'POSCTL',
+    'AUTO_MISSION', 'AUTO_LOITER', 'AUTO_RTL',
+    'ACRO', 'OFFBOARD', 'STAB', 'RATTITUDE',
+    'AUTO_TAKEOFF', 'AUTO_LAND',
+    'AUTO_FOLLOW_TARGET']
+
+FLIGHT_MODE_COLOR = {
+    'MANUAL': 'white',
+    'ALTCTL': 'red',
+    'POSCTL' : 'green',
+    'AUTO_MISSION' : 'blue',
+    'AUTO_LOITER' : 'cyan',
+    'AUTO_RTL': 'magenta',
+    'ACRO' : 'yellow',
+    'OFFBOARD' : 'black',
+    'STAB' : 'orange',
+    'RATTITUDE' : 'brown',
+    'AUTO_TAKEOFF' : 'lime',
+    'AUTO_LAND' : 'violet',
+    'AUTO_FOLLOW_TARGET' : 'grey',
+}
 
 
 def filter_finite(data):
@@ -25,41 +46,48 @@ def octa_cox_data_to_ss(data):
     """
     Extracts state space model data from octa cox log.
     """
-    t = pandas.Series((data['TIME_StartTime'] -
+    t = pandas.Series((
+        data['TIME_StartTime'] -
         data['TIME_StartTime'].values[0])/1.0e6, name='t, sec')
-    xh = pandas.DataFrame(data[[
-        'LPOS_X', 'LPOS_Y', 'LPOS_Z',
-        'LPOS_VX', 'LPOS_VY', 'LPOS_VZ',
-        'ATT_Roll', 'ATT_Pitch', 'ATT_Yaw',
-        'ATT_RollRate', 'ATT_PitchRate', 'ATT_YawRate']].values,
-        columns=['X', 'Y', 'Z', 'V_X', 'V_Y', 'V_Z',
+    xh = pandas.DataFrame(
+        data[[
+            'LPOS_X', 'LPOS_Y', 'LPOS_Z',
+            'LPOS_VX', 'LPOS_VY', 'LPOS_VZ',
+            'ATT_Roll', 'ATT_Pitch', 'ATT_Yaw',
+            'ATT_RollRate', 'ATT_PitchRate', 'ATT_YawRate']].values,
+        columns=[
+            'X', 'Y', 'Z', 'V_X', 'V_Y', 'V_Z',
             'Phi', 'Theta', 'Psi',
             'P', 'Q', 'R'], index=t)
-    y = pandas.DataFrame(data[[
-        'GPS_Lat', 'GPS_Lon', 'GPS_Alt',
-        'SENS_BaroAlt',
-        'IMU1_AccX', 'IMU1_AccY', 'IMU1_AccZ',
-        'IMU1_GyroX', 'IMU1_GyroY', 'IMU1_GyroZ',
-        'IMU1_MagX', 'IMU1_MagY', 'IMU1_MagZ']].values,
-        columns=['GPS_Lat', 'GPS_Lon', 'GPS_Alt',
+    y = pandas.DataFrame(
+        data[[
+            'GPS_Lat', 'GPS_Lon', 'GPS_Alt',
+            'SENS_BaroAlt',
+            'IMU1_AccX', 'IMU1_AccY', 'IMU1_AccZ',
+            'IMU1_GyroX', 'IMU1_GyroY', 'IMU1_GyroZ',
+            'IMU1_MagX', 'IMU1_MagY', 'IMU1_MagZ']].values,
+        columns=[
+            'GPS_Lat', 'GPS_Lon', 'GPS_Alt',
             'Baro_Alt',
             'Acc_X', 'Acc_Y', 'Acc_Z',
             'Gyro_X', 'Gyro_Y', 'Gyro_Z',
             'Mag_X', 'Mag_Y', 'Mag_Z'], index=t)
-    u_raw = pandas.DataFrame(((
-        data[['OUT0_Out0', 'OUT0_Out1', 'OUT0_Out2',
-        'OUT0_Out3', 'OUT0_Out4', 'OUT0_Out5', 'OUT0_Out6',
-              'OUT0_Out7']] - 1000.0)/1000.0).values,
+    u_raw = pandas.DataFrame(
+        ((data[[
+            'OUT0_Out0', 'OUT0_Out1', 'OUT0_Out2',
+            'OUT0_Out3', 'OUT0_Out4', 'OUT0_Out5', 'OUT0_Out6',
+            'OUT0_Out7']] - 1000.0)/1000.0).values,
         columns=['1', '2', '3', '4', '5', '6', '7', '8'], index=t)
     C_mix_octo = np.array([
-                           [1, 1, 1, 1, 1, 1, 1, 1], # thrust
-                           [-1, 1, 1, -1, -1, 1, 1, -1], # roll
-                           [-1, -1, 1, 1, -1, -1, 1, 1], # pitch
-                           [1, -1, 1, -1, 1, -1, 1, -1], # yaw
-                          ])/8.0
-    u = pandas.DataFrame(C_mix_octo.dot(u_raw.T).T,
-            columns=['thrust', 'roll', 'pitch', 'yaw'],
-                         index=t)
+        [1, 1, 1, 1, 1, 1, 1, 1], # thrust
+        [-1, 1, 1, -1, -1, 1, 1, -1], # roll
+        [-1, -1, 1, 1, -1, -1, 1, 1], # pitch
+        [1, -1, 1, -1, 1, -1, 1, -1], # yaw
+        ])/8.0
+    u = pandas.DataFrame(
+        C_mix_octo.dot(u_raw.T).T,
+        columns=['thrust', 'roll', 'pitch', 'yaw'],
+        index=t)
     return t, xh, u, y, u_raw
 
 def alt_analysis(data, min_alt=None, max_alt=None):
@@ -94,11 +122,11 @@ def pos_analysis(data):
     """
     Analyze position.
     """
-    tmerc_map = create_map(data.GPS_Lon.values, data.GPS_Lat.values)
+    tmerc_map = mapping.create_map(data.GPS_Lon.values, data.GPS_Lat.values)
     gps_y, gps_x = tmerc_map(data.GPS_Lon.values, data.GPS_Lat.values)
     gpos_y, gpos_x = tmerc_map(data.GPOS_Lon.values, data.GPOS_Lat.values)
-    gpsp_y, gpsp_x = tmerc_map(data.GPSP_Lon[
-        np.isfinite(data.GPSP_Lon.values)].values,
+    gpsp_y, gpsp_x = tmerc_map(
+        data.GPSP_Lon[np.isfinite(data.GPSP_Lon.values)].values,
         data.GPSP_Lat[np.isfinite(data.GPSP_Lat.values)].values)
 
     import matplotlib.pyplot as plt
@@ -148,9 +176,11 @@ def set_time_series(data):
     """
     Set data to use time series
     """
-    t = pandas.Series((data['TIME_StartTime'] -
-        data['TIME_StartTime'].values[0])/1.0e6, name='t, sec')
-    data = pandas.DataFrame(data.values,
+    t = pandas.Series(
+        (data['TIME_StartTime'] -
+         data['TIME_StartTime'].values[0])/1.0e6, name='t, sec')
+    data = pandas.DataFrame(
+        data.values,
         columns=data.columns, index=t)
     return data
 
@@ -184,7 +214,6 @@ def plot_attitude_loops(data):
     plt.ylabel('yaw, deg')
     background_flight_modes(data)
 
-
 def plot_attitude_rate_loops(data):
     """
     Plot attitude rate control loops.
@@ -213,7 +242,6 @@ def plot_attitude_rate_loops(data):
     plt.ylabel('yaw, deg/s')
     plt.grid(True)
     background_flight_modes(data)
-
 
 def plot_velocity_loops(data):
     """
@@ -280,7 +308,6 @@ def plot_control_loops(data):
     plot_velocity_loops(data)
     plot_position_loops(data)
 
-
 def statistics(df, keys=None, plot=False):
     data = {}
     for key in keys:
@@ -295,7 +322,6 @@ def statistics(df, keys=None, plot=False):
             df_meas = 0
             dt = 0
             stddev = 0
-            var = 0
             mean = 0
             noise_power = 0
             variance = 0
@@ -311,25 +337,28 @@ def statistics(df, keys=None, plot=False):
             df[key].plot(alpha=0.5)
             plt.hlines(mean, df.index[0], df.index[-1], 'k')
             plt.hlines([mean + stddev, mean - stddev],
-                    df.index[0], df.index[-1], 'r')
+                       df.index[0], df.index[-1], 'r')
     return data
 
 def find_lpe_gains(df, printing=False):
     keys = ['GPS_X', 'GPS_Y', 'GPS_Z', 'GPS_VelN', 'GPS_VelE', 'GPS_VelD',
             'DIST_Distance',
-        'IMU1_AccX', 'IMU1_AccY', 'IMU1_AccZ', 'SENS_BaroAlt']
+            'IMU1_AccX', 'IMU1_AccY', 'IMU1_AccZ', 'SENS_BaroAlt']
     stats = statistics(df, keys)
 
     params = {
         'LPE_LDR_Z': stats['DIST_Distance_stddev'],
         'LPE_BAR_Z': stats['SENS_BaroAlt_stddev'],
-        'LPE_ACC_XY': np.array([stats['IMU1_AccX_stddev'],
+        'LPE_ACC_XY': np.array([
+            stats['IMU1_AccX_stddev'],
             stats['IMU1_AccX_noise_power']]).max(),
         'LPE_ACC_Z': stats['IMU1_AccZ_stddev'],
-        'LPE_GPS_XY': np.array([stats['GPS_X_stddev'],
+        'LPE_GPS_XY': np.array([
+            stats['GPS_X_stddev'],
             stats['GPS_Y_stddev']]).max(),
         'LPE_GPS_Z': stats['GPS_Z_stddev'],
-        'LPE_GPS_VXY':  np.array([stats['GPS_VelN_stddev'],
+        'LPE_GPS_VXY':  np.array([
+            stats['GPS_VelN_stddev'],
             stats['GPS_VelE_stddev']]).max(),
         'LPE_GPS_VZ':  stats['GPS_VelD_stddev']
     }
@@ -351,50 +380,57 @@ def all_new_sample(df):
 def find_meas_period(series):
     new = new_sample(series)
     return ((new.index[-1] - new.index[0])/
-                len(new))
+            len(new))
 
 def plot_modes(data):
     import matplotlib.pyplot as plt
     data.STAT_MainState.plot()
-    plt.ylim([0,13])
-    plt.yticks(range(0,13), FLIGHT_MODES)
+    plt.ylim([0, 13])
+    plt.yticks(range(0, 13), FLIGHT_MODES)
     background_flight_modes(data)
 
 def background_flight_modes(data):
     """
     Overlays a background color for each flight mode. Can be called to style a graph.
     """
-    modes = data.STAT_MainState.unique()
-    from matplotlib import colors
     import matplotlib.pyplot as plt
-    colors_ = list(six.iteritems(colors.cnames))
-    colors_.insert(0,'white')
-
+    modes = data.STAT_MainState.notnull().unique()
     for m in modes:
-        mode = data.STAT_MainState[data.STAT_MainState == m]
-        t_min = mode.index[0]
-        t_max = mode.index[mode.count() - 1]
-        plt.axvspan(t_min, t_max, alpha=0.3, color=colors_[int(m)][0], label=FLIGHT_MODES[int(m)])
+        mode_data = data.STAT_MainState[data.STAT_MainState == m]
+        mode_name = FLIGHT_MODES[m]
+        mode_color = FLIGHT_MODE_COLOR[mode_name]
+        t_min = mode_data.index[0]
+        t_max = mode_data.index[mode_data.count() - 1]
+        plt.axvspan(
+            t_min, t_max, alpha=0.3, color=mode_color,
+            label=mode_name, zorder=0)
 
+def process_all(data_frame, project_lat_lon=True, lpe_health=True):
+    data = process_data(data_frame)
+    if project_lat_lon:
+        data = mapping.project_lat_lon(data)
+    if lpe_health:
+        data = process_lpe_health(data)
+    return data
 
 def process_lpe_health(data):
     names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
     try:
         faults = np.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
-            for j in range(7)]
-            for i in range(len(data.index))])
+                            for j in range(7)]
+                           for i in range(len(data.EST2_fHealth.notnull().index))])
         for i in range(7):
-            data['fault_' + names[i]] =  pandas.Series(
-                data=faults[:,i], index=data.index, name='fault ' + names[i])
+            data['fault_' + names[i]] = pandas.Series(
+                data=faults[:, i], index=data.index, name='fault ' + names[i])
     except Exception as e:
         print(e)
     try:
         timeouts = np.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
-            for j in range(7)]
-            for i in range(len(data.index))])
+                              for j in range(7)]
+                             for i in range(len(data.EST0_fTOUt.notnull().index))])
         for i in range(7):
-            data['timeout_' + names[i]] =  pandas.Series(
-                data=timeouts[:,i], index=data.index, name='timeout ' + names[i])
+            data['timeout_' + names[i]] = pandas.Series(
+                data=timeouts[:, i], index=data.index, name='timeout ' + names[i])
     except Exception as e:
         print(e)
     return data

@@ -415,3 +415,60 @@ def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=Fal
         ('MC_PITCHRATE_I', round(K_pitchrate[1, 0], 3)),
         ('MC_PITCHRATE_D', round(K_pitchrate[2, 0], 3)),
     ]), locals()
+
+def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):
+    """
+    Design a PID controller from log file.
+    """
+    data, dt = setup_data(raw_data)
+    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+    K_guess_att = np.matrix([[1.0]]).T
+
+    roll_acc = data.ATT_RollRate.diff()/dt
+    K_rollrate, G_cl_rollrate = attitude_control_design(
+        'roll rate', roll_acc, data.ATTC_Roll,
+        rolling_mean_window=rolling_mean_window,
+        do_plot=do_plot, verbose=verbose, d_tc=d_tc)
+
+    tf_integrator = control.tf((1), (1, 0))
+
+    K_roll, G_roll, G_cl_roll = pid_design(
+        G_cl_rollrate*tf_integrator, K_guess_att, d_tc,
+        verbose=verbose, use_I=False, use_D=False)
+
+    if do_plot:
+        plt.figure()
+        plot_loops('roll', G_roll, G_cl_roll)
+
+    pitch_acc = data.ATT_PitchRate.diff()/dt
+    K_pitchrate, G_cl_pitchrate = attitude_control_design(
+        'pitch rate', pitch_acc, data.ATTC_Pitch,
+        rolling_mean_window=rolling_mean_window,
+        do_plot=do_plot, d_tc=d_tc, verbose=verbose)
+
+    K_pitch, G_pitch, G_cl_pitch = pid_design(
+        G_cl_pitchrate*tf_integrator, K_guess_att, d_tc,
+        verbose=verbose, use_I=False, use_D=False)
+
+    if do_plot:
+        plt.figure()
+        plot_loops('pitch', G_pitch, G_cl_pitch)
+
+    if verbose:
+        print('G_roll', G_roll)
+        print('G_cl_roll', G_cl_roll)
+        print('G_cl_rollrate', G_cl_rollrate)
+        print('G_pitch', G_pitch)
+        print('G_cl_pitch', G_cl_pitch)
+        print('G_cl_pitchrate', G_cl_pitchrate)
+
+    return OrderedDict([
+        ('MC_ROLL_P', round(K_roll[0, 0], 3)),
+        ('MC_ROLLRATE_P', round(K_rollrate[0, 0], 3)),
+        ('MC_ROLLRATE_I', round(K_rollrate[1, 0], 3)),
+        ('MC_ROLLRATE_D', round(K_rollrate[2, 0], 3)),
+        ('MC_PITCH_P', round(K_pitch[0, 0], 3)),
+        ('MC_PITCHRATE_P', round(K_pitchrate[0, 0], 3)),
+        ('MC_PITCHRATE_I', round(K_pitchrate[1, 0], 3)),
+        ('MC_PITCHRATE_D', round(K_pitchrate[2, 0], 3)),
+    ]), locals()

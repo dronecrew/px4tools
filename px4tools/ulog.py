@@ -87,6 +87,19 @@ class PX4DataFrame(object):
         plt.xlabel('t, sec')
         plt.ylabel('m')
 
+    def plot_local_position(self, plot_groundtruth):
+        plt.title('local position')
+        plt.plot(self.df.t_vehicle_local_position_0__f_x,
+                         self.df.t_vehicle_local_position_0__f_y, label='estimate')
+        if plot_groundtruth:
+            plt.plot(self.df.t_vehicle_local_position_groundtruth_0__f_x,
+                             self.df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
+                             label='true')
+        plt.grid()
+        plt.xlabel('N, m')
+        plt.ylabel('E, m')
+        plt.legend(loc='best')
+
     def plot_euler(self, plot_groundtruth):
         """
         Plot euler angles
@@ -201,6 +214,9 @@ standard deviation euler error:
 
         plt.figure()
         self.plot_euler_error()
+
+        plt.figure()
+        self.plot_local_position(plot_groundtruth=True)
 
         plt.figure()
         self.plot_velocity(plot_groundtruth=True)

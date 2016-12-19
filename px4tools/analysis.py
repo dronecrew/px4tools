@@ -117,6 +117,7 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     plt.xlabel('t, sec')
     plt.ylabel('altitude, m')
     background_flight_modes(data)
+    plt.legend(loc='best', ncol=3)
 
 def pos_analysis(data):
     """
@@ -394,7 +395,7 @@ def background_flight_modes(data):
     Overlays a background color for each flight mode. Can be called to style a graph.
     """
     import matplotlib.pyplot as plt
-    modes = data.STAT_MainState.notnull().unique()
+    modes = np.array(data.STAT_MainState.unique(), np.uint8)
     for m in modes:
         mode_data = data.STAT_MainState[data.STAT_MainState == m]
         mode_name = FLIGHT_MODES[m]

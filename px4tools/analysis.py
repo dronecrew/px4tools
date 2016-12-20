@@ -428,7 +428,7 @@ def process_lpe_health(data):
     try:
         timeouts = np.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
                               for j in range(7)]
-                             for i in range(len(data.EST0_fTOUt.notnull().index))])
+                             for i in range(len(data.EST0_fTOut.notnull().index))])
         for i in range(7):
             data['timeout_' + names[i]] = pandas.Series(
                 data=timeouts[:, i], index=data.index, name='timeout ' + names[i])

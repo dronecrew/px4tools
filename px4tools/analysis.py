@@ -8,6 +8,7 @@ Analysis of px4 logs
 from __future__ import print_function
 import pandas
 import numpy as np
+import matplotlib.pyplot as plt
 
 try:
     from . import mapping
@@ -438,7 +439,7 @@ def process_lpe_health(data):
 
 def plot_faults(data):
     try:
-        data.fault_sonar.plot(alpha=0.1)
+        data.fault_sonar.plot()
         data.fault_baro.plot()
         data.fault_gps.plot()
         data.fault_flow.plot()
@@ -447,5 +448,20 @@ def plot_faults(data):
         data.fault_lidar.plot()
     except AttributeError as e:
         print(e)
+    plt.gca().set_ylim(-1, 2)
 
-# vim: set et fenc= ff=unix sts=0 sw=4 ts=4 :
+def plot_timeouts(data):
+    try:
+        data.timeout_sonar.plot()
+        data.timeout_baro.plot()
+        data.timeout_gps.plot()
+        data.timeout_flow.plot()
+        data.timeout_vision.plot()
+        data.timeout_mocap.plot()
+        data.timeout_lidar.plot()
+    except AttributeError as e:
+        print(e)
+    plt.gca().set_ylim(-1, 2)
+
+
+# vim: set et fenc= ft=python ff=unix sts=0 sw=4 ts=4 :

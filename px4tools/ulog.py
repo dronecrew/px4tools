@@ -4,6 +4,8 @@ ulog2pandas converter
 
 #pylint: disable=no-member, invalid-name, broad-except, too-many-locals
 
+from __future__ import print_function
+
 import os
 import tempfile
 import re
@@ -20,19 +22,57 @@ except ImportError as ex:
     print(ex)
     print('please install transforms3d: pip install transforms3d')
 
+IEKF_STATES = {
+    0: 'q_nb_0',
+    1: 'q_nb_1',
+    2: 'q_nb_2',
+    3: 'q_nb_3',
+    4: 'vel_N',
+    5: 'vel_E',
+    6: 'vel_D',
+    7: 'gyro_bias_bx',
+    8: 'gyro_bias_by',
+    9: 'gyro_bias_bz',
+    10: 'accel_scale',
+    11: 'pos_N',
+    12: 'pos_E',
+    13: 'pos_D',
+    14: 'terrain_alt',
+    15: 'baro_bias',
+    16: 'wind_N',
+    17: 'wind_E',
+    18: 'wind_D',
+}
+
+IEKF_ERROR_STATES = {
+    0: 'rot_N',
+    1: 'rot_E',
+    2: 'rot_D',
+    3: 'vel_N',
+    4: 'vel_E',
+    5: 'vel_D',
+    6: 'gyro_bias_N',
+    7: 'gyro_bias_E',
+    8: 'gyro_bias_D',
+    9: 'accel_scale',
+    10: 'pos_N',
+    11: 'pos_E',
+    12: 'pos_D',
+    13: 'terrain_alt',
+    14: 'baro_bias',
+    15: 'wind_N',
+    16: 'wind_E',
+    17: 'wind_D',
+}
+
 class PX4DataFrame(object):
 
     """
     This is the main structure users use to interact with resampled log files
     """
 
-    def __init__(self, dataframe, t1=None, t2=None):
-        armed_index = dataframe.index[dataframe.t_vehicle_status_0__f_arming_state == 2]
-        if t1 is None:
-            t1 = armed_index[0]
-        if t2 is None:
-            t2 = armed_index[-1]
-        self.df = dataframe[t1:t2]
+    def __init__(self, dataframe):
+        self.df = dataframe
         self.compute_data()
 
     def compute_data(self):
@@ -87,14 +127,38 @@ class PX4DataFrame(object):
         plt.xlabel('t, sec')
         plt.ylabel('m')
 
+    def plot_iekf_std_dev(self):
+        """
+        Plot IEKF standard deviation.
+        """
+        for i in range(len(IEKF_ERROR_STATES)):
+            exec('np.sqrt(self.df.t_estimator_status_0__f_covariances_{:d}_).plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
+        plt.gca().set_ylim(0, 4)
+        plt.legend(ncol=3, loc='best')
+        plt.title('IEKF est std. dev.')
+        plt.grid()
+
+    def plot_iekf_states(self):
+        """
+        Plot IEKF states
+        """
+        for i in range(len(IEKF_STATES)):
+            exec('self.df.t_estimator_status_0__f_states_{:d}_.plot(label=IEKF_STATES[{:d}])'.format(i, i))
+        plt.legend(ncol=3, loc='best')
+        plt.title('IEKF states')
+        plt.grid()
+
     def plot_local_position(self, plot_groundtruth):
+        """
+        Plot local position
+        """
         plt.title('local position')
         plt.plot(self.df.t_vehicle_local_position_0__f_x,
-                         self.df.t_vehicle_local_position_0__f_y, label='estimate')
+                 self.df.t_vehicle_local_position_0__f_y, label='estimate')
         if plot_groundtruth:
             plt.plot(self.df.t_vehicle_local_position_groundtruth_0__f_x,
-                             self.df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
-                             label='true')
+                     self.df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
+                     label='true')
         plt.grid()
         plt.xlabel('N, m')
         plt.ylabel('E, m')
@@ -239,32 +303,35 @@ class PX4MessageDict(dict):
     def __init__(self, d):
         super(PX4MessageDict, self).__init__(d)
 
-    def resample(self, period):
+    def resample_and_concat(self, dt):
         """
-        @param period, '1L' (1 millisecond), '100L', (100 miiliseconds), @see pandas
+        Resample at dt and concatenate all data frames.
         """
-        msg_dict_rs = {}
-        for key in self.keys():
-            try:
-                msg_dict_rs[key] = self[key].resample(period).ffill().bfill()
-            except ValueError as ex:
-                print(key, ex)
-        return PX4MessageDict(msg_dict_rs)
-
-    def concat(self):
-        """
-        If all of the dataframes have the same inde (through resample method),
-        this concatentates all of the dataframes into one pandas DataFrame object.
-        """
-        data = PX4DataFrame(pd.concat([
-            pd.DataFrame(data=self[msg].values,
-                         index=self[msg].index,
-                         columns=[msg + '__' + key for key in self[msg].columns])
-            for msg in self.keys()], axis=1))
-        data.df.index = [
-            (data.df.index[i] - data.df.index[0]).total_seconds()
-            for i in range(len(data.df.index))]
-        return data
+        act_ctrl = self['actuator_controls_0_0']
+        # build empty data frame with the index we want
+        m = pd.DataFrame(
+            data=np.arange(
+                int(1e3*act_ctrl.timestamp.values[0]),
+                int(1e3*act_ctrl.timestamp.values[-1]),
+                int(1e9*dt)), columns=['timestamp'])
+        # populate dataframe with other data frames merging
+        # as of our defined index
+        for topic in sorted(self.keys()):
+            new_cols = {}
+            for col in self[topic].columns:
+                if col == 'timestamp':
+                    new_cols[col] = col
+                else:
+                    new_cols[col] = 't_' + topic + '__f_' + col
+            df = self[topic].rename(columns=new_cols)
+            # estimator status uses nano-seconds, the
+            # rest use micro-seconds
+            if topic != 'estimator_status_0':
+                df.timestamp = np.array(df.timestamp*1e3, dtype=np.int)
+            m = pd.merge_asof(m, df, on='timestamp')
+            m = m.drop_duplicates()
+        m.index = pd.Index(m.timestamp/1e9, name='time, sec')
+        return PX4DataFrame(m)
 
 def read_ulog(ulog_filename, verbose=False):
     """
@@ -286,27 +353,25 @@ def read_ulog(ulog_filename, verbose=False):
     col_rename_pattern = re.compile(
         r'(' + '|'.join([re.escape(key) for key in d_col_rename.keys()]) + r')')
 
-    for file in sorted(glob.glob(glob_expr)):
+    for filename in sorted(glob.glob(glob_expr)):
         if verbose:
-            print('processing', file)
-        file_name = os.path.splitext(os.path.basename(file))[0]
+            print('processing', filename)
+        file_name = os.path.splitext(os.path.basename(filename))[0]
         topic_name = file_name.replace(log_name + '_', '')
 
         # read data
-        data_new = pd.read_csv(file, index_col=0)
-        data_new.index = pd.to_datetime(data_new.index, unit='us')
+        data_new = pd.read_csv(filename)
         data_new.columns = [
-            'f_' + col_rename_pattern.sub(
+            col_rename_pattern.sub(
                 lambda x: d_col_rename[x.group()], col)
             for col in data_new.columns
         ]
 
-        data['t_' + topic_name] = data_new
+        data[topic_name] = data_new
 
     if verbose:
         print(log_name, 'data loaded')
 
     return PX4MessageDict(data)
-
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

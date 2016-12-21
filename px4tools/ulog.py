@@ -65,198 +65,185 @@ IEKF_ERROR_STATES = {
     17: 'wind_D',
 }
 
-class PX4DataFrame(object):
-
+def compute_data(df):
     """
-    This is the main structure users use to interact with resampled log files
+    This computes useful data from analysis from the raw log data,
+    converting quaternions to euler angles etc.
     """
+    series = [df]
+    msg = 't_vehicle_attitude_0'
+    roll, pitch, yaw = series_quat2euler(
+        df.t_vehicle_attitude_0__f_q_0_,
+        df.t_vehicle_attitude_0__f_q_1_,
+        df.t_vehicle_attitude_0__f_q_2_,
+        df.t_vehicle_attitude_0__f_q_3_, msg)
+    series += [roll, pitch, yaw]
 
-    def __init__(self, dataframe):
-        self.df = dataframe
-        self.compute_data()
+    try:
+        msg_gt = 't_vehicle_attitude_groundtruth_0'
+        roll_gt, pitch_gt, yaw_gt = series_quat2euler(
+            df.t_vehicle_attitude_groundtruth_0__f_q_0_,
+            df.t_vehicle_attitude_groundtruth_0__f_q_1_,
+            df.t_vehicle_attitude_groundtruth_0__f_q_2_,
+            df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
 
-    def compute_data(self):
-        """
-        This computes useful data from analysis from the raw log data,
-        converting quaternions to euler angles etc.
-        """
-        df = self.df
-        series = [df]
-        msg = 't_vehicle_attitude_0'
-        roll, pitch, yaw = self.series_quat2euler(
-            df.t_vehicle_attitude_0__f_q_0_,
-            df.t_vehicle_attitude_0__f_q_1_,
-            df.t_vehicle_attitude_0__f_q_2_,
-            df.t_vehicle_attitude_0__f_q_3_, msg)
-        series += [roll, pitch, yaw]
+        e_roll = pd.Series(angle_wrap(roll - roll_gt), name=msg + '__f_roll_error')
+        e_pitch = pd.Series(angle_wrap(pitch - pitch_gt), name=msg + '__f_pitch_error')
+        e_yaw = pd.Series(angle_wrap(yaw - yaw_gt), name=msg + '__f_yaw_error')
 
-        try:
-            msg_gt = 't_vehicle_attitude_groundtruth_0'
-            roll_gt, pitch_gt, yaw_gt = self.series_quat2euler(
-                df.t_vehicle_attitude_groundtruth_0__f_q_0_,
-                df.t_vehicle_attitude_groundtruth_0__f_q_1_,
-                df.t_vehicle_attitude_groundtruth_0__f_q_2_,
-                df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
+        series += [roll_gt, pitch_gt, yaw_gt, e_roll, e_pitch, e_yaw]
+    except Exception as ex:
+        print(ex)
 
-            e_roll = pd.Series(self.angle_wrap(roll - roll_gt), name=msg + '__f_roll_error')
-            e_pitch = pd.Series(self.angle_wrap(pitch - pitch_gt), name=msg + '__f_pitch_error')
-            e_yaw = pd.Series(self.angle_wrap(yaw - yaw_gt), name=msg + '__f_yaw_error')
+    return pd.concat(series, axis=1)
 
-            series += [roll_gt, pitch_gt, yaw_gt, e_roll, e_pitch, e_yaw]
-        except Exception as ex:
-            print(ex)
+def angle_wrap(x):
+    """wrap angle betwe -pi and pi"""
+    return np.arcsin(np.sin(x))
 
-        self.df = pd.concat(series, axis=1)
+def plot_altitude(df, plot_groundtruth=False):
+    """
+    Plot altitude
+    """
+    plt.title('altitude')
+    df.t_vehicle_global_position_0__f_alt.plot(label='alt', style='b-')
+    if plot_groundtruth:
+        df.t_vehicle_global_position_groundtruth_0__f_alt.plot(
+            label='alt-true', style='b--')
+    plt.grid()
+    plt.legend(loc='best', ncol=3)
+    plt.xlabel('t, sec')
+    plt.ylabel('m')
 
-    @staticmethod
-    def angle_wrap(x):
-        """wrap angle betwe -pi and pi"""
-        return np.arcsin(np.sin(x))
+def plot_iekf_std_dev(df):
+    """
+    Plot IEKF standard deviation.
+    """
+    for i in range(len(IEKF_ERROR_STATES)):
+        exec('np.sqrt(df.t_estimator_status_0__f_covariances_{:d}_).plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
+    plt.gca().set_ylim(0, 4)
+    plt.legend(ncol=3, loc='best')
+    plt.title('IEKF est std. dev.')
+    plt.grid()
 
-    def plot_altitude(self, plot_groundtruth):
-        """
-        Plot altitude
-        """
-        plt.title('altitude')
-        self.df.t_vehicle_global_position_0__f_alt.plot(label='alt', style='b-')
-        if plot_groundtruth:
-            self.df.t_vehicle_global_position_groundtruth_0__f_alt.plot(
-                label='alt-true', style='b--')
-        plt.grid()
-        plt.legend(loc='best', ncol=3)
-        plt.xlabel('t, sec')
-        plt.ylabel('m')
+def plot_iekf_states(df):
+    """
+    Plot IEKF states
+    """
+    for i in range(len(IEKF_STATES)):
+        exec('df.t_estimator_status_0__f_states_{:d}_.plot(label=IEKF_STATES[{:d}])'.format(i, i))
+    plt.legend(ncol=3, loc='best')
+    plt.title('IEKF states')
+    plt.grid()
 
-    def plot_iekf_std_dev(self):
-        """
-        Plot IEKF standard deviation.
-        """
-        for i in range(len(IEKF_ERROR_STATES)):
-            exec('np.sqrt(self.df.t_estimator_status_0__f_covariances_{:d}_).plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
-        plt.gca().set_ylim(0, 4)
-        plt.legend(ncol=3, loc='best')
-        plt.title('IEKF est std. dev.')
-        plt.grid()
+def plot_local_position(df, plot_groundtruth=False):
+    """
+    Plot local position
+    """
+    plt.title('local position')
+    plt.plot(df.t_vehicle_local_position_0__f_x,
+             df.t_vehicle_local_position_0__f_y, label='estimate')
+    if plot_groundtruth:
+        plt.plot(df.t_vehicle_local_position_groundtruth_0__f_x,
+                 df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
+                 label='true')
+    plt.grid()
+    plt.xlabel('N, m')
+    plt.ylabel('E, m')
+    plt.legend(loc='best')
 
-    def plot_iekf_states(self):
-        """
-        Plot IEKF states
-        """
-        for i in range(len(IEKF_STATES)):
-            exec('self.df.t_estimator_status_0__f_states_{:d}_.plot(label=IEKF_STATES[{:d}])'.format(i, i))
-        plt.legend(ncol=3, loc='best')
-        plt.title('IEKF states')
-        plt.grid()
+def plot_euler(df, plot_groundtruth=False):
+    """
+    Plot euler angles
+    """
+    plt.title('euler angles')
+    np.rad2deg(df.t_vehicle_attitude_0__f_roll).plot(label='roll', style='r-')
+    if plot_groundtruth:
+        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_roll).plot(
+            label='roll true', style='r--')
+    np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(label='pitch', style='g-')
+    if plot_groundtruth:
+        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_pitch).plot(
+            label='pitch true', style='g--')
+    np.rad2deg(df.t_vehicle_attitude_0__f_yaw).plot(label='yaw', style='b-')
+    if plot_groundtruth:
+        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_yaw).plot(
+            label='yaw true', style='b--')
+    plt.grid()
+    plt.legend(loc='best', ncol=3)
+    plt.xlabel('t, sec')
+    plt.ylabel('deg')
 
-    def plot_local_position(self, plot_groundtruth):
-        """
-        Plot local position
-        """
-        plt.title('local position')
-        plt.plot(self.df.t_vehicle_local_position_0__f_x,
-                 self.df.t_vehicle_local_position_0__f_y, label='estimate')
-        if plot_groundtruth:
-            plt.plot(self.df.t_vehicle_local_position_groundtruth_0__f_x,
-                     self.df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
-                     label='true')
-        plt.grid()
-        plt.xlabel('N, m')
-        plt.ylabel('E, m')
-        plt.legend(loc='best')
+def plot_euler_error(df):
+    """
+    Plot error between euler angles and ground truth
+    """
+    plt.title('euler angle errors')
+    np.rad2deg(df.t_vehicle_attitude_0__f_roll_error).plot(
+        label='roll error', style='r-')
+    np.rad2deg(df.t_vehicle_attitude_0__f_pitch_error).plot(
+        label='pitch error', style='g-')
+    np.rad2deg(df.t_vehicle_attitude_0__f_yaw_error).plot(
+        label='yaw error', style='b-')
+    plt.grid()
+    plt.legend(loc='best', ncol=3)
+    plt.xlabel('t, sec')
+    plt.ylabel('deg')
 
-    def plot_euler(self, plot_groundtruth):
-        """
-        Plot euler angles
-        """
-        plt.title('euler angles')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_roll).plot(label='roll', style='r-')
-        if plot_groundtruth:
-            np.rad2deg(self.df.t_vehicle_attitude_groundtruth_0__f_roll).plot(
-                label='roll true', style='r--')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_pitch).plot(label='pitch', style='g-')
-        if plot_groundtruth:
-            np.rad2deg(self.df.t_vehicle_attitude_groundtruth_0__f_pitch).plot(
-                label='pitch true', style='g--')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_yaw).plot(label='yaw', style='b-')
-        if plot_groundtruth:
-            np.rad2deg(self.df.t_vehicle_attitude_groundtruth_0__f_yaw).plot(
-                label='yaw true', style='b--')
-        plt.grid()
-        plt.legend(loc='best', ncol=3)
-        plt.xlabel('t, sec')
-        plt.ylabel('deg')
+def plot_velocity(df, plot_groundtruth=False):
+    """
+    Plot velocity
+    """
+    plt.title('velocity')
+    df.t_vehicle_global_position_0__f_vel_n.plot(label='vel_n', style='r-')
+    if plot_groundtruth:
+        df.t_vehicle_global_position_groundtruth_0__f_vel_n.plot(
+            label='vel_n-true', style='r--')
+    df.t_vehicle_global_position_0__f_vel_e.plot(
+        label='vel_e', style='g-')
+    if plot_groundtruth:
+        df.t_vehicle_global_position_groundtruth_0__f_vel_e.plot(
+            label='vel_e-true', style='g--')
+    df.t_vehicle_global_position_0__f_vel_d.plot(
+        label='vel_d', style='b-')
+    if plot_groundtruth:
+        df.t_vehicle_global_position_groundtruth_0__f_vel_d.plot(
+            label='vel_d-true', style='b--')
+    plt.grid()
+    plt.legend(loc='best', ncol=3)
+    plt.xlabel('t, sec')
+    plt.ylabel('m/s')
 
-    def plot_euler_error(self):
-        """
-        Plot error between euler angles and ground truth
-        """
-        plt.title('euler angle errors')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_roll_error).plot(
-            label='roll error', style='r-')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_pitch_error).plot(
-            label='pitch error', style='g-')
-        np.rad2deg(self.df.t_vehicle_attitude_0__f_yaw_error).plot(
-            label='yaw error', style='b-')
-        plt.grid()
-        plt.legend(loc='best', ncol=3)
-        plt.xlabel('t, sec')
-        plt.ylabel('deg')
+def series_quat2euler(q0, q1, q2, q3, msg_name):
+    """
+    Given pandas series q0-q4, compute series roll, pitch, yaw
+    """
+    yaw, pitch, roll = np.array([
+        tf.quat2euler([q0i, q1i, q2i, q3i]) for
+        q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
+    yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
+    pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
+    roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
+    return roll, pitch, yaw
 
-    def plot_velocity(self, plot_groundtruth):
-        """
-        Plot velocity
-        """
-        plt.title('velocity')
-        self.df.t_vehicle_global_position_0__f_vel_n.plot(label='vel_n', style='r-')
-        if plot_groundtruth:
-            self.df.t_vehicle_global_position_groundtruth_0__f_vel_n.plot(
-                label='vel_n-true', style='r--')
-        self.df.t_vehicle_global_position_0__f_vel_e.plot(
-            label='vel_e', style='g-')
-        if plot_groundtruth:
-            self.df.t_vehicle_global_position_groundtruth_0__f_vel_e.plot(
-                label='vel_e-true', style='g--')
-        self.df.t_vehicle_global_position_0__f_vel_d.plot(
-            label='vel_d', style='b-')
-        if plot_groundtruth:
-            self.df.t_vehicle_global_position_groundtruth_0__f_vel_d.plot(
-                label='vel_d-true', style='b--')
-        plt.grid()
-        plt.legend(loc='best', ncol=3)
-        plt.xlabel('t, sec')
-        plt.ylabel('m/s')
-
-    @staticmethod
-    def series_quat2euler(q0, q1, q2, q3, msg_name):
-        """
-        Given pandas series q0-q4, compute series roll, pitch, yaw
-        """
-        yaw, pitch, roll = np.array([
-            tf.quat2euler([q0i, q1i, q2i, q3i]) for
-            q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
-        yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
-        pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
-        roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
-        return roll, pitch, yaw
-
-    def estimator_analysis(self):
-        """
-        Evaluates estimator performance
-        """
-        #pylint: disable=unused-variable
-        roll_error_mean = np.rad2deg(
-            self.df.t_vehicle_attitude_0__f_roll_error.mean())
-        pitch_error_mean = np.rad2deg(
-            self.df.t_vehicle_attitude_0__f_pitch_error.mean())
-        yaw_error_mean = np.rad2deg(
-            self.df.t_vehicle_attitude_0__f_yaw_error.mean())
-        roll_error_std = np.rad2deg(np.sqrt(
-            self.df.t_vehicle_attitude_0__f_roll_error.var()))
-        pitch_error_std = np.rad2deg(np.sqrt(
-            self.df.t_vehicle_attitude_0__f_pitch_error.var()))
-        yaw_error_std = np.rad2deg(np.sqrt(
-            self.df.t_vehicle_attitude_0__f_yaw_error.var()))
-        print('''
+def estimator_analysis(df):
+    """
+    Evaluates estimator performance
+    """
+    #pylint: disable=unused-variable
+    roll_error_mean = np.rad2deg(
+        df.t_vehicle_attitude_0__f_roll_error.mean())
+    pitch_error_mean = np.rad2deg(
+        df.t_vehicle_attitude_0__f_pitch_error.mean())
+    yaw_error_mean = np.rad2deg(
+        df.t_vehicle_attitude_0__f_yaw_error.mean())
+    roll_error_std = np.rad2deg(np.sqrt(
+        df.t_vehicle_attitude_0__f_roll_error.var()))
+    pitch_error_std = np.rad2deg(np.sqrt(
+        df.t_vehicle_attitude_0__f_pitch_error.var()))
+    yaw_error_std = np.rad2deg(np.sqrt(
+        df.t_vehicle_attitude_0__f_yaw_error.var()))
+    print('''
 ESTIMATOR ANALYSIS
 -----------------------------------
 mean euler error:
@@ -270,26 +257,20 @@ standard deviation euler error:
 \t{yaw_error_std:10f}\t deg
 '''.format(**locals()))
 
-        plt.figure()
-        self.plot_altitude(plot_groundtruth=True)
+    plt.figure()
+    plot_altitude(df, plot_groundtruth=True)
 
-        plt.figure()
-        self.plot_euler(plot_groundtruth=True)
+    plt.figure()
+    plot_euler(df, plot_groundtruth=True)
 
-        plt.figure()
-        self.plot_euler_error()
+    plt.figure()
+    plot_euler_error(df)
 
-        plt.figure()
-        self.plot_local_position(plot_groundtruth=True)
+    plt.figure()
+    plot_local_position(df, plot_groundtruth=True)
 
-        plt.figure()
-        self.plot_velocity(plot_groundtruth=True)
-
-    def __repr__(self):
-        """
-        To make display work
-        """
-        return self.df.__repr__()
+    plt.figure()
+    plot_velocity(df, plot_groundtruth=True)
 
 
 class PX4MessageDict(dict):
@@ -331,7 +312,11 @@ class PX4MessageDict(dict):
             m = pd.merge_asof(m, df, on='timestamp')
             m = m.drop_duplicates()
         m.index = pd.Index(m.timestamp/1e9, name='time, sec')
-        return PX4DataFrame(m)
+        try:
+            m = compute_data(m)
+        except Exception as e:
+            print("failed to compute extra data")
+        return m
 
 def read_ulog(ulog_filename, verbose=False):
     """

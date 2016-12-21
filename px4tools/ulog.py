@@ -10,6 +10,7 @@ import os
 import tempfile
 import re
 import glob
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -318,17 +319,18 @@ class PX4MessageDict(dict):
             print("failed to compute extra data")
         return m
 
-def read_ulog(ulog_filename, verbose=False):
+def read_ulog(ulog_filename, messages='', verbose=False):
     """
     Convert ulog to pandas dataframe.
     """
 
+    tmp_dir = tempfile.mkdtemp()
     pyulog.ulog2csv.convert_ulog2csv(
-        ulog_filename, '', tempfile.tempdir, ',')
+        ulog_filename, messages, tmp_dir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
     data = {}
     glob_expr = '{:s}*.csv'.format(
-        os.path.join(tempfile.gettempdir(), log_name))
+        os.path.join(tmp_dir, log_name))
 
     # column naming
     d_col_rename = {
@@ -357,6 +359,7 @@ def read_ulog(ulog_filename, verbose=False):
     if verbose:
         print(log_name, 'data loaded')
 
+    shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

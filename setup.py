@@ -9,7 +9,7 @@ from __future__ import print_function
 
 MAJOR = 0
 MINOR = 6
-MICRO = 4
+MICRO = 5
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -139,7 +139,7 @@ def setup_package():
         license='BSD 3-Clause',
         classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-        install_requires=['scipy', 'numpy', 'pandas >= 0.19.1', 'transforms3d'],
+        install_requires=['scipy', 'numpy', 'pandas >= 0.19.1', 'transforms3d', 'pyulog'],
         tests_require=['nose'],
         test_suite='nose.collector',
         entry_points = {

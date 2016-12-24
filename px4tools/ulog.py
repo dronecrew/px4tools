@@ -16,12 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyulog
-
-try:
-    import transforms3d.taitbryan as tf
-except ImportError as ex:
-    print(ex)
-    print('please install transforms3d: pip install transforms3d')
+import transforms3d.taitbryan as tf
 
 IEKF_STATES = {
     0: 'q_nb_0',

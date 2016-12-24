@@ -317,11 +317,7 @@ class PX4MessageDict(dict):
             m = pd.merge_asof(m, df, on='timestamp')
             m = m.drop_duplicates()
         m.index = pd.Index(m.timestamp/1e9, name='time, sec')
-        try:
-            m = compute_data(m)
-        except Exception as e:
-            print("failed to compute extra data")
-        return m
+        return compute_data(m)
 
 def read_ulog(ulog_filename, messages='', verbose=False):
     """

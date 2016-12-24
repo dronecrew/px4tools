@@ -227,24 +227,27 @@ def series_quat2euler(q0, q1, q2, q3, msg_name):
     roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
     return roll, pitch, yaw
 
-def estimator_analysis(df):
+def estimator_analysis(df, plot=True):
     """
     Evaluates estimator performance
     """
     #pylint: disable=unused-variable
-    roll_error_mean = np.rad2deg(
-        df.t_vehicle_attitude_0__f_roll_error.mean())
-    pitch_error_mean = np.rad2deg(
-        df.t_vehicle_attitude_0__f_pitch_error.mean())
-    yaw_error_mean = np.rad2deg(
-        df.t_vehicle_attitude_0__f_yaw_error.mean())
-    roll_error_std = np.rad2deg(np.sqrt(
-        df.t_vehicle_attitude_0__f_roll_error.var()))
-    pitch_error_std = np.rad2deg(np.sqrt(
-        df.t_vehicle_attitude_0__f_pitch_error.var()))
-    yaw_error_std = np.rad2deg(np.sqrt(
-        df.t_vehicle_attitude_0__f_yaw_error.var()))
-    print('''
+    data = {
+        'roll_error_mean' : np.rad2deg(
+            df.t_vehicle_attitude_0__f_roll_error.mean()),
+        'pitch_error_mean' : np.rad2deg(
+            df.t_vehicle_attitude_0__f_pitch_error.mean()),
+        'yaw_error_mean' : np.rad2deg(
+            df.t_vehicle_attitude_0__f_yaw_error.mean()),
+        'roll_error_std' : np.rad2deg(np.sqrt(
+            df.t_vehicle_attitude_0__f_roll_error.var())),
+        'pitch_error_std' : np.rad2deg(np.sqrt(
+            df.t_vehicle_attitude_0__f_pitch_error.var())),
+        'yaw_error_std' : np.rad2deg(np.sqrt(
+            df.t_vehicle_attitude_0__f_yaw_error.var())),
+    }
+    if plot:
+        print('''
 ESTIMATOR ANALYSIS
 -----------------------------------
 mean euler error:
@@ -256,23 +259,24 @@ standard deviation euler error:
 \t{roll_error_std:10f}\t deg
 \t{pitch_error_std:10f}\t deg
 \t{yaw_error_std:10f}\t deg
-'''.format(**locals()))
+'''.format(**data))
 
-    plt.figure()
-    plot_altitude(df, plot_groundtruth=True)
+        plt.figure()
+        plot_altitude(df, plot_groundtruth=True)
 
-    plt.figure()
-    plot_euler(df, plot_groundtruth=True)
+        plt.figure()
+        plot_euler(df, plot_groundtruth=True)
 
-    plt.figure()
-    plot_euler_error(df)
+        plt.figure()
+        plot_euler_error(df)
 
-    plt.figure()
-    plot_local_position(df, plot_groundtruth=True)
+        plt.figure()
+        plot_local_position(df, plot_groundtruth=True)
 
-    plt.figure()
-    plot_velocity(df, plot_groundtruth=True)
+        plt.figure()
+        plot_velocity(df, plot_groundtruth=True)
 
+    return data
 
 class PX4MessageDict(dict):
 

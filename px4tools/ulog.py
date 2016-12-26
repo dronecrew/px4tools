@@ -288,29 +288,27 @@ class PX4MessageDict(dict):
         """
         Resample at dt and concatenate all data frames.
         """
-        act_ctrl = self['actuator_controls_0_0']
+        sensor_comb = self['sensor_combined_0']
         # build empty data frame with the index we want
         m = pd.DataFrame(
             data=np.arange(
-                int(1e3*act_ctrl.timestamp.values[0]),
-                int(1e3*act_ctrl.timestamp.values[-1]),
+                int(1e3*sensor_comb.timestamp.values[0]),
+                int(1e3*sensor_comb.timestamp.values[-1]),
                 int(1e9*dt)), columns=['timestamp'])
         # populate dataframe with other data frames merging
         # as of our defined index
         for topic in sorted(self.keys()):
             new_cols = {}
+            print('merging {:s} as of timestamp'.format(topic))
             for col in self[topic].columns:
                 if col == 'timestamp':
                     new_cols[col] = col
                 else:
                     new_cols[col] = 't_' + topic + '__f_' + col
             df = self[topic].rename(columns=new_cols)
-            # estimator status uses nano-seconds, the
-            # rest use micro-seconds
-            if topic != 'estimator_status_0':
-                df.timestamp = np.array(df.timestamp*1e3, dtype=np.int)
+            df.timestamp = np.array(df.timestamp*1e3, dtype=np.int)
+            df = df.sort_values('timestamp')
             m = pd.merge_asof(m, df, on='timestamp')
-            m = m.drop_duplicates()
         m.index = pd.Index(m.timestamp/1e9, name='time, sec')
         return compute_data(m)
 

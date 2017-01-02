@@ -382,10 +382,10 @@ def plot_allan_variance(data, dt, plot=True):
         data_vals += [std]
         dt_vals += [(i*dt)]
 
-    p = np.polyfit(np.log10(dt_vals), np.log10(data_vals), 4)
+    p = np.polynomial.Polynomial.fit(np.log10(dt_vals), np.log10(data_vals), 5)
 
     try:
-        noise_power = float(10**np.polyval(p, 0.0))
+        noise_power = float(10**p(0))
     except Exception as e:
         print(e)
         noise_power = 0.0
@@ -408,6 +408,7 @@ def plot_autocorrelation(data, dt, plot=True):
     indicates that the random walk process is not significant
     and is over powered by wide-band noise.
     """
+    data.index = pd.TimedeltaIndex(data.index, unit='s')
     data_vals = []
     dt_vals = []
     lag_n = min(int(len(data.index)/2), int(1000/dt))
@@ -417,23 +418,22 @@ def plot_autocorrelation(data, dt, plot=True):
         dt_vals += [i*dt]
 
     # polynomial fits
-    p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 4)
-    p = p/p(0)
+    p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 5)
 
     if plot:
         x = np.linspace(0, lag_max)
-        y = p(x)
+        y = p(x)/p(0)
         plt.title('normalized autocorrelation')
-        #plt.plot(dt_vals, data_vals/p(0), '.', alpha=0.01)
+        plt.plot(dt_vals[1:], data_vals[1:]/p(0), '.', alpha=0.02, label='raw')
         plt.xlabel('lag, sec')
         plt.ylabel('corr/ corr(0)')
-        plt.plot(x, y, linewidth=2)
+        plt.plot(x, y, linewidth=2, label='poly fit for intersection')
         plt.hlines(1/np.e, 0, lag_max, linewidth=2)
         plt.grid(True)
 
     # grab first positive, real root
     correlation_time = 0.0
-    for root in sorted((p - 1/np.e).roots()):
+    for root in sorted((p/p(0) - 1/np.e).roots()):
         if np.isreal(root) and root > 0 and root < lag_max:
             correlation_time = float(np.real(root))
             break

@@ -422,15 +422,18 @@ def plot_autocorrelation(data, plot=True):
         data_vals += [data.autocorr(i)]
         dt_vals += [i*dt]
 
-    # normalize by max
-    data_vals /= np.max(data_vals)
-
     # polynomial fits
     p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 5)
 
+    # normalize by max of fit polynomial
+    x = np.linspace(0, lag_max)
+    y = p(x)
+    y_max = np.max(np.abs(y))
+    data_vals /= y_max
+    y /= y_max
+    p /= y_max
+
     if plot:
-        x = np.linspace(0, lag_max)
-        y = p(x)
         plt.title('normalized autocorrelation')
         plt.plot(dt_vals[1:], data_vals[1:], '.', alpha=0.2, label='raw')
         plt.xlabel('lag, sec')
@@ -461,7 +464,7 @@ def noise_analysis(df, plot=True):
     t_g_x = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
     t_g_y = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
     t_g_z = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
-    plt.title('autocorrelation - gyroscope')
+    plt.title('normalized autocorrelation - gyroscope')
     r['gyroscope_randomwalk_correlation_time'] = np.mean([t_g_x, t_g_y, t_g_z])
 
     plt.figure()
@@ -483,7 +486,7 @@ def noise_analysis(df, plot=True):
         df.t_sensor_combined_0__f_accelerometer_m_s2_2_,
         plot)
     r['accelerometer_randomwalk_correlation_time'] = np.mean([t_a_x, t_a_y, t_a_z])
-    plt.title('autocorrelation - accelerometer')
+    plt.title('normalized autocorrelation - accelerometer')
 
     plt.figure()
     n_a_x = plot_allan_variance(
@@ -510,7 +513,7 @@ def noise_analysis(df, plot=True):
         df.t_sensor_combined_0__f_magnetometer_ga_2_,
         plot)
     r['magnetometer_randomwalk_correlation_time'] = np.mean([t_m_x, t_m_y, t_m_z])
-    plt.title('autocorrelation - magnetometer')
+    plt.title('normalized autocorrelation - magnetometer')
 
     plt.figure()
     n_m_x = plot_allan_variance(
@@ -531,7 +534,7 @@ def noise_analysis(df, plot=True):
         df.t_sensor_combined_0__f_baro_alt_meter,
         plot)
     r['baro_randomwalk_correlation_time'] = t_b
-    plt.title('autocorrelation - barometric altimeter')
+    plt.title('normalized autocorrelation - barometric altimeter')
 
     plt.figure()
     n_b = plot_allan_variance(

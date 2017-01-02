@@ -360,7 +360,14 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     return PX4MessageDict(data)
 
 def alan_plot(data, dt):
-    data.index = pandas.TimedeltaIndex(data.index, unit='s')
+    """
+    Given a dataset of a stationary vehicle on the ground,
+    this compute the alan variance plot for the noise.
+    The intersection at 1 is the noise power.
+    """
+
+
+    data.index = pd.TimedeltaIndex(data.index, unit='s')
     data_vals = []
     dt_vals = []
     c = 0
@@ -369,17 +376,26 @@ def alan_plot(data, dt):
         c_vals += [2**c]
         c += 1
     for i in c_vals:
-        std = float(sqrt(data.resample('{:d}L'.format(int(i*dt*1000))).agg('mean').var()))
+        std = float(np.sqrt(data.resample(
+            '{:d}L'.format(int(i*dt*1000))).agg('mean').var()))
         data_vals += [std]
         dt_vals += [(i*dt)]
     #plt.loglog(dt_vals, data_vals, '.-')
     plt.title('Alan variance plot')
     plt.loglog(dt_vals, data_vals, '.-')
     plt.xlabel('$\\tau$, sec')
-    plt.ylabel('$\sigma$')
+    plt.ylabel('$\\sigma$')
 
 def autocorr_plot(data, dt):
-    data.index = pandas.TimedeltaIndex(data.index, unit='s')
+    """
+    Given a dataset of a stationary vehicle on the ground,
+    this compute the autocorrellation. The intersection with
+    the horizontal line at 0.348 represents the correllation
+    time constant. If the intersection does not occur, it
+    indicates that the random walk process is not significant
+    and is over powered by wide-band noise.
+    """
+    data.index = pd.TimedeltaIndex(data.index, unit='s')
     data_vals = []
     dt_vals = []
     lag_n = min(int(len(data.index)/2), int(1000/dt))
@@ -387,39 +403,43 @@ def autocorr_plot(data, dt):
     for i in range(lag_n):
         data_vals += [data.autocorr(lag=i)]
         dt_vals += [i*dt]
-    plt.title('auto-correlation plot')
+    plt.title('autocorrelation plot')
     plt.plot(dt_vals, data_vals, '.-')
     plt.xlabel('lag, sec')
     plt.ylabel('autocorrelation')
     plt.hlines(0.368, 0, lag_max)
 
 def noise_analysis(df, dt_sample):
-    figure()
+    """
+    Given a dataset of a stationary vehicle on the ground, this compute the noise statistics.
+    """
+
+    plt.figure()
     autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
     autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
     autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
     plt.grid()
-    title('gyro auto-correlation')
-    
-    figure()
+    plt.title('autocorrelation - gyroscope')
+
+    plt.figure()
     autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
     autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
     autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
     plt.grid()
-    title('accel auto-correlation')
+    plt.title('autocorrelation - accelerometer')
 
-    figure()
+    plt.figure()
     alan_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
     alan_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
     alan_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
     plt.grid()
-    title('Alan variance plot - gyro')
+    plt.title('Alan variance plot - gyroscope')
 
-    figure()
+    plt.figure()
     alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
     alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, dt_sample)
     alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, dt_sample)
     plt.grid()
-    title('Alan variance plot - accel')
+    plt.title('Alan variance plot - accelerometer')
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

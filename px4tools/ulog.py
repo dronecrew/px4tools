@@ -363,7 +363,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
 def plot_allan_variance(data, dt, plot=True):
     """
     Given a dataset of a stationary vehicle on the ground,
-    this compute the alan variance plot for the noise.
+    this compute the Allan variance plot for the noise.
     The intersection at 1 is the noise power.
     """
 
@@ -457,7 +457,7 @@ def noise_analysis(df, dt_sample, plot=True):
     n_g_x = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample, plot)
     n_g_y = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample, plot)
     n_g_z = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample, plot)
-    plt.title('Alan variance plot - gyroscope')
+    plt.title('Allan variance plot - gyroscope')
     r['gyroscope_noise_density'] = np.mean([n_g_x, n_g_y, n_g_z])
 
     # accelerometer
@@ -484,7 +484,7 @@ def noise_analysis(df, dt_sample, plot=True):
     n_a_z = plot_allan_variance(
         df.t_sensor_combined_0__f_accelerometer_m_s2_2_,
         dt_sample, plot)
-    plt.title('Alan variance plot - accelerometer')
+    plt.title('Allan variance plot - accelerometer')
     r['accelerometer_noise_density'] = np.mean([n_a_x, n_a_y, n_a_z])
 
     # magnetometer
@@ -511,7 +511,7 @@ def noise_analysis(df, dt_sample, plot=True):
     n_m_z = plot_allan_variance(
         df.t_sensor_combined_0__f_magnetometer_ga_2_,
         dt_sample, plot)
-    plt.title('Alan variance plot - magnetometer')
+    plt.title('Allan variance plot - magnetometer')
     r['magnetometer_noise_density'] = np.mean([n_m_x, n_m_y, n_m_z])
 
     # baro
@@ -526,7 +526,7 @@ def noise_analysis(df, dt_sample, plot=True):
     n_b = plot_allan_variance(
         df.t_sensor_combined_0__f_baro_alt_meter,
         dt_sample, plot)
-    plt.title('Alan variance plot - barometric altimeter')
+    plt.title('Allan variance plot - barometric altimeter')
     r['baro_noise_desnity'] = n_b
 
     return r

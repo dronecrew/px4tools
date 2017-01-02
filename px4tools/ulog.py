@@ -418,16 +418,17 @@ def plot_autocorrelation(data, dt, plot=True):
 
     # polynomial fits
     p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 4)
+    p = p/p(0)
 
     if plot:
         x = np.linspace(0, lag_max)
         y = p(x)
-        plt.title('autocorrelation')
-        plt.plot(dt_vals, data_vals, '.-')
+        plt.title('normalized autocorrelation')
+        #plt.plot(dt_vals, data_vals/p(0), '.', alpha=0.01)
         plt.xlabel('lag, sec')
-        plt.ylabel('autocorrelation')
-        plt.hlines(1/np.e, 0, lag_max)
-        plt.plot(x, y)
+        plt.ylabel('corr/ corr(0)')
+        plt.plot(x, y, linewidth=2)
+        plt.hlines(1/np.e, 0, lag_max, linewidth=2)
         plt.grid(True)
 
     # grab first positive, real root

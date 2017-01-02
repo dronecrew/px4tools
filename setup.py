@@ -9,7 +9,7 @@ from __future__ import print_function
 
 MAJOR = 0
 MINOR = 7
-MICRO = 2
+MICRO = 3
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 

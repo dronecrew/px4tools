@@ -310,7 +310,11 @@ class PX4MessageDict(dict):
             df = df.sort_values('timestamp')
             m = pd.merge_asof(m, df, on='timestamp')
         m.index = pd.Index(m.timestamp/1e9, name='time, sec')
-        return compute_data(m)
+        try:
+            return compute_data(m)
+        except AttributeError as e:
+            print(e)
+            return m
 
 def read_ulog(ulog_filename, messages='', verbose=False):
     """
@@ -354,5 +358,68 @@ def read_ulog(ulog_filename, messages='', verbose=False):
 
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
+
+def alan_plot(data, dt):
+    data.index = pandas.TimedeltaIndex(data.index, unit='s')
+    data_vals = []
+    dt_vals = []
+    c = 0
+    c_vals = []
+    while 2**c < len(data.index)/2**6:
+        c_vals += [2**c]
+        c += 1
+    for i in c_vals:
+        std = float(sqrt(data.resample('{:d}L'.format(int(i*dt*1000))).agg('mean').var()))
+        data_vals += [std]
+        dt_vals += [(i*dt)]
+    #plt.loglog(dt_vals, data_vals, '.-')
+    plt.title('Alan variance plot')
+    plt.loglog(dt_vals, data_vals, '.-')
+    plt.xlabel('$\\tau$, sec')
+    plt.ylabel('$\sigma$')
+
+def autocorr_plot(data, dt):
+    data.index = pandas.TimedeltaIndex(data.index, unit='s')
+    data_vals = []
+    dt_vals = []
+    lag_n = min(int(len(data.index)/2), int(1000/dt))
+    lag_max = dt*lag_n
+    for i in range(lag_n):
+        data_vals += [data.autocorr(lag=i)]
+        dt_vals += [i*dt]
+    plt.title('auto-correlation plot')
+    plt.plot(dt_vals, data_vals, '.-')
+    plt.xlabel('lag, sec')
+    plt.ylabel('autocorrelation')
+    plt.hlines(0.368, 0, lag_max)
+
+def noise_analysis(df, dt_sample):
+    figure()
+    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
+    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
+    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
+    plt.grid()
+    title('gyro auto-correlation')
+    
+    figure()
+    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    plt.grid()
+    title('accel auto-correlation')
+
+    figure()
+    alan_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
+    alan_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
+    alan_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
+    plt.grid()
+    title('Alan variance plot - gyro')
+
+    figure()
+    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, dt_sample)
+    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, dt_sample)
+    plt.grid()
+    title('Alan variance plot - accel')
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

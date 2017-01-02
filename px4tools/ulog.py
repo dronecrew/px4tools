@@ -411,11 +411,11 @@ def plot_autocorrelation(data, dt, plot=True):
     data.index = pd.TimedeltaIndex(data.index, unit='s')
     data_vals = []
     dt_vals = []
-    lag_n = min(int(len(data.index)/2), int(1000/dt))
-    lag_max = dt*lag_n
-    for i in range(lag_n):
+    data = data.resample('1000L').agg('mean')
+    lag_max = min(int(len(data.index)/2), 1000)
+    for i in range(1, lag_max):
         data_vals += [data.autocorr(lag=i)]
-        dt_vals += [i*dt]
+        dt_vals += [i]
 
     # polynomial fits
     p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 5)

@@ -359,7 +359,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
 
-def alan_plot(data, dt):
+def plot_allan_variance(data, dt):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the alan variance plot for the noise.
@@ -381,12 +381,13 @@ def alan_plot(data, dt):
         data_vals += [std]
         dt_vals += [(i*dt)]
     #plt.loglog(dt_vals, data_vals, '.-')
-    plt.title('Alan variance plot')
+    plt.title('Allan variance plot')
     plt.loglog(dt_vals, data_vals, '.-')
-    plt.xlabel('$\\tau$, sec')
-    plt.ylabel('$\\sigma$')
+    plt.xlabel('Averaging Time, $\\tau$, sec')
+    plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
+    plt.grid()
 
-def autocorr_plot(data, dt):
+def plot_autocorrelation(data, dt):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the autocorrellation. The intersection with
@@ -408,6 +409,7 @@ def autocorr_plot(data, dt):
     plt.xlabel('lag, sec')
     plt.ylabel('autocorrelation')
     plt.hlines(0.368, 0, lag_max)
+    plt.grid()
 
 def noise_analysis(df, dt_sample):
     """
@@ -415,31 +417,27 @@ def noise_analysis(df, dt_sample):
     """
 
     plt.figure()
-    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
-    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
-    autocorr_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
-    plt.grid()
+    plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
+    plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
+    plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
     plt.title('autocorrelation - gyroscope')
 
     plt.figure()
-    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
-    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
-    autocorr_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
-    plt.grid()
+    plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
     plt.title('autocorrelation - accelerometer')
 
     plt.figure()
-    alan_plot(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
-    alan_plot(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
-    alan_plot(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
-    plt.grid()
+    plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample)
+    plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample)
+    plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample)
     plt.title('Alan variance plot - gyroscope')
 
     plt.figure()
-    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
-    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, dt_sample)
-    alan_plot(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, dt_sample)
-    plt.grid()
+    plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, dt_sample)
+    plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, dt_sample)
+    plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, dt_sample)
     plt.title('Alan variance plot - accelerometer')
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

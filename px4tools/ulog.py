@@ -391,7 +391,7 @@ def plot_allan_variance(data, dt, plot=True):
         noise_power = 0.0
 
     if plot:
-        plt.title('Allan variance plot')
+        plt.title('Frequency Stability')
         plt.loglog(dt_vals, data_vals, '.-')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
@@ -422,7 +422,7 @@ def plot_autocorrelation(data, dt, plot=True):
     if plot:
         x = np.linspace(0, lag_max)
         y = p(x)
-        plt.title('autocorrelation plot')
+        plt.title('autocorrelation')
         plt.plot(dt_vals, data_vals, '.-')
         plt.xlabel('lag, sec')
         plt.ylabel('autocorrelation')

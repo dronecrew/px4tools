@@ -360,15 +360,17 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
 
-def plot_allan_variance(data, dt, plot=True):
+def plot_allan_variance(data, plot=True):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan variance plot for the noise.
     The intersection at 1 is the noise power.
     """
 
-
     data.index = pd.TimedeltaIndex(data.index, unit='s')
+    dt = float(
+        data.index.values[1] - data.index.values[0])/1e9
+
     data_vals = []
     dt_vals = []
     c = 0
@@ -399,7 +401,7 @@ def plot_allan_variance(data, dt, plot=True):
         plt.minorticks_on()
     return noise_power
 
-def plot_autocorrelation(data, dt, plot=True):
+def plot_autocorrelation(data, plot=True):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the autocorrellation. The intersection with
@@ -411,35 +413,43 @@ def plot_autocorrelation(data, dt, plot=True):
     data.index = pd.TimedeltaIndex(data.index, unit='s')
     data_vals = []
     dt_vals = []
-    data = data.resample('1000L').agg('mean')
-    lag_max = min(int(len(data.index)/2), 1000)
-    for i in range(1, lag_max):
-        data_vals += [data.autocorr(lag=i)]
-        dt_vals += [i]
+    dt = 1
+    # downsample every dt seconds, taking mean
+    data = data.resample(
+        '{:d}L'.format(int(dt*1000))).agg('mean')
+    lag_max = min(int(dt*len(data.index)/2), 1000)
+    for i in range(1, int(lag_max/dt)):
+        data_vals += [data.autocorr(i)]
+        dt_vals += [i*dt]
+
+    # normalize by max
+    data_vals /= np.max(data_vals)
 
     # polynomial fits
     p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 5)
 
     if plot:
         x = np.linspace(0, lag_max)
-        y = p(x)/p(0)
+        y = p(x)
         plt.title('normalized autocorrelation')
-        plt.plot(dt_vals[1:], data_vals[1:]/p(0), '.', alpha=0.02, label='raw')
+        plt.plot(dt_vals[1:], data_vals[1:], '.', alpha=0.2, label='raw')
         plt.xlabel('lag, sec')
-        plt.ylabel('corr/ corr(0)')
+        plt.ylabel('corr/ max(corr)')
         plt.plot(x, y, linewidth=2, label='poly fit for intersection')
         plt.hlines(1/np.e, 0, lag_max, linewidth=2)
+        plt.gca().set_ylim(-1, 1)
+        plt.gca().set_xlim(0, lag_max)
         plt.grid(True)
 
     # grab first positive, real root
     correlation_time = 0.0
-    for root in sorted((p/p(0) - 1/np.e).roots()):
+    for root in sorted((p - 1/np.e).roots()):
         if np.isreal(root) and root > 0 and root < lag_max:
             correlation_time = float(np.real(root))
             break
     return correlation_time
 
-def noise_analysis(df, dt_sample, plot=True):
+def noise_analysis(df, plot=True):
     """
     Given a dataset of a stationary vehicle on the ground, this compute the noise statistics.
     """
@@ -448,16 +458,16 @@ def noise_analysis(df, dt_sample, plot=True):
 
     # gyroscope
     plt.figure()
-    t_g_x = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample, plot)
-    t_g_y = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample, plot)
-    t_g_z = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample, plot)
+    t_g_x = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
+    t_g_y = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
+    t_g_z = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
     plt.title('autocorrelation - gyroscope')
     r['gyroscope_randomwalk_correlation_time'] = np.mean([t_g_x, t_g_y, t_g_z])
 
     plt.figure()
-    n_g_x = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, dt_sample, plot)
-    n_g_y = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, dt_sample, plot)
-    n_g_z = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, dt_sample, plot)
+    n_g_x = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
+    n_g_y = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
+    n_g_z = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
     plt.title('Allan variance plot - gyroscope')
     r['gyroscope_noise_density'] = np.mean([n_g_x, n_g_y, n_g_z])
 
@@ -465,26 +475,26 @@ def noise_analysis(df, dt_sample, plot=True):
     plt.figure()
     t_a_x = plot_autocorrelation(
         df.t_sensor_combined_0__f_accelerometer_m_s2_0_,
-        dt_sample, plot)
+        plot)
     t_a_y = plot_autocorrelation(
         df.t_sensor_combined_0__f_accelerometer_m_s2_1_,
-        dt_sample, plot)
+        plot)
     t_a_z = plot_autocorrelation(
         df.t_sensor_combined_0__f_accelerometer_m_s2_2_,
-        dt_sample)
+        plot)
     r['accelerometer_randomwalk_correlation_time'] = np.mean([t_a_x, t_a_y, t_a_z])
     plt.title('autocorrelation - accelerometer')
 
     plt.figure()
     n_a_x = plot_allan_variance(
         df.t_sensor_combined_0__f_accelerometer_m_s2_0_,
-        dt_sample, plot)
+        plot)
     n_a_y = plot_allan_variance(
         df.t_sensor_combined_0__f_accelerometer_m_s2_1_,
-        dt_sample, plot)
+        plot)
     n_a_z = plot_allan_variance(
         df.t_sensor_combined_0__f_accelerometer_m_s2_2_,
-        dt_sample, plot)
+        plot)
     plt.title('Allan variance plot - accelerometer')
     r['accelerometer_noise_density'] = np.mean([n_a_x, n_a_y, n_a_z])
 
@@ -492,26 +502,26 @@ def noise_analysis(df, dt_sample, plot=True):
     plt.figure()
     t_m_x = plot_autocorrelation(
         df.t_sensor_combined_0__f_magnetometer_ga_0_,
-        dt_sample, plot)
+        plot)
     t_m_y = plot_autocorrelation(
         df.t_sensor_combined_0__f_magnetometer_ga_1_,
-        dt_sample, plot)
+        plot)
     t_m_z = plot_autocorrelation(
         df.t_sensor_combined_0__f_magnetometer_ga_2_,
-        dt_sample, plot)
+        plot)
     r['magnetometer_randomwalk_correlation_time'] = np.mean([t_m_x, t_m_y, t_m_z])
     plt.title('autocorrelation - magnetometer')
 
     plt.figure()
     n_m_x = plot_allan_variance(
         df.t_sensor_combined_0__f_magnetometer_ga_0_,
-        dt_sample, plot)
+        plot)
     n_m_y = plot_allan_variance(
         df.t_sensor_combined_0__f_magnetometer_ga_1_,
-        dt_sample, plot)
+        plot)
     n_m_z = plot_allan_variance(
         df.t_sensor_combined_0__f_magnetometer_ga_2_,
-        dt_sample, plot)
+        plot)
     plt.title('Allan variance plot - magnetometer')
     r['magnetometer_noise_density'] = np.mean([n_m_x, n_m_y, n_m_z])
 
@@ -519,14 +529,14 @@ def noise_analysis(df, dt_sample, plot=True):
     plt.figure()
     t_b = plot_autocorrelation(
         df.t_sensor_combined_0__f_baro_alt_meter,
-        dt_sample, plot)
+        plot)
     r['baro_randomwalk_correlation_time'] = t_b
     plt.title('autocorrelation - barometric altimeter')
 
     plt.figure()
     n_b = plot_allan_variance(
         df.t_sensor_combined_0__f_baro_alt_meter,
-        dt_sample, plot)
+        plot)
     plt.title('Allan variance plot - barometric altimeter')
     r['baro_noise_desnity'] = n_b
 

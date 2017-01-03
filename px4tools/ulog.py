@@ -380,16 +380,16 @@ def plot_allan_variance(data, plot=True):
 
     data_vals = []
     dt_vals = []
-    c = 0
+    c = int(np.ceil(np.log10(dt)))
     c_vals = []
-    while 2**c < len(data.index)/2**6:
-        c_vals += [2**c]
-        c += 1
+    while 10**c < float(data.index.values[-1]/1e9):
+        c_vals += [10**c]
+        c += 0.5
     for i in c_vals:
         std = float(np.sqrt(data.resample(
-            '{:d}L'.format(int(i*dt*1000))).agg('mean').var()))
+            '{:d}L'.format(int(i*1000))).agg('mean').var()))
         data_vals += [std]
-        dt_vals += [(i*dt)]
+        dt_vals += [i]
 
     p = np.polynomial.Polynomial.fit(np.log10(dt_vals), np.log10(data_vals), 5)
 

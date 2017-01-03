@@ -384,13 +384,15 @@ def plot_allan_variance(data, plot=True):
     c_vals = []
     # require at least 9 clusters for < 25% error:
     # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
-    while 10**c < float(data.index.values[-1]/1e9/9):
+    while 10**c < float(data.index.values[-1]/1e9):
         c_vals += [10**c]
         c += 0.5
     for i in c_vals:
-        std = float(np.sqrt(data.resample(
-            '{:d}L'.format(int(i*1000))).agg('mean').var()))
-        data_vals += [std]
+        allan_std = float(np.sqrt(data.resample(
+            '{:d}L'.format(int(i*1000))).agg('mean').diff().var()/2))
+        if not np.isfinite(allan_std):
+            break
+        data_vals += [allan_std]
         dt_vals += [i]
 
     p = np.polynomial.Polynomial.fit(np.log10(dt_vals), np.log10(data_vals), 5)

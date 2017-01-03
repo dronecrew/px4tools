@@ -382,7 +382,9 @@ def plot_allan_variance(data, plot=True):
     dt_vals = []
     c = int(np.ceil(np.log10(dt)))
     c_vals = []
-    while 10**c < float(data.index.values[-1]/1e9):
+    # require at least 9 clusters for < 25% error:
+    # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
+    while 10**c < float(data.index.values[-1]/1e9/9):
         c_vals += [10**c]
         c += 0.5
     for i in c_vals:

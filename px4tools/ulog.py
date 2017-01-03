@@ -285,11 +285,18 @@ class PX4MessageDict(dict):
     def __init__(self, d):
         super(PX4MessageDict, self).__init__(d)
 
-    def resample_and_concat(self, dt):
+    def resample_and_concat(self, dt=-1):
         """
         Resample at dt and concatenate all data frames.
+
+        Not setting dt will flag to auto-calculate from sensor combined mean
+        period.
         """
         sensor_comb = self['sensor_combined_0']
+
+        if dt == -1:
+            dt = self['sensor_combined_0']['timestamp'].diff().mean()/1e6
+
         # build empty data frame with the index we want
         m = pd.DataFrame(
             data=np.arange(
@@ -541,7 +548,7 @@ def noise_analysis(df, plot=True):
         df.t_sensor_combined_0__f_baro_alt_meter,
         plot)
     plt.title('Allan variance plot - barometric altimeter')
-    r['baro_noise_desnity'] = n_b
+    r['baro_noise_density'] = n_b
 
     return r
 

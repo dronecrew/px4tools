@@ -365,7 +365,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
 
-def _smallest_positive_real_root(roots, min_val=0):
+def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
     """
     Find smallest positive real root in list
     """
@@ -377,6 +377,8 @@ def _smallest_positive_real_root(roots, min_val=0):
         posreal = sorted(np.real(roots[cond]))
         if len(posreal) > 0:
             res = posreal[0]
+    if not np.isfinite(res) or res < min_val or res > max_val:
+        res = 0
     return res
 
 def plot_allan_variance(data, plot=True):
@@ -413,23 +415,23 @@ def plot_allan_variance(data, plot=True):
     p = np.polynomial.Polynomial.fit(x, y, 6)
     pdiff = p.deriv()
 
-    log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), 0)
+    log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), 0, 5)
     tau_0 = 10**log_tau_0
-    if tau_0 > 0:
+    if tau_0 > 0 and np.isfinite(tau_0):
         sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)
     else:
         sig_rw = 0
 
-    log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0)
+    log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
     tau_1 = 10**log_tau_1
-    if tau_1 > 0:
+    if tau_1 > 0 and np.isfinite(tau_1):
         sig_bi = (10**p(log_tau_1))*np.sqrt(np.pi/(2*np.log(2)))
     else:
         sig_bi = 0
 
-    log_tau_2 = _smallest_positive_real_root((pdiff - 0.5).roots(), log_tau_1)
+    log_tau_2 = _smallest_positive_real_root((pdiff - 0.5).roots(), log_tau_1, 5)
     tau_2 = 10**log_tau_2
-    if tau_2 > 0:
+    if tau_2 > 0 and np.isfinite(tau_2):
         sig_rrw = (10**p(log_tau_2))*np.sqrt(3/tau_2)
     else:
         sig_rrw = 0
@@ -437,16 +439,16 @@ def plot_allan_variance(data, plot=True):
     if plot:
         x2 = np.linspace(x[0], x[-1])
         y2 = p(x2)
-        ydiff = pdiff(x2)
+        # ydiff = pdiff(x2)
         plt.title('Frequency Stability')
         plt.loglog(dt_vals, data_vals, 'k.', label='raw')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
         plt.loglog(10**x2, 10**y2, 'g-', label='fit')
         # plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
-        plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='tau 0')
-        plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='tau 1')
-        plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='tau 2')
+        plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='noise density', markeredgewidth=3)
+        plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='bias instability', markeredgewidth=3)
+        plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='random walk', markeredgewidth=3)
         plt.grid(True, which='both')
         plt.minorticks_on()
 
@@ -489,7 +491,7 @@ def plot_autocorrelation(data, plot=True):
         plt.plot(dt_vals[1:], data_vals[1:], '.', alpha=0.2, label='raw')
         plt.xlabel('lag, sec')
         plt.ylabel('corr/ max(corr)')
-        plt.plot(x, y, linewidth=2, label='poly fit for intersection')
+        plt.plot(x, y, linewidth=2, label='fit')
         plt.hlines(1/np.e, 0, lag_max, linewidth=2)
         plt.gca().set_ylim(-1, 1)
         plt.gca().set_xlim(0, lag_max)
@@ -513,22 +515,22 @@ def noise_analysis(df, plot=True):
     tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
     plt.title('normalized autocorrelation - gyroscope')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['gyroscope_randomwalk_correlation_time'] = float(np.mean([tau1, tau2, tau3]))
+    r['gyroscope_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
     res1 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
     res2 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
     res3 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
-    res = np.mean([res1, res2, res3], axis=0)
+    res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - gyroscope')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['gyroscope_noise_density'] = res[0]
-    r['gyroscope_bias_instability'] = res[1]
-    r['gyroscope_bias_randomwalk'] = res[2]
-    r['gyroscope_bias_tau_0'] = res[3]
-    r['gyroscope_bias_tau_1'] = res[4]
-    r['gyroscope_bias_tau_2'] = res[5]
+    r['gyroscope_noise_density'] = res[:,0]
+    r['gyroscope_bias_instability'] = res[:,1]
+    r['gyroscope_bias_randomwalk'] = res[:,2]
+    r['gyroscope_bias_tau_0'] = res[:,3]
+    r['gyroscope_bias_tau_1'] = res[:,4]
+    r['gyroscope_bias_tau_2'] = res[:,5]
 
     # accelerometer
     plt.figure()
@@ -538,22 +540,22 @@ def noise_analysis(df, plot=True):
     tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
     plt.title('normalized autocorrelation - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['accelerometer_randomwalk_correlation_time'] = np.mean([tau1, tau2, tau3])
+    r['accelerometer_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
     res1 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
     res2 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
     res3 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
-    res = np.mean([res1, res2, res3], axis=0)
+    res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['accelerometer_noise_density'] = res[0]
-    r['accelerometer_bias_instability'] = res[1]
-    r['accelerometer_bias_randomwalk'] = res[2]
-    r['accelerometer_bias_tau_0'] = res[3]
-    r['accelerometer_bias_tau_1'] = res[4]
-    r['accelerometer_bias_tau_2'] = res[5]
+    r['accelerometer_noise_density'] = res[:,0]
+    r['accelerometer_bias_instability'] = res[:,1]
+    r['accelerometer_bias_randomwalk'] = res[:,2]
+    r['accelerometer_bias_tau_0'] = res[:,3]
+    r['accelerometer_bias_tau_1'] = res[:,4]
+    r['accelerometer_bias_tau_2'] = res[:,5]
 
     # magnetometer
     plt.figure()
@@ -563,22 +565,22 @@ def noise_analysis(df, plot=True):
     tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
     plt.title('normalized autocorrelation - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['magnetometer_randomwalk_correlation_time'] = np.mean([tau1, tau2, tau3])
+    r['magnetometer_randomwalk_correlation_time'] =  [tau1, tau2, tau3]
 
     plt.figure()
     res1 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
     res2 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
     res3 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
-    res = np.mean([res1, res2, res3], axis=0)
+    res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['magnetometer_noise_density'] = res[0]
-    r['magnetometer_bias_instability'] = res[1]
-    r['magnetometer_bias_randomwalk'] = res[2]
-    r['magnetometer_bias_tau_0'] = res[3]
-    r['magnetometer_bias_tau_1'] = res[4]
-    r['magnetometer_bias_tau_2'] = res[5]
+    r['magnetometer_noise_density'] = res[:,0]
+    r['magnetometer_bias_instability'] = res[:,1]
+    r['magnetometer_bias_randomwalk'] = res[:,2]
+    r['magnetometer_bias_tau_0'] = res[:,3]
+    r['magnetometer_bias_tau_1'] = res[:,4]
+    r['magnetometer_bias_tau_2'] = res[:,5]
 
     # baro
     plt.figure()

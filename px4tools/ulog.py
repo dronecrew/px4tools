@@ -319,8 +319,7 @@ class PX4MessageDict(dict):
         m.index = pd.Index(m.timestamp/1e9, name='time, sec')
         try:
             return compute_data(m)
-        except AttributeError as e:
-            print(e)
+        except AttributeError:
             return m
 
 def read_ulog(ulog_filename, messages='', verbose=False):
@@ -399,7 +398,7 @@ def plot_allan_variance(data, plot=True):
     # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
     while 10**c < float(data.index.values[-1]/1e9):
         c_vals += [10**c]
-        c += 0.5
+        c += 0.2
     for c_i in c_vals:
         allan_std = float(np.sqrt(data.resample(
             '{:d}L'.format(int(c_i*1000))).agg('mean').diff().var()/2))

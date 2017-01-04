@@ -426,7 +426,7 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         res = 0
     return res
 
-def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9):
+def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_order=6):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan standard deviation plot for the noise.
@@ -456,7 +456,7 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9):
     x = np.log10(dt_vals)
     y = np.log10(data_vals)
 
-    p = np.polynomial.Polynomial.fit(x, y, 6)
+    p = np.polynomial.Polynomial.fit(x, y, poly_order)
     pdiff = p.deriv()
 
     log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), 0, 5)
@@ -505,7 +505,7 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9):
         'tau_2': tau_2
     }
 
-def plot_autocorrelation(data, plot=True):
+def plot_autocorrelation(data, plot=True, poly_order=5):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the autocorrellation. The intersection with
@@ -527,7 +527,7 @@ def plot_autocorrelation(data, plot=True):
         dt_vals += [i*dt]
 
     # polynomial fits
-    p = np.polynomial.Polynomial.fit(dt_vals, data_vals, 5)
+    p = np.polynomial.Polynomial.fit(dt_vals, data_vals, poly_order)
 
     # normalize by max of fit polynomial
     x = np.linspace(0, lag_max)

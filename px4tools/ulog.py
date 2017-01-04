@@ -395,11 +395,10 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         res = 0
     return res
 
-def plot_allan_variance(data, plot=True):
+def plot_allan_std_dev(data, plot=True):
     """
     Given a dataset of a stationary vehicle on the ground,
-    this compute the Allan variance plot for the noise.
-    The intersection at 1 is the noise power.
+    this compute the Allan standard deviation plot for the noise.
     """
 
     data.index = pd.TimedeltaIndex(data.index, unit='s')

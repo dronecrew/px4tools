@@ -298,23 +298,23 @@ class PX4MessageDict(dict):
         df.index = pd.Index(df.timestamp/1e6, name='time, sec')
         return df
 
-    def resample_and_concat_mean(dt, verbose=False):
+    def resample_and_concat_mean(self, dt, verbose=False):
         """
         Resample at dt and concatenate all data frames using mean aggregation
         """
 
         data_frames = {}
-        for topic in d0.keys():
+        for topic in self.keys():
             if verbose:
                 print('resampling', topic)
             new_cols = {}
-            for col in d0[topic].columns:
+            for col in self[topic].columns:
                 if col == 'timestamp':
                     new_cols[col] = col
                 else:
                     new_cols[col] = 't_' + topic + '__f_' + col
-            df = d0[t].rename(columns=new_cols)
-            df.index = pandas.TimedeltaIndex(df.index, unit='s')
+            df = self[topic].rename(columns=new_cols)
+            df.index = pd.TimedeltaIndex(df.index, unit='s')
             df = df.resample('{:d}L'.format(int(dt*1000))).agg('mean')
             data_frames[topic] = df
         m = None
@@ -324,8 +324,8 @@ class PX4MessageDict(dict):
             if m is None:
                 m = data_frames[topic]
             else:
-                m = pandas.merge_asof(m, data_frames[topic], on='timestamp')
-        m.index = pandas.Index(m.timestamp/1e6, name='time, sec')
+                m = pd.merge_asof(m, data_frames[topic], on='timestamp')
+        m.index = pd.Index(m.timestamp/1e6, name='time, sec')
         return m
 
     def resample_and_concat(self, dt=-1):
@@ -357,10 +357,10 @@ class PX4MessageDict(dict):
                 else:
                     new_cols[col] = 't_' + topic + '__f_' + col
             df = self[topic].rename(columns=new_cols)
-            df.timestamp = np.array(df.timestamp*1e3, dtype=np.int)
+            df.timestamp = np.array(df.timestamp, dtype=np.int)
             df = df.sort_values('timestamp')
             m = pd.merge_asof(m, df, on='timestamp')
-        m.index = pd.Index(m.timestamp/1e9, name='time, sec')
+        m.index = pd.Index(m.timestamp/1e6, name='time, sec')
         try:
             return compute_data(m)
         except AttributeError:
@@ -425,7 +425,7 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         res = 0
     return res
 
-def plot_allan_std_dev(data, plot=True):
+def plot_allan_std_dev(data, plot=True, min_intervals=9):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan standard deviation plot for the noise.
@@ -441,7 +441,7 @@ def plot_allan_std_dev(data, plot=True):
     c_vals = []
     # require at least 9 clusters for < 25% error:
     # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
-    while 10**c < float(data.index.values[-1]/1e9):
+    while 10**c < float(data.index.values[-1]/1e9/min_intervals):
         c_vals += [10**c]
         c += 0.2
     for c_i in c_vals:

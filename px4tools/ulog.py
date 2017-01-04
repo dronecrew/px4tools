@@ -426,7 +426,7 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         res = 0
     return res
 
-def plot_allan_std_dev(data, plot=True, min_intervals=9):
+def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan standard deviation plot for the noise.
@@ -483,13 +483,13 @@ def plot_allan_std_dev(data, plot=True, min_intervals=9):
     if plot:
         x2 = np.linspace(x[0], x[-1])
         y2 = p(x2)
-        # ydiff = pdiff(x2)
+        ydiff = pdiff(x2)
         plt.title('Frequency Stability')
         plt.loglog(dt_vals, data_vals, 'k.', label='raw')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
         plt.loglog(10**x2, 10**y2, 'g-', label='fit')
-        # plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
+        plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
         plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='noise density', markeredgewidth=3)
         plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='bias instability', markeredgewidth=3)
         plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='random walk', markeredgewidth=3)

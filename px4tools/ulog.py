@@ -284,6 +284,20 @@ class PX4MessageDict(dict):
     def __init__(self, d):
         super(PX4MessageDict, self).__init__(d)
 
+    def get_topic(self, topic):
+        """
+        Just get a single topic with canonical naming.
+        """
+        new_cols = {}
+        for col in self[topic].columns:
+            if col == 'timestamp':
+                new_cols[col] = col
+            else:
+                new_cols[col] = 't_' + topic + '__f_' + col
+        df = self[topic].rename(columns=new_cols)
+        df.index = pd.Index(df.timestamp/1e6, name='time, sec')
+        return df
+
     def resample_and_concat(self, dt=-1):
         """
         Resample at dt and concatenate all data frames.
@@ -452,7 +466,14 @@ def plot_allan_variance(data, plot=True):
         plt.grid(True, which='both')
         plt.minorticks_on()
 
-    return sig_rw, sig_bi, sig_rrw, tau_0, tau_1, tau_2
+    return {
+        'sig_rw': sig_rw,
+        'sig_bi': sig_bi,
+        'sig_rrw': sig_rrw,
+        'tau_0': tau_0,
+        'tau_1': tau_1,
+        'tau_2': tau_2
+    }
 
 def plot_autocorrelation(data, plot=True):
     """
@@ -522,15 +543,10 @@ def noise_analysis(df, plot=True):
     handles, labels = plt.gca().get_legend_handles_labels()
     res2 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
     res3 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
-    res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - gyroscope')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['gyroscope_noise_density'] = res[:,0]
-    r['gyroscope_bias_instability'] = res[:,1]
-    r['gyroscope_bias_randomwalk'] = res[:,2]
-    r['gyroscope_bias_tau_0'] = res[:,3]
-    r['gyroscope_bias_tau_1'] = res[:,4]
-    r['gyroscope_bias_tau_2'] = res[:,5]
+    for key in res1.keys():
+        r['gyroscope_' + key] = [ d[key] for d in [res1, res2, res3] ]
 
     # accelerometer
     plt.figure()
@@ -550,12 +566,8 @@ def noise_analysis(df, plot=True):
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['accelerometer_noise_density'] = res[:,0]
-    r['accelerometer_bias_instability'] = res[:,1]
-    r['accelerometer_bias_randomwalk'] = res[:,2]
-    r['accelerometer_bias_tau_0'] = res[:,3]
-    r['accelerometer_bias_tau_1'] = res[:,4]
-    r['accelerometer_bias_tau_2'] = res[:,5]
+    for key in res1.keys():
+        r['accelerometer_' + key] = [ d[key] for d in [res1, res2, res3] ]
 
     # magnetometer
     plt.figure()
@@ -575,12 +587,8 @@ def noise_analysis(df, plot=True):
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['magnetometer_noise_density'] = res[:,0]
-    r['magnetometer_bias_instability'] = res[:,1]
-    r['magnetometer_bias_randomwalk'] = res[:,2]
-    r['magnetometer_bias_tau_0'] = res[:,3]
-    r['magnetometer_bias_tau_1'] = res[:,4]
-    r['magnetometer_bias_tau_2'] = res[:,5]
+    for key in res1.keys():
+        r['magnetometer_' + key] = [ d[key] for d in [res1, res2, res3] ]
 
     # baro
     plt.figure()
@@ -597,12 +605,8 @@ def noise_analysis(df, plot=True):
         plot)
     plt.title('Allan variance plot - barometric altimeter')
     plt.legend(loc='best', ncol=3)
-    r['baro_noise_density'] = res[0]
-    r['baro_bias_instability'] = res[1]
-    r['baro_bias_randomwalk'] = res[2]
-    r['baro_bias_tau_0'] = res[3]
-    r['baro_bias_tau_1'] = res[4]
-    r['baro_bias_tau_2'] = res[5]
+    for key in res1.keys():
+        r['baro_' + key] = res[key]
 
     return r
 

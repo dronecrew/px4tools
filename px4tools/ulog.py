@@ -284,30 +284,7 @@ class PX4MessageDict(dict):
 
     def __init__(self, d):
         super(PX4MessageDict, self).__init__(d)
-
-    def get_topic(self, topic):
-        """
-        Just get a single topic with canonical naming.
-        """
-        new_cols = {}
-        for col in self[topic].columns:
-            if col == 'timestamp':
-                new_cols[col] = col
-            else:
-                new_cols[col] = 't_' + topic + '__f_' + col
-        df = self[topic].rename(columns=new_cols)
-        df.index = pd.Index(df.timestamp/1e6, name='time, sec')
-        return df
-
-    def resample_and_concat_mean(self, dt, verbose=False):
-        """
-        Resample at dt and concatenate all data frames using mean aggregation
-        """
-
-        data_frames = {}
         for topic in self.keys():
-            if verbose:
-                print('resampling', topic)
             new_cols = {}
             for col in self[topic].columns:
                 if col == 'timestamp':
@@ -315,57 +292,53 @@ class PX4MessageDict(dict):
                 else:
                     new_cols[col] = 't_' + topic + '__f_' + col
             df = self[topic].rename(columns=new_cols)
-            df.index = pd.TimedeltaIndex(df.index, unit='s')
-            df = df.resample('{:d}L'.format(int(dt*1000))).agg('mean')
-            data_frames[topic] = df
-        m = None
-        for topic in sorted(data_frames.keys()):
+            df.index = pd.TimedeltaIndex(df.timestamp*1e3, unit='ns')
+            self[topic] = df
+
+    def concat(self, topics=None, on=None, dt=None, verbose=False):
+        """
+
+        @param topics: topics to merge on, unspecified merges all
+
+        timestamp options
+        @param on: the topic whose timestamp will define the merge timestamp
+        @param dt: if specified, dt cannot be specified
+
+        @param verbose: show status
+        """
+        # define timestamps to merge on
+        if dt is not None:
+            ts_min = None
+            ts_max = None
+            for topic in sorted(self.keys()):
+                ts_t_min = self[topic]['timestamp'].min()
+                ts_t_max = self[topic]['timestamp'].max()
+                if ts_min is None or ts_t_min < ts_min:
+                    ts_min = ts_t_min
+                if ts_max is None or ts_t_max > ts_max:
+                    ts_max = ts_t_max
+            timestamps = np.arange(ts_min, ts_max, dt*1e6, dtype=np.int64)
+        elif on is not None:
+            timestamps = self[on].timestamp
+        else:
+            raise IOError('must pass dt or on')
+
+        # concat
+        m = pd.DataFrame(data=timestamps, columns=['timestamp'])
+        if topics is None:
+            topics = self.keys()
+
+        for topic in topics:
+            new_cols = {}
             if verbose:
-                print('merging', topic)
-            if m is None:
-                m = data_frames[topic]
-            else:
-                m = pd.merge_asof(m, data_frames[topic], on='timestamp')
-        m.index = pd.Index(m.timestamp/1e6, name='time, sec')
+                print('merging {:s} as of timestamp'.format(topic))
+            df = self[topic]
+            m = pd.merge_asof(m, df, 'timestamp')
+        m.index = pd.TimedeltaIndex(m.timestamp*1e3, unit='ns')
+        # fill any nans
+        m.ffill(inplace=True)
+        m.bfill(inplace=True)
         return m
-
-    def resample_and_concat(self, dt=-1):
-        """
-        Resample at dt and concatenate all data frames.
-
-        Not setting dt will flag to auto-calculate from sensor combined mean
-        period.
-        """
-        sensor_comb = self['sensor_combined_0']
-
-        if dt == -1:
-            dt = self['sensor_combined_0']['timestamp'].diff().mean()/1e6
-
-        # build empty data frame with the index we want
-        m = pd.DataFrame(
-            data=np.arange(
-                int(1e3*sensor_comb.timestamp.values[0]),
-                int(1e3*sensor_comb.timestamp.values[-1]),
-                int(1e9*dt)), columns=['timestamp'])
-        # populate dataframe with other data frames merging
-        # as of our defined index
-        for topic in sorted(self.keys()):
-            new_cols = {}
-            print('merging {:s} as of timestamp'.format(topic))
-            for col in self[topic].columns:
-                if col == 'timestamp':
-                    new_cols[col] = col
-                else:
-                    new_cols[col] = 't_' + topic + '__f_' + col
-            df = self[topic].rename(columns=new_cols)
-            df.timestamp = np.array(df.timestamp, dtype=np.int)
-            df = df.sort_values('timestamp')
-            m = pd.merge_asof(m, df, on='timestamp')
-        m.index = pd.Index(m.timestamp/1e6, name='time, sec')
-        try:
-            return compute_data(m)
-        except AttributeError:
-            return m
 
 def read_ulog(ulog_filename, messages='', verbose=False):
     """
@@ -483,13 +456,14 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
     if plot:
         x2 = np.linspace(x[0], x[-1])
         y2 = p(x2)
-        ydiff = pdiff(x2)
         plt.title('Frequency Stability')
         plt.loglog(dt_vals, data_vals, 'k.', label='raw')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
         plt.loglog(10**x2, 10**y2, 'g-', label='fit')
-        plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
+        if plot_deriv:
+            ydiff = pdiff(x2)
+            plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
         plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='noise density', markeredgewidth=3)
         plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='bias instability', markeredgewidth=3)
         plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='random walk', markeredgewidth=3)
@@ -576,7 +550,7 @@ def noise_analysis(df, plot=True):
     plt.title('Allan variance plot - gyroscope')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
-        r['gyroscope_' + key] = [ d[key] for d in [res1, res2, res3] ]
+        r['gyroscope_' + key] = [d[key] for d in [res1, res2, res3]]
 
     # accelerometer
     plt.figure()
@@ -597,7 +571,7 @@ def noise_analysis(df, plot=True):
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
-        r['accelerometer_' + key] = [ d[key] for d in [res1, res2, res3] ]
+        r['accelerometer_' + key] = [d[key] for d in [res1, res2, res3]]
 
     # magnetometer
     plt.figure()
@@ -607,7 +581,7 @@ def noise_analysis(df, plot=True):
     tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
     plt.title('normalized autocorrelation - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
-    r['magnetometer_randomwalk_correlation_time'] =  [tau1, tau2, tau3]
+    r['magnetometer_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
     res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
@@ -618,7 +592,7 @@ def noise_analysis(df, plot=True):
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
-        r['magnetometer_' + key] = [ d[key] for d in [res1, res2, res3] ]
+        r['magnetometer_' + key] = [d[key] for d in [res1, res2, res3]]
 
     # baro
     plt.figure()
@@ -640,23 +614,33 @@ def noise_analysis(df, plot=True):
 
     return r
 
-def load_or_create_mean_downsampled_dataset(log, dt, msg_filter='', verbose=False):
+def cached_log_processing(
+        log, processing_func, msg_filter='',
+        save_label='',
+        force_processing=False, verbose=False):
     """
     Downsamples a log using mean aggregation and stores as a
     pkl for later loading.
+
+    @param log: ulog to process
+    @param processing_func: data = f(data0), how to process data
+    @param msg_filter: filter to pass to ulog, '' is all topics
+    @param save_label: label for processing pkl
+    @param force_processing: force processing
+    @param verbose: show status messages
     """
-    pkl_file = log.replace('ulg', 'pkl')
-    if os.path.exists(pkl_file):
+    save_filename = log.replace('.ulg', '{:s}.pkl'.format(save_label))
+    if not force_processing and os.path.exists(save_filename):
         if verbose:
-            print('loading pickle', pkl_file)
-        with open(pkl_file, 'rb') as f:
+            print('loading pickle', save_filename)
+        with open(save_filename, 'rb') as f:
             d = pickle.load(f)
     else:
         if verbose:
-            print('creating pickle', pkl_file)
+            print('creating pickle', save_filename)
         d0 = read_ulog(log, msg_filter)
-        d = d0.resample_and_concat_mean(dt)
-        with open(pkl_file, 'wb') as f:
+        d = processing_func(d0)
+        with open(save_filename, 'wb') as f:
             pickle.dump(d, f)
     return d
 

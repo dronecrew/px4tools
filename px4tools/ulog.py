@@ -538,10 +538,10 @@ def noise_analysis(df, plot=True):
     r['gyroscope_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
-    res1 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
+    res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_gyro_rad_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    res2 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
-    res3 = plot_allan_variance(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
+    res2 = plot_allan_std_dev(df.t_sensor_combined_0__f_gyro_rad_1_, plot)
+    res3 = plot_allan_std_dev(df.t_sensor_combined_0__f_gyro_rad_2_, plot)
     plt.title('Allan variance plot - gyroscope')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
@@ -558,10 +558,10 @@ def noise_analysis(df, plot=True):
     r['accelerometer_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
-    res1 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
+    res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    res2 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
-    res3 = plot_allan_variance(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
+    res2 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
+    res3 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
@@ -579,10 +579,10 @@ def noise_analysis(df, plot=True):
     r['magnetometer_randomwalk_correlation_time'] =  [tau1, tau2, tau3]
 
     plt.figure()
-    res1 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
+    res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    res2 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
-    res3 = plot_allan_variance(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
+    res2 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
+    res3 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
@@ -599,7 +599,7 @@ def noise_analysis(df, plot=True):
     r['baro_randomwalk_correlation_time'] = float(tau)
 
     plt.figure()
-    res = plot_allan_variance(
+    res = plot_allan_std_dev(
         df.t_sensor_combined_0__f_baro_alt_meter,
         plot)
     plt.title('Allan variance plot - barometric altimeter')

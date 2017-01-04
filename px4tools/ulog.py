@@ -11,6 +11,7 @@ import tempfile
 import re
 import glob
 import shutil
+import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -638,5 +639,25 @@ def noise_analysis(df, plot=True):
         r['baro_' + key] = res[key]
 
     return r
+
+def load_or_create_mean_downsampled_dataset(log, dt, msg_filter='', verbose=False):
+    """
+    Downsamples a log using mean aggregation and stores as a
+    pkl for later loading.
+    """
+    pkl_file = log.replace('ulg', 'pkl')
+    if os.path.exists(pkl_file):
+        if verbose:
+            print('loading pickle', pkl_file)
+        with open(pkl_file, 'rb') as f:
+            d = pickle.load(f)
+    else:
+        if verbose:
+            print('creating pickle', pkl_file)
+        d0 = read_ulog(log, msg_filter)
+        d = d0.resample_and_concat_mean(dt)
+        with open(pkl_file, 'wb') as f:
+            pickle.dump(d, f)
+    return d
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

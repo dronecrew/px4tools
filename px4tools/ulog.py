@@ -298,6 +298,36 @@ class PX4MessageDict(dict):
         df.index = pd.Index(df.timestamp/1e6, name='time, sec')
         return df
 
+    def resample_and_concat_mean(dt, verbose=False):
+        """
+        Resample at dt and concatenate all data frames using mean aggregation
+        """
+
+        data_frames = {}
+        for topic in d0.keys():
+            if verbose:
+                print('resampling', topic)
+            new_cols = {}
+            for col in d0[topic].columns:
+                if col == 'timestamp':
+                    new_cols[col] = col
+                else:
+                    new_cols[col] = 't_' + topic + '__f_' + col
+            df = d0[t].rename(columns=new_cols)
+            df.index = pandas.TimedeltaIndex(df.index, unit='s')
+            df = df.resample('{:d}L'.format(int(dt*1000))).agg('mean')
+            data_frames[topic] = df
+        m = None
+        for topic in sorted(data_frames.keys()):
+            if verbose:
+                print('merging', topic)
+            if m is None:
+                m = data_frames[topic]
+            else:
+                m = pandas.merge_asof(m, data_frames[topic], on='timestamp')
+        m.index = pandas.Index(m.timestamp/1e6, name='time, sec')
+        return m
+
     def resample_and_concat(self, dt=-1):
         """
         Resample at dt and concatenate all data frames.

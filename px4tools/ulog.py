@@ -116,8 +116,10 @@ def plot_iekf_std_dev(df):
     """
     Plot IEKF standard deviation.
     """
+    #pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_ERROR_STATES)):
-        exec('np.sqrt(df.t_estimator_status_0__f_covariances_{:d}_).plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
+        exec('np.sqrt(df.t_estimator_status_0__f_covariances_{:d}_).'
+             'plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
     plt.gca().set_ylim(0, 4)
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF est std. dev.')
@@ -127,6 +129,7 @@ def plot_iekf_states(df):
     """
     Plot IEKF states
     """
+    #pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_STATES)):
         exec('df.t_estimator_status_0__f_states_{:d}_.plot(label=IEKF_STATES[{:d}])'.format(i, i))
     plt.legend(ncol=3, loc='best')
@@ -317,7 +320,7 @@ class PX4MessageDict(dict):
                     ts_min = ts_t_min
                 if ts_max is None or ts_t_max > ts_max:
                     ts_max = ts_t_max
-            timestamps = np.arange(ts_min, ts_max, dt*1e6, dtype=np.int64)
+            timestamps = np.arange(ts_min, ts_max - dt*1e6, dt*1e6, dtype=np.int64)
         elif on is not None:
             timestamps = self[on].timestamp
         else:
@@ -327,9 +330,7 @@ class PX4MessageDict(dict):
         m = pd.DataFrame(data=timestamps, columns=['timestamp'])
         if topics is None:
             topics = self.keys()
-
         for topic in topics:
-            new_cols = {}
             if verbose:
                 print('merging {:s} as of timestamp'.format(topic))
             df = self[topic]
@@ -338,6 +339,8 @@ class PX4MessageDict(dict):
         # fill any nans
         m.ffill(inplace=True)
         m.bfill(inplace=True)
+        m.pad(inplace=True)
+        assert(np.all(np.isfinite(m)))
         return m
 
 def read_ulog(ulog_filename, messages='', verbose=False):
@@ -396,14 +399,15 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         if len(posreal) > 0:
             res = posreal[0]
     if not np.isfinite(res) or res < min_val or res > max_val:
-        res = 0
+        res = np.nan
     return res
 
-def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_order=6):
+def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_order=2):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan standard deviation plot for the noise.
     """
+    #pylint: disable=too-many-statements
 
     data.index = pd.TimedeltaIndex(data.index, unit='s')
     dt = float(
@@ -415,7 +419,8 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
     c_vals = []
     # require at least 9 clusters for < 25% error:
     # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
-    while 10**c < float(data.index.values[-1]/1e9/min_intervals):
+    t_len = (data.index.values[-1] - data.index.values[0])/1e9
+    while 10**c < float(t_len/min_intervals):
         c_vals += [10**c]
         c += 0.2
     for c_i in c_vals:
@@ -437,36 +442,41 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
     if tau_0 > 0 and np.isfinite(tau_0):
         sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)
     else:
-        sig_rw = 0
+        print('failed to find tau_0')
+        sig_rw = np.nan
 
     log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
     tau_1 = 10**log_tau_1
     if tau_1 > 0 and np.isfinite(tau_1):
         sig_bi = (10**p(log_tau_1))*np.sqrt(np.pi/(2*np.log(2)))
     else:
-        sig_bi = 0
+        print('failed to find tau_1')
+        sig_bi = np.nan
 
     log_tau_2 = _smallest_positive_real_root((pdiff - 0.5).roots(), log_tau_1, 5)
     tau_2 = 10**log_tau_2
     if tau_2 > 0 and np.isfinite(tau_2):
         sig_rrw = (10**p(log_tau_2))*np.sqrt(3/tau_2)
     else:
-        sig_rrw = 0
+        print('failed to find tau_2')
+        sig_rrw = np.nan
 
     if plot:
-        x2 = np.linspace(x[0], x[-1])
+        x2 = np.linspace(
+            min([x[0], log_tau_0, log_tau_1, log_tau_2]),
+            max([x[-1], log_tau_0, log_tau_1, log_tau_2]))
         y2 = p(x2)
         plt.title('Frequency Stability')
-        plt.loglog(dt_vals, data_vals, 'k.', label='raw')
+        plt.loglog(dt_vals, data_vals, '.', label='raw')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
-        plt.loglog(10**x2, 10**y2, 'g-', label='fit')
+        plt.loglog(10**x2, 10**y2, '-', label='fit')
         if plot_deriv:
             ydiff = pdiff(x2)
-            plt.loglog(10**x2, 10**ydiff, 'g--', label='fit deriv')
-        plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='noise density', markeredgewidth=3)
-        plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='bias instability', markeredgewidth=3)
-        plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='random walk', markeredgewidth=3)
+            plt.loglog(10**x2, 10**ydiff, '--', label='fit deriv')
+        plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='$\\sigma_{rw}$', markeredgewidth=3)
+        plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='$\\sigma_{bi}$', markeredgewidth=3)
+        plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='$\\sigma_{rrw}$', markeredgewidth=3)
         plt.grid(True, which='both')
         plt.minorticks_on()
 
@@ -525,10 +535,45 @@ def plot_autocorrelation(data, plot=True, poly_order=5):
     correlation_time = _smallest_positive_real_root((p - 1/np.e).roots())
     return correlation_time
 
-def noise_analysis(df, plot=True):
+def noise_analysis_sensor(df, topic='sensor_gyro_0', plot=True, allan_args={},
+        corr_args={}):
     """
-    Given a dataset of a stationary vehicle on the ground, this compute the noise statistics.
+    Given a sensor gyro dataset of a stationary vehicle on the ground,
+    this compute the noise statistics.
     """
+
+    r = {}
+
+    # gyroscope
+    plt.figure()
+    gx = df['t_{:s}__f_x'.format(topic)]
+    gy = df['t_{:s}__f_y'.format(topic)]
+    gz = df['t_{:s}__f_z'.format(topic)]
+    tau1 = plot_autocorrelation(gx, plot, **corr_args)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    tau2 = plot_autocorrelation(gy, plot, **corr_args)
+    tau3 = plot_autocorrelation(gz, plot, **corr_args)
+    plt.title('normalized autocorrelation - {:s}'.format(topic))
+    plt.legend(handles, labels, loc='best', ncol=3)
+    r['{:s}_randomwalk_correlation_time'.format(topic)] = [tau1, tau2, tau3]
+
+    plt.figure()
+    res1 = plot_allan_std_dev(gx, plot, **allan_args)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    res2 = plot_allan_std_dev(gy, plot, **allan_args)
+    res3 = plot_allan_std_dev(gz, plot, **allan_args)
+    plt.title('Allan variance plot - {:s}'.format(topic))
+    plt.legend(handles, labels, loc='best', ncol=3)
+    for key in res1.keys():
+        r['{:s}_{:s}'.format(topic, key)] = [d[key] for d in [res1, res2, res3]]
+    return r
+
+def noise_analysis_sensor_combined(df, plot=True):
+    """
+    Given a sensor combined dataset of a stationary vehicle on the ground,
+    this compute the noise statistics.
+    """
+    #pylint: disable=too-many-statements
 
     r = {}
 
@@ -629,6 +674,8 @@ def cached_log_processing(
     @param force_processing: force processing
     @param verbose: show status messages
     """
+    #pylint: disable=too-many-arguments
+
     save_filename = log.replace('.ulg', '{:s}.pkl'.format(save_label))
     if not force_processing and os.path.exists(save_filename):
         if verbose:

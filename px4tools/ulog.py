@@ -410,8 +410,7 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
     #pylint: disable=too-many-statements
 
     data.index = pd.TimedeltaIndex(data.index, unit='s')
-    dt = float(
-        data.index.values[1] - data.index.values[0])/1e9
+    dt = float(np.diff(data.index.values).mean())/1e9
 
     data_vals = []
     dt_vals = []

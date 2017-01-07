@@ -2,7 +2,7 @@
 ulog2pandas converter
 """
 
-#pylint: disable=no-member, invalid-name, broad-except, too-many-locals
+# pylint: disable=no-member, invalid-name, broad-except, too-many-locals
 
 from __future__ import print_function
 
@@ -62,6 +62,7 @@ IEKF_ERROR_STATES = {
     17: 'wind_D',
 }
 
+
 def compute_data(df):
     """
     This computes useful data from analysis from the raw log data,
@@ -84,8 +85,10 @@ def compute_data(df):
             df.t_vehicle_attitude_groundtruth_0__f_q_2_,
             df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
 
-        e_roll = pd.Series(angle_wrap(roll - roll_gt), name=msg + '__f_roll_error')
-        e_pitch = pd.Series(angle_wrap(pitch - pitch_gt), name=msg + '__f_pitch_error')
+        e_roll = pd.Series(angle_wrap(roll - roll_gt),
+                           name=msg + '__f_roll_error')
+        e_pitch = pd.Series(angle_wrap(pitch - pitch_gt),
+                            name=msg + '__f_pitch_error')
         e_yaw = pd.Series(angle_wrap(yaw - yaw_gt), name=msg + '__f_yaw_error')
 
         series += [roll_gt, pitch_gt, yaw_gt, e_roll, e_pitch, e_yaw]
@@ -94,9 +97,11 @@ def compute_data(df):
 
     return pd.concat(series, axis=1)
 
+
 def angle_wrap(x):
     """wrap angle betwe -pi and pi"""
     return np.arcsin(np.sin(x))
+
 
 def plot_altitude(df, plot_groundtruth=False):
     """
@@ -112,29 +117,35 @@ def plot_altitude(df, plot_groundtruth=False):
     plt.xlabel('t, sec')
     plt.ylabel('m')
 
+
 def plot_iekf_std_dev(df):
     """
     Plot IEKF standard deviation.
     """
-    #pylint: disable=exec-used, unused-argument
+    # pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_ERROR_STATES)):
-        exec('np.sqrt(df.t_estimator_status_0__f_covariances_{:d}_).'
-             'plot(label=IEKF_ERROR_STATES[{:d}])'.format(i, i))
+        d = getattr(
+            df, 't_estimator_status_0__f_covariances_{:d}_'.format(i))
+        getattr(np.sqrt(d), 'plot')(label='IEKF_ERROR_STATES[{:d}]'.format(i))
     plt.gca().set_ylim(0, 4)
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF est std. dev.')
     plt.grid()
 
+
 def plot_iekf_states(df):
     """
     Plot IEKF states
     """
-    #pylint: disable=exec-used, unused-argument
+    # pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_STATES)):
-        exec('df.t_estimator_status_0__f_states_{:d}_.plot(label=IEKF_STATES[{:d}])'.format(i, i))
+        d = getattr(
+            df, 't_estimator_status_0__f_states_{:d}_'.format(i))
+        getattr(d, 'plot')(label='IEKF_STATES[{:d}]'.format(i))
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF states')
     plt.grid()
+
 
 def plot_local_position(df, plot_groundtruth=False):
     """
@@ -152,6 +163,7 @@ def plot_local_position(df, plot_groundtruth=False):
     plt.ylabel('E, m')
     plt.legend(loc='best')
 
+
 def plot_euler(df, plot_groundtruth=False):
     """
     Plot euler angles
@@ -161,7 +173,8 @@ def plot_euler(df, plot_groundtruth=False):
     if plot_groundtruth:
         np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_roll).plot(
             label='roll true', style='r--')
-    np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(label='pitch', style='g-')
+    np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(
+        label='pitch', style='g-')
     if plot_groundtruth:
         np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_pitch).plot(
             label='pitch true', style='g--')
@@ -173,6 +186,7 @@ def plot_euler(df, plot_groundtruth=False):
     plt.legend(loc='best', ncol=3)
     plt.xlabel('t, sec')
     plt.ylabel('deg')
+
 
 def plot_euler_error(df):
     """
@@ -189,6 +203,7 @@ def plot_euler_error(df):
     plt.legend(loc='best', ncol=3)
     plt.xlabel('t, sec')
     plt.ylabel('deg')
+
 
 def plot_velocity(df, plot_groundtruth=False):
     """
@@ -214,6 +229,7 @@ def plot_velocity(df, plot_groundtruth=False):
     plt.xlabel('t, sec')
     plt.ylabel('m/s')
 
+
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """
     Given pandas series q0-q4, compute series roll, pitch, yaw
@@ -226,23 +242,24 @@ def series_quat2euler(q0, q1, q2, q3, msg_name):
     roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
     return roll, pitch, yaw
 
+
 def estimator_analysis(df, plot=True):
     """
     Evaluates estimator performance
     """
-    #pylint: disable=unused-variable
+    # pylint: disable=unused-variable
     data = {
-        'roll_error_mean' : np.rad2deg(
+        'roll_error_mean': np.rad2deg(
             df.t_vehicle_attitude_0__f_roll_error.mean()),
-        'pitch_error_mean' : np.rad2deg(
+        'pitch_error_mean': np.rad2deg(
             df.t_vehicle_attitude_0__f_pitch_error.mean()),
-        'yaw_error_mean' : np.rad2deg(
+        'yaw_error_mean': np.rad2deg(
             df.t_vehicle_attitude_0__f_yaw_error.mean()),
-        'roll_error_std' : np.rad2deg(np.sqrt(
+        'roll_error_std': np.rad2deg(np.sqrt(
             df.t_vehicle_attitude_0__f_roll_error.var())),
-        'pitch_error_std' : np.rad2deg(np.sqrt(
+        'pitch_error_std': np.rad2deg(np.sqrt(
             df.t_vehicle_attitude_0__f_pitch_error.var())),
-        'yaw_error_std' : np.rad2deg(np.sqrt(
+        'yaw_error_std': np.rad2deg(np.sqrt(
             df.t_vehicle_attitude_0__f_yaw_error.var())),
     }
     if plot:
@@ -276,6 +293,7 @@ standard deviation euler error:
         plot_velocity(df, plot_groundtruth=True)
 
     return data
+
 
 class PX4MessageDict(dict):
 
@@ -320,7 +338,8 @@ class PX4MessageDict(dict):
                     ts_min = ts_t_min
                 if ts_max is None or ts_t_max > ts_max:
                     ts_max = ts_t_max
-            timestamps = np.arange(ts_min, ts_max - dt*1e6, dt*1e6, dtype=np.int64)
+            timestamps = np.arange(
+                ts_min, ts_max - dt*1e6, dt*1e6, dtype=np.int64)
         elif on is not None:
             timestamps = self[on].timestamp
         else:
@@ -340,8 +359,9 @@ class PX4MessageDict(dict):
         m.ffill(inplace=True)
         m.bfill(inplace=True)
         m.pad(inplace=True)
-        assert(np.all(np.isfinite(m)))
+        assert np.all(np.isfinite(m))
         return m
+
 
 def read_ulog(ulog_filename, messages='', verbose=False):
     """
@@ -362,7 +382,9 @@ def read_ulog(ulog_filename, messages='', verbose=False):
         ']': '_',
     }
     col_rename_pattern = re.compile(
-        r'(' + '|'.join([re.escape(key) for key in d_col_rename.keys()]) + r')')
+        r'(' + '|'.join([
+            re.escape(key)
+            for key in d_col_rename.keys()]) + r')')
 
     for filename in sorted(glob.glob(glob_expr)):
         if verbose:
@@ -386,6 +408,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
 
+
 def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
     """
     Find smallest positive real root in list
@@ -402,12 +425,14 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
         res = np.nan
     return res
 
-def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_order=2):
+
+def plot_allan_std_dev(
+        data, plot=True, plot_deriv=False, min_intervals=9, poly_order=2):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the Allan standard deviation plot for the noise.
     """
-    #pylint: disable=too-many-statements
+    # pylint: disable=too-many-statements
 
     data.index = pd.TimedeltaIndex(data.index, unit='s')
     dt = float(np.diff(data.index.values).mean())/1e9
@@ -417,7 +442,8 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
     c = int(np.ceil(np.log10(dt)))
     c_vals = []
     # require at least 9 clusters for < 25% error:
-    # source http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
+    # source:
+    # http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
     t_len = (data.index.values[-1] - data.index.values[0])/1e9
     while 10**c < float(t_len/min_intervals):
         c_vals += [10**c]
@@ -452,7 +478,8 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
         print('failed to find tau_1')
         sig_bi = np.nan
 
-    log_tau_2 = _smallest_positive_real_root((pdiff - 0.5).roots(), log_tau_1, 5)
+    log_tau_2 = _smallest_positive_real_root(
+        (pdiff - 0.5).roots(), log_tau_1, 5)
     tau_2 = 10**log_tau_2
     if tau_2 > 0 and np.isfinite(tau_2):
         sig_rrw = (10**p(log_tau_2))*np.sqrt(3/tau_2)
@@ -473,9 +500,15 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
         if plot_deriv:
             ydiff = pdiff(x2)
             plt.loglog(10**x2, 10**ydiff, '--', label='fit deriv')
-        plt.plot(tau_0, 10**p(log_tau_0), 'rx', label='$\\sigma_{rw}$', markeredgewidth=3)
-        plt.plot(tau_1, 10**p(log_tau_1), 'bx', label='$\\sigma_{bi}$', markeredgewidth=3)
-        plt.plot(tau_2, 10**p(log_tau_2), 'gx', label='$\\sigma_{rrw}$', markeredgewidth=3)
+        plt.plot(
+            tau_0, 10**p(log_tau_0), 'rx',
+            label='$\\sigma_{rw}$', markeredgewidth=3)
+        plt.plot(
+            tau_1, 10**p(log_tau_1), 'bx',
+            label='$\\sigma_{bi}$', markeredgewidth=3)
+        plt.plot(
+            tau_2, 10**p(log_tau_2), 'gx',
+            label='$\\sigma_{rrw}$', markeredgewidth=3)
         plt.grid(True, which='both')
         plt.minorticks_on()
 
@@ -487,6 +520,7 @@ def plot_allan_std_dev(data, plot=True, plot_deriv=False, min_intervals=9, poly_
         'tau_1': tau_1,
         'tau_2': tau_2
     }
+
 
 def plot_autocorrelation(data, plot=True, poly_order=5):
     """
@@ -534,12 +568,20 @@ def plot_autocorrelation(data, plot=True, poly_order=5):
     correlation_time = _smallest_positive_real_root((p - 1/np.e).roots())
     return correlation_time
 
-def noise_analysis_sensor(df, topic='sensor_gyro_0', plot=True, allan_args={},
-        corr_args={}):
+
+def noise_analysis_sensor(
+        df, topic='sensor_gyro_0', plot=True, allan_args=None,
+        corr_args=None):
     """
     Given a sensor gyro dataset of a stationary vehicle on the ground,
     this compute the noise statistics.
     """
+
+    if allan_args is None:
+        allan_args = {}
+
+    if corr_args is None:
+        corr_args = {}
 
     r = {}
 
@@ -564,15 +606,17 @@ def noise_analysis_sensor(df, topic='sensor_gyro_0', plot=True, allan_args={},
     plt.title('Allan variance plot - {:s}'.format(topic))
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
-        r['{:s}_{:s}'.format(topic, key)] = [d[key] for d in [res1, res2, res3]]
+        r['{:s}_{:s}'.format(topic, key)] = \
+            [d[key] for d in [res1, res2, res3]]
     return r
+
 
 def noise_analysis_sensor_combined(df, plot=True):
     """
     Given a sensor combined dataset of a stationary vehicle on the ground,
     this compute the noise statistics.
     """
-    #pylint: disable=too-many-statements
+    # pylint: disable=too-many-statements
 
     r = {}
 
@@ -598,19 +642,25 @@ def noise_analysis_sensor_combined(df, plot=True):
 
     # accelerometer
     plt.figure()
-    tau1 = plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
+    tau1 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    tau2 = plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
-    tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
+    tau2 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
+    tau3 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
     plt.title('normalized autocorrelation - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     r['accelerometer_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
-    res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
+    res1 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    res2 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
-    res3 = plot_allan_std_dev(df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
+    res2 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
+    res3 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
@@ -619,19 +669,25 @@ def noise_analysis_sensor_combined(df, plot=True):
 
     # magnetometer
     plt.figure()
-    tau1 = plot_autocorrelation(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
+    tau1 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    tau2 = plot_autocorrelation(df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
-    tau3 = plot_autocorrelation(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
+    tau2 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
+    tau3 = plot_autocorrelation(
+        df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
     plt.title('normalized autocorrelation - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     r['magnetometer_randomwalk_correlation_time'] = [tau1, tau2, tau3]
 
     plt.figure()
-    res1 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
+    res1 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_magnetometer_ga_0_, plot)
     handles, labels = plt.gca().get_legend_handles_labels()
-    res2 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
-    res3 = plot_allan_std_dev(df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
+    res2 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
+    res3 = plot_allan_std_dev(
+        df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
     res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
@@ -658,9 +714,10 @@ def noise_analysis_sensor_combined(df, plot=True):
 
     return r
 
+
 def cached_log_processing(
         log, processing_func, msg_filter='',
-        save_label='',
+        save_path='',
         force_processing=False, verbose=False):
     """
     Downsamples a log using mean aggregation and stores as a
@@ -669,24 +726,23 @@ def cached_log_processing(
     @param log: ulog to process
     @param processing_func: data = f(data0), how to process data
     @param msg_filter: filter to pass to ulog, '' is all topics
-    @param save_label: label for processing pkl
+    @param save_path: file path for saved pkl file
     @param force_processing: force processing
     @param verbose: show status messages
     """
-    #pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
 
-    save_filename = log.replace('.ulg', '{:s}.pkl'.format(save_label))
-    if not force_processing and os.path.exists(save_filename):
+    if not force_processing and os.path.exists(save_path):
         if verbose:
-            print('loading pickle', save_filename)
-        with open(save_filename, 'rb') as f:
+            print('loading pickle', save_path)
+        with open(save_path, 'rb') as f:
             d = pickle.load(f)
     else:
         if verbose:
-            print('creating pickle', save_filename)
+            print('creating pickle', save_path)
         d0 = read_ulog(log, msg_filter)
         d = processing_func(d0)
-        with open(save_filename, 'wb') as f:
+        with open(save_path, 'wb') as f:
             pickle.dump(d, f)
     return d
 

@@ -27,6 +27,12 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 
 1. See requirements.txt
 
+For pandas, to fix time series plotting with time delta index you need this branch:
+
+	```bash
+	https://github.com/jgoppert/pandas/tree/tdi_plot_fix
+	```
+
 ### Using Anaconda (Recommended)
 
 1. [Install anaconda](http://docs.continuum.io/anaconda/install)

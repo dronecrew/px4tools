@@ -462,7 +462,7 @@ def plot_allan_std_dev(
     p = np.polynomial.Polynomial.fit(x, y, poly_order)
     pdiff = p.deriv()
 
-    log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), 0, 5)
+    log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), -5, 5)
     tau_0 = 10**log_tau_0
     if tau_0 > 0 and np.isfinite(tau_0):
         sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)

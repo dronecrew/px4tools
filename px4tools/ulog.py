@@ -467,16 +467,14 @@ def plot_allan_std_dev(
     if tau_0 > 0 and np.isfinite(tau_0):
         sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)
     else:
-        print('failed to find tau_0')
-        sig_rw = np.nan
+        sig_rw = 0
 
     log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
     tau_1 = 10**log_tau_1
     if tau_1 > 0 and np.isfinite(tau_1):
         sig_bi = (10**p(log_tau_1))*np.sqrt(np.pi/(2*np.log(2)))
     else:
-        print('failed to find tau_1')
-        sig_bi = np.nan
+        sig_bi = 0
 
     log_tau_2 = _smallest_positive_real_root(
         (pdiff - 0.5).roots(), log_tau_1, 5)
@@ -484,8 +482,7 @@ def plot_allan_std_dev(
     if tau_2 > 0 and np.isfinite(tau_2):
         sig_rrw = (10**p(log_tau_2))*np.sqrt(3/tau_2)
     else:
-        print('failed to find tau_2')
-        sig_rrw = np.nan
+        sig_rrw = 0
 
     if plot:
         x2 = np.linspace(

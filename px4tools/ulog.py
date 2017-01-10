@@ -467,7 +467,9 @@ def plot_allan_std_dev(
     if tau_0 > 0 and np.isfinite(tau_0):
         sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)
     else:
-        sig_rw = 0
+        # if intersect fails, evaluate slope at tau=1
+        tau_0 = 1
+        sig_rw = 10**p(np.log10(tau_0))*np.sqrt(tau_0)
 
     log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
     tau_1 = 10**log_tau_1

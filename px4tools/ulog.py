@@ -413,7 +413,7 @@ def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):
     """
     Find smallest positive real root in list
     """
-    res = 0
+    res = np.nan
     if len(roots) > 0:
         cond = np.logical_and(
             np.isreal(roots),
@@ -522,7 +522,7 @@ def plot_allan_std_dev(
     }
 
 
-def plot_autocorrelation(data, plot=True, poly_order=5):
+def plot_autocorrelation(data, plot=True, poly_order=1):
     """
     Given a dataset of a stationary vehicle on the ground,
     this compute the autocorrellation. The intersection with

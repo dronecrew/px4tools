@@ -355,11 +355,6 @@ class PX4MessageDict(dict):
             df = self[topic]
             m = pd.merge_asof(m, df, 'timestamp')
         m.index = pd.TimedeltaIndex(m.timestamp*1e3, unit='ns')
-        # fill any nans
-        m.ffill(inplace=True)
-        m.bfill(inplace=True)
-        m.pad(inplace=True)
-        assert np.all(np.isfinite(m))
         return m
 
 

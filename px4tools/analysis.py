@@ -106,8 +106,8 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     except Exception:
         pass
     (-1*data.LPSP_Z).plot(legend=True)
-    (data.SENS_BaroAlt - data.SENS_BaroAlt[i0_Baro]).plot(legend=True)
-    (data.GPS_Alt - data.GPS_Alt[i0_GPS]).plot(legend=True)
+    (data.SENS_BaroAlt - data.SENS_BaroAlt[i0_Baro].values[0]).plot(legend=True)
+    (data.GPS_Alt - data.GPS_Alt[i0_GPS].values[0]).plot(legend=True)
     (-1*data).LPOS_Z.plot(legend=True)
 
     import matplotlib.pyplot as plt
@@ -448,7 +448,7 @@ def plot_faults(data):
         (7*data.fault_lidar).plot()
     except AttributeError as e:
         print(e)
-    plt.gca().set_ylim(-1, 2)
+    plt.gca().set_ylim(-1, 8)
 
 def plot_timeouts(data):
     try:
@@ -461,7 +461,7 @@ def plot_timeouts(data):
         (7*data.timeout_lidar).plot()
     except AttributeError as e:
         print(e)
-    plt.gca().set_ylim(-1, 2)
+    plt.gca().set_ylim(-1, 8)
 
 
 # vim: set et fenc= ft=python ff=unix sts=0 sw=4 ts=4 :

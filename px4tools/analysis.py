@@ -439,26 +439,26 @@ def process_lpe_health(data):
 
 def plot_faults(data):
     try:
-        data.fault_sonar.plot()
-        data.fault_baro.plot()
-        data.fault_gps.plot()
-        data.fault_flow.plot()
-        data.fault_vision.plot()
-        data.fault_mocap.plot()
-        data.fault_lidar.plot()
+        (1*data.fault_sonar).plot()
+        (2*data.fault_baro).plot()
+        (3*data.fault_gps).plot()
+        (4*data.fault_flow).plot()
+        (5*data.fault_vision).plot()
+        (6*data.fault_mocap).plot()
+        (7*data.fault_lidar).plot()
     except AttributeError as e:
         print(e)
     plt.gca().set_ylim(-1, 2)
 
 def plot_timeouts(data):
     try:
-        data.timeout_sonar.plot()
-        data.timeout_baro.plot()
-        data.timeout_gps.plot()
-        data.timeout_flow.plot()
-        data.timeout_vision.plot()
-        data.timeout_mocap.plot()
-        data.timeout_lidar.plot()
+        (1*data.timeout_sonar).plot()
+        (2*data.timeout_baro).plot()
+        (3*data.timeout_gps).plot()
+        (4*data.timeout_flow).plot()
+        (5*data.timeout_vision).plot()
+        (6*data.timeout_mocap).plot()
+        (7*data.timeout_lidar).plot()
     except AttributeError as e:
         print(e)
     plt.gca().set_ylim(-1, 2)

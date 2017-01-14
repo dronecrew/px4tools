@@ -53,14 +53,14 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 	. conda_env
 	```
 
-2. Install via conda
+2. Install px4tools via conda
 
 	```bash
 	conda config --add channels conda-forge
 	conda install px4tools jupyter
 	```
 
-3. Upgrading using pip in conda
+3. Upgrading px4tools using pip in conda
 
 	The conda-forge px4tools package usually lags behind master. If you need the latest code, use pip within your conda env.
 
@@ -69,7 +69,7 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 	pip install px4tools
 	```
 
-4. Building form source and installing to conda environment
+4. Building px4tools form source and installing to conda environment
 
 	If you want to do development and edit some of the source, follow this example:
 

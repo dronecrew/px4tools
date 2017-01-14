@@ -322,8 +322,9 @@ class PX4MessageDict(dict):
         @param topics: topics to merge on, unspecified merges all
 
         timestamp options
-        @param on: the topic whose timestamp will define the merge timestamp
-        @param dt: if specified, dt cannot be specified
+        @param on: the topic whose timestamp will define the merge timestamp,
+            if specified, dt cannot be specified
+        @param dt: if specified, on cannot be specified
 
         @param verbose: show status
         """

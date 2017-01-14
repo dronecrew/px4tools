@@ -55,10 +55,10 @@ For pandas, to fix time series plotting with time delta index you need this bran
 
 2. Install via conda
 
-```bash
-conda config --add channels conda-forge
-conda install px4tools jupyter
-```
+	```bash
+	conda config --add channels conda-forge
+	conda install px4tools jupyter
+	```
 
 3. Upgrading using pip in conda
 
@@ -70,24 +70,25 @@ The conda-forge px4tools package usually lags behind master. If you need the lat
 	```
 
 ### Using PyPi
-```bash
-pip install px4tools jupyter --user
-```
+
+	```bash
+	pip install px4tools jupyter --user
+	```
 
 ## Usage
 
 First use the sdlog2_dumpy.py program to convert the px4log to csv:
 
-```bash
-wget https://github.com/PX4/Firmware/raw/master/Tools/sdlog2/sdlog2_dump.py
-python sdlog2_dumpy.py your_log.px4log > your_log.csv
-```
+	```bash
+	wget https://github.com/PX4/Firmware/raw/master/Tools/sdlog2/sdlog2_dump.py
+	python sdlog2_dumpy.py your_log.px4log > your_log.csv
+	```
 
 Now start jupyter notebook in the directoy of your_log.csv:
 
-```bash
-jupyter notebook
-```
+	```bash
+	jupyter notebook
+	```
 
 ## Examples:
 

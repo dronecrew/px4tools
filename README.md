@@ -69,6 +69,17 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 	pip install px4tools
 	```
 
+4. Building form source and installed to conda
+
+	If you want to do development and edit some of the source, follow this example:
+
+	```bash
+	. conda_env
+	git clone git@github.com:dronecrew/px4tools.git
+	cd px4tools
+	python setup.py build install
+	```	
+
 ### Using PyPi
 
 	```bash

@@ -27,7 +27,7 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 
 1. See requirements.txt
 
-For pandas, to fix time series plotting with time delta index you need this branch:
+	For pandas, to fix time series plotting with time delta index you need this branch:
 
 	```bash
 	https://github.com/jgoppert/pandas/tree/tdi_plot_fix
@@ -62,7 +62,7 @@ For pandas, to fix time series plotting with time delta index you need this bran
 
 3. Upgrading using pip in conda
 
-The conda-forge px4tools package usually lags behind master. If you need the latest code, use pip within your conda env.
+	The conda-forge px4tools package usually lags behind master. If you need the latest code, use pip within your conda env.
 
 	```bash
 	. conda_env

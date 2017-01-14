@@ -69,7 +69,7 @@ Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/px4tools/b
 	pip install px4tools
 	```
 
-4. Building form source and installed to conda
+4. Building form source and installing to conda environment
 
 	If you want to do development and edit some of the source, follow this example:
 

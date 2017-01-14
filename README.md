@@ -57,10 +57,16 @@ A log analysis toolbox for the [PX4 autopilot](http://px4.io/) written in python
 
 1. See requirements.txt
 
-	For pandas, to fix time series plotting with time delta index you need this branch:
+	For pandas, to fix time series plotting memory 
+	[issue](https://github.com/pandas-dev/pandas/pull/15067) with time delta index you need this branch:
+
 
 	```bash
-	https://github.com/jgoppert/pandas/tree/tdi_plot_fix
+	. conda_env (See instructions below for setting up conda_env script)
+	git clone git@github.com:jgoppert/pandas.git
+	cd pandas
+	git checkout tdi_plot_fix
+	python setup.py install
 	```
 
 ### Using Anaconda (Recommended)

@@ -60,6 +60,15 @@ conda config --add channels conda-forge
 conda install px4tools jupyter
 ```
 
+3. Upgrading using pip in conda
+
+The conda-forge px4tools package usually lags behind master. If you need the latest code, use pip within your conda env.
+
+	```bash
+	. conda_env
+	pip install px4tools
+	```
+
 ### Using PyPi
 ```bash
 pip install px4tools jupyter --user

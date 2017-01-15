@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from .pandas_monkeypatch import *
+
 try:
     from .mapping import *
 except ImportError as ex:

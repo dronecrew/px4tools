@@ -16,6 +16,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy.signal
 import pyulog
 import transforms3d.taitbryan as tf
 
@@ -740,5 +741,48 @@ def cached_log_processing(
         with open(save_path, 'wb') as f:
             pickle.dump(d, f)
     return d
+
+
+def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
+    """
+    Plot the power spectrum and print the intersection at various log slopes
+    @param x, the data
+    @param cross_points, the slopes to print intersections for
+    @param freq_max, the max frequency to plot
+    @param poly_order, the max order to use when fitting the plot
+    """
+    x -= x.mean()
+    freq, power = scipy.signal.periodogram(
+        x.resample('1 s').mean().ffill())
+    freq_range = np.logical_and(freq > 1e-4, freq < freq_max)
+    power = power[freq_range]
+    freq = freq[freq_range]
+    log_freq = np.log10(freq)
+    log_power = np.log10(power)
+
+    plt.loglog(freq, power)
+
+    p = np.polynomial.Polynomial.fit(log_freq, log_power, poly_order)
+    dpdf = p.deriv()
+    freq_lin = np.logspace(log_freq.min(), log_freq.max())
+    plt.loglog(freq_lin, 10**p(np.log10(freq_lin)))
+    # plt.loglog(freq_lin, 10**dpdf(np.log10(freq_lin)))
+
+    for cross in cross_points:
+        roots = (dpdf - cross).roots()
+        roots = np.real(roots[np.isreal(roots)])
+        vals = p(roots)
+        print('crossing point', cross)
+        print('\troots', 10**roots)
+        print('\tvals', 10**vals)
+        for root, val in zip(roots, vals):
+            plt.loglog(10**root, 10**val, 'rx', markeredgewidth=2)
+
+    # gca().set_xlim([freq.min(), freq.max()])
+    # gca().set_ylim([power.min(), power.max()])
+    plt.grid()
+    plt.title('Power spectrum')
+    plt.xlabel('Hz')
+    plt.ylabel('Power')
 
 #  vim: set et fenc=utf-8 ff=unix sts=0 sw=4 ts=4 :

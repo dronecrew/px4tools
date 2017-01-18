@@ -751,7 +751,7 @@ def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
     @param freq_max, the max frequency to plot
     @param poly_order, the max order to use when fitting the plot
     """
-    data = []
+    data = {}
     x -= x.mean()
     freq, power = scipy.signal.periodogram(
         x.resample('1 s').mean().ffill())
@@ -770,6 +770,7 @@ def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
     # plt.loglog(freq_lin, 10**dpdf(np.log10(freq_lin)))
 
     for cross in cross_points:
+        data_cross = []
         roots = (dpdf - cross).roots()
         roots = np.real(roots[np.isreal(roots)])
         vals = p(roots)
@@ -778,7 +779,8 @@ def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
         # print('\tvals', 10**vals)
         for root, val in zip(roots, vals):
             plt.loglog(10**root, 10**val, 'rx', markeredgewidth=2)
-            data += [(cross, 10**root, 10**val)]
+            data_cross += [{'root': 10**root, 'val': 10**val}]
+        data[cross] = data_cross
 
     # gca().set_xlim([freq.min(), freq.max()])
     # gca().set_ylim([power.min(), power.max()])

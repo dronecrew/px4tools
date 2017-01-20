@@ -6,6 +6,11 @@ This module allows you to do control and statistical analysis for the PX4.
 """
 
 from __future__ import print_function
+import os
+import sys
+import subprocess
+
+from setuptools import setup, find_packages
 
 MAJOR = 0
 MINOR = 7
@@ -14,12 +19,6 @@ ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 DOCLINES = __doc__.split("\n")
-
-import os
-import sys
-import subprocess
-
-from setuptools import setup, find_packages
 
 CLASSIFIERS = """\
 Development Status :: 1 - Planning
@@ -39,9 +38,11 @@ Operating System :: Unix
 Operating System :: MacOS
 """
 
+# pylint: disable=invalid-name
 
-# Return the git revision as a string
+
 def git_version():
+    """ Return the git revision as a string """
     def _minimal_ext_cmd(cmd):
         # construct minimal environment
         env = {}
@@ -70,9 +71,11 @@ def git_version():
 
 
 def get_version_info():
-    # Adding the git rev number needs to be done inside write_version_py(),
-    # otherwise the import of package.version messes up
-    # the build under Python 3.
+    """
+    Adding the git rev number needs to be done inside write_version_py(),
+    otherwise the import of package.version messes up
+    the build under Python 3.
+    """
     FULLVERSION = VERSION
     if os.path.exists('.git'):
         GIT_REVISION = git_version()
@@ -81,9 +84,11 @@ def get_version_info():
         try:
             from px4tools.version import git_revision as GIT_REVISION
         except ImportError as e:
-            raise ImportError(str(e) + " - Unable to import git_revision. Try removing "
-                              "px4tools/version.py and the build directory "
-                              "before building.")
+            raise ImportError(
+                str(e) +
+                " - Unable to import git_revision. Try removing "
+                "px4tools/version.py and the build directory "
+                "before building.")
     else:
         GIT_REVISION = "Unknown"
 
@@ -94,6 +99,9 @@ def get_version_info():
 
 
 def write_version_py(filename='px4tools/version.py'):
+    """
+    Creates version.py
+    """
     cnt = """
 # THIS FILE IS GENERATED FROM SETUP.PY
 short_version = '%(version)s'
@@ -118,6 +126,9 @@ if not release:
 
 
 def setup_package():
+    """
+    Package setup
+    """
     src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     old_path = os.getcwd()
     os.chdir(src_path)
@@ -139,16 +150,18 @@ def setup_package():
         license='BSD 3-Clause',
         classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
         platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
-        install_requires=['scipy', 'numpy', 'pandas >= 0.19.99', 'transforms3d', 'pyulog'],
+        install_requires=[
+            'scipy', 'numpy',
+            'pandas >= 0.19.2', 'transforms3d', 'pyulog'],
         tests_require=['nose'],
         test_suite='nose.collector',
-        entry_points = {
+        entry_points={
             'console_scripts': ['px42csv=px4tools.px42csv:main'],
         },
         packages=find_packages(),
     )
 
-    FULLVERSION, GIT_REVISION = get_version_info()
+    FULLVERSION = get_version_info()[0]
     metadata['version'] = FULLVERSION
 
     try:

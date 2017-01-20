@@ -118,8 +118,6 @@ A log analysis toolbox for the [PX4 autopilot](http://px4.io/) written in python
 
 ### Using PyPi
 
-	```bash
-	pip install px4tools jupyter --user
-	```
-
-
+```bash
+pip install px4tools jupyter --user
+```

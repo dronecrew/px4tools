@@ -31,15 +31,17 @@ IEKF_STATES = {
     7: 'gyro_bias_bx',
     8: 'gyro_bias_by',
     9: 'gyro_bias_bz',
-    10: 'accel_scale',
-    11: 'pos_N',
-    12: 'pos_E',
-    13: 'pos_D',
-    14: 'terrain_alt',
-    15: 'baro_bias',
-    16: 'wind_N',
-    17: 'wind_E',
-    18: 'wind_D',
+    10: 'accel_bias_bx',
+    11: 'accel_bias_by',
+    12: 'accel_bias_bz',
+    13: 'pos_N',
+    14: 'pos_E',
+    15: 'pos_D',
+    16: 'terrain_alt',
+    17: 'baro_bias',
+    # 18: 'wind_N',
+    # 19: 'wind_E',
+    # 20: 'wind_D',
 }
 
 IEKF_ERROR_STATES = {
@@ -52,15 +54,17 @@ IEKF_ERROR_STATES = {
     6: 'gyro_bias_N',
     7: 'gyro_bias_E',
     8: 'gyro_bias_D',
-    9: 'accel_scale',
-    10: 'pos_N',
-    11: 'pos_E',
-    12: 'pos_D',
-    13: 'terrain_alt',
-    14: 'baro_bias',
-    15: 'wind_N',
-    16: 'wind_E',
-    17: 'wind_D',
+    9: 'accel_bias_N',
+    10: 'accel_bias_E',
+    11: 'accel_bias_D',
+    12: 'pos_N',
+    13: 'pos_E',
+    14: 'pos_D',
+    15: 'terrain_alt',
+    16: 'baro_bias',
+    # 17: 'wind_N',
+    # 18: 'wind_E',
+    # 19: 'wind_D',
 }
 
 
@@ -355,6 +359,7 @@ class PX4MessageDict(dict):
             if verbose:
                 print('merging {:s} as of timestamp'.format(topic))
             df = self[topic]
+            df.sort_values(by='timestamp', inplace=True)
             m = pd.merge_asof(m, df, 'timestamp')
         m.index = pd.TimedeltaIndex(m.timestamp*1e3, unit='ns')
         return m

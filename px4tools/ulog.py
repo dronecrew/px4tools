@@ -137,22 +137,23 @@ def plot_iekf_std_dev(df):
     plt.title('IEKF est std. dev.')
     plt.grid()
 
-def extract_P(data=data, msg_name='t_estimator_status_0__f_covariances_',num_states=28):
-    '''Extract the covariance matrices P for at each time step of the log data df. P is a diagonal matrix sized by the number of states num_states. Data is extracted from the t_estimator_status topic for num_states topics.'''
+def extract_P(df, msg_name='t_estimator_status_0__f_covariances_',num_states=28):
+    '''Extract the covariance matrices P for at each time step of the log data df. P is a diagonal matrix sized by the number of states num_states. Data is extracted from the t_estimator_status topic for num_states topics.F'''
     states=np.arange(0,28,1) #states go from 0 to 27 
     # initialize list of covariances for each state at each time step 
     estimator_status_list=[]
-    for i in range(len(states)):
-        estimator_name=msg_name+states.astype('string')[i]+'_'
-        attribute = np.array([getattr(data,estimator_name).values]).T
+    for k in range(len(states)):
+        estimator_name=msg_name+states.astype('string')[k]+'_'
+        attribute = np.array([getattr(df,estimator_name).values]).T
         estimator_status_list+=[attribute]
-    # covariance ndimensional array of size (num_states/no.(data points),1)
+    # covariance ndimensional array of size (num_states/no.(df points),1)
+    
     covariance_nd_array = np.ascontiguousarray(estimator_status_list)
     #print(covariance_nd_array.shape)
     # List of covariance matrices
     P_list = []
     # for the ith time-step 
-    for i in range(len(data.t_estimator_status_0__f_covariances_0_.values)):
+    for i in range(len(df.t_estimator_status_0__f_covariances_0_.values)):
         # initialize P as a num_states x num_states zero matrix
         P=np.zeros((28,28))
         #  cycle through each states at the ith time step 

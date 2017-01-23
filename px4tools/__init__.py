@@ -2,6 +2,8 @@ from __future__ import print_function
 
 from .pandas_monkeypatch import *
 
+from ._version import *
+
 try:
     from .mapping import *
 except ImportError as ex:
@@ -39,3 +41,7 @@ WARNING: logsysid module requires python-control
 please install:
     pip install control
 ''')
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

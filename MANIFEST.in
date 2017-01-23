@@ -1,1 +1,3 @@
 include LICENSE
+include versioneer.py
+include px4tools/_version.py

@@ -13,8 +13,8 @@ import subprocess
 from setuptools import setup, find_packages
 
 MAJOR = 0
-MINOR = 7
-MICRO = 9
+MINOR = 8
+MICRO = 0
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 

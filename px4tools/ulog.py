@@ -149,7 +149,7 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
     # initialize list of covariances for each state at each time step
     estimator_status_list = []
     for k in range(len(states)):
-        estimator_name = msg_name + states.astype(unicode)[k] + '_'
+        estimator_name = msg_name + states.astype('unicode')[k] + '_'
         attribute = np.array([getattr(df, estimator_name).values]).T
         estimator_status_list += [attribute]
     # covariance ndimensional array of size (num_states/no.(df points),1)

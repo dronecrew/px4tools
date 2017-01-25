@@ -194,6 +194,39 @@ def plot_iekf_std_dev(df):
     plt.gcf().autofmt_xdate()
 
 
+def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19):
+    '''
+    Extract the covariance matrices P for at each time step
+    of the log data df. P is a diagonal matrix sized by the
+    number of states num_states. Data is extracted from the
+    t_estimator_status topic for num_states topics.
+    '''
+    states = np.arange(0, num_states, 1)
+    # initialize list of covariances for each state at each time step
+    estimator_status_list = []
+    for k in range(len(states)):
+        estimator_name = msg_name + states.astype('unicode')[k] + '_'
+        attribute = np.array([getattr(df, estimator_name).values]).T
+        estimator_status_list += [attribute]
+    # covariance ndimensional array of size (num_states/no.(df points),1)
+
+    covariance_nd_array = np.ascontiguousarray(estimator_status_list)
+    # print(covariance_nd_array.shape)
+    # List of covariance matrices
+    P_list = []
+    # for the ith time-step
+    for i in range(len(df.t_estimator_status_0__f_covariances_0_.values)):
+        # initialize P as a num_states x num_states zero matrix
+        P = np.zeros((num_states, num_states))
+        #  cycle through each states at the ith time step
+        for j in range(len(states)):
+            # update the diagonal element for the jth state of the ith P matrix
+            P[j, j] = np.ascontiguousarray(covariance_nd_array[j, i, :])
+        # list of i P(jxj) matrices
+        P_list += [P]
+    return P_list
+
+
 def plot_iekf_states(df):
     """
     Plot IEKF states
@@ -414,7 +447,7 @@ class PX4MessageDict(dict):
                 else:
                     new_cols[col] = 't_' + topic + '__f_' + col
             df = self[topic].rename(columns=new_cols)
-            df.index = pd.TimedeltaIndex(df.timestamp*1e3, unit='ns')
+            df.index = pd.TimedeltaIndex(df.timestamp * 1e3, unit='ns')
             self[topic] = df
 
     def concat(self, topics=None, on=None, dt=None, verbose=False):
@@ -441,7 +474,7 @@ class PX4MessageDict(dict):
                 if ts_max is None or ts_t_max > ts_max:
                     ts_max = ts_t_max
             timestamps = np.arange(
-                ts_min, ts_max - dt*1e6, dt*1e6, dtype=np.int64)
+                ts_min, ts_max - dt * 1e6, dt * 1e6, dtype=np.int64)
         elif on is not None:
             timestamps = self[on].timestamp
         else:
@@ -457,7 +490,7 @@ class PX4MessageDict(dict):
             df = self[topic]
             df.sort_values(by='timestamp', inplace=True)
             m = pd.merge_asof(m, df, 'timestamp')
-        m.index = pd.TimedeltaIndex(m.timestamp*1e3, unit='ns')
+        m.index = pd.TimedeltaIndex(m.timestamp * 1e3, unit='ns')
         return m
 
 
@@ -533,7 +566,7 @@ def plot_allan_std_dev(
     # pylint: disable=too-many-statements
 
     data.index = pd.TimedeltaIndex(data.index, unit='s')
-    dt = float(np.diff(data.index.values).mean())/1e9
+    dt = float(np.diff(data.index.values).mean()) / 1e9
 
     data_vals = []
     dt_vals = []
@@ -542,13 +575,13 @@ def plot_allan_std_dev(
     # require at least 9 clusters for < 25% error:
     # source:
     # http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
-    t_len = (data.index.values[-1] - data.index.values[0])/1e9
-    while 10**c < float(t_len/min_intervals):
+    t_len = (data.index.values[-1] - data.index.values[0]) / 1e9
+    while 10**c < float(t_len / min_intervals):
         c_vals += [10**c]
         c += 0.2
     for c_i in c_vals:
         allan_std = float(np.sqrt(data.resample(
-            '{:d}L'.format(int(c_i*1000))).agg('mean').diff().var()/2))
+            '{:d}L'.format(int(c_i * 1000))).agg('mean').diff().var() / 2))
         if not np.isfinite(allan_std):
             break
         data_vals += [allan_std]
@@ -563,16 +596,16 @@ def plot_allan_std_dev(
     log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), -5, 5)
     tau_0 = 10**log_tau_0
     if tau_0 > 0 and np.isfinite(tau_0):
-        sig_rw = 10**p(log_tau_0)*np.sqrt(tau_0)
+        sig_rw = 10**p(log_tau_0) * np.sqrt(tau_0)
     else:
         # if intersect fails, evaluate slope at tau=1
         tau_0 = 1
-        sig_rw = 10**p(np.log10(tau_0))*np.sqrt(tau_0)
+        sig_rw = 10**p(np.log10(tau_0)) * np.sqrt(tau_0)
 
     log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
     tau_1 = 10**log_tau_1
     if tau_1 > 0 and np.isfinite(tau_1):
-        sig_bi = (10**p(log_tau_1))*np.sqrt(np.pi/(2*np.log(2)))
+        sig_bi = (10**p(log_tau_1)) * np.sqrt(np.pi / (2 * np.log(2)))
     else:
         sig_bi = 0
 
@@ -580,7 +613,7 @@ def plot_allan_std_dev(
         (pdiff - 0.5).roots(), log_tau_1, 5)
     tau_2 = 10**log_tau_2
     if tau_2 > 0 and np.isfinite(tau_2):
-        sig_rrw = (10**p(log_tau_2))*np.sqrt(3/tau_2)
+        sig_rrw = (10**p(log_tau_2)) * np.sqrt(3 / tau_2)
     else:
         sig_rrw = 0
 
@@ -634,11 +667,11 @@ def plot_autocorrelation(data, plot=True, poly_order=1):
     dt = 1
     # downsample every dt seconds, taking mean
     data = data.resample(
-        '{:d}L'.format(int(dt*1000))).agg('mean')
-    lag_max = int(dt*len(data.index)/2)
-    for i in range(1, int(lag_max/dt)):
+        '{:d}L'.format(int(dt * 1000))).agg('mean')
+    lag_max = int(dt * len(data.index) / 2)
+    for i in range(1, int(lag_max / dt)):
         data_vals += [data.autocorr(i)]
-        dt_vals += [i*dt]
+        dt_vals += [i * dt]
 
     # polynomial fits
     p = np.polynomial.Polynomial.fit(dt_vals, data_vals, poly_order)
@@ -657,12 +690,12 @@ def plot_autocorrelation(data, plot=True, poly_order=1):
         plt.xlabel('lag, sec')
         plt.ylabel('corr/ max(corr)')
         plt.plot(x, y, linewidth=2, label='fit')
-        plt.hlines(1/np.e, 0, lag_max, linewidth=2)
+        plt.hlines(1 / np.e, 0, lag_max, linewidth=2)
         plt.gca().set_ylim(-1, 1)
         plt.gca().set_xlim(0, lag_max)
         plt.grid(True)
 
-    correlation_time = _smallest_positive_real_root((p - 1/np.e).roots())
+    correlation_time = _smallest_positive_real_root((p - 1 / np.e).roots())
     return correlation_time
 
 

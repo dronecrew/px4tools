@@ -1,0 +1,162 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BLOCK_SIZE	test/sdlog2_dump.py	/^    BLOCK_SIZE = 8192$/;"	kind:variable	line:36
+DOCLINES	setup.py	/^DOCLINES = __doc__.split("\\n")$/;"	kind:variable	line:21
+FLIGHT_MODES	px4tools/analysis.py	/^FLIGHT_MODES = [$/;"	kind:variable	line:18
+FLIGHT_MODE_COLOR	px4tools/analysis.py	/^FLIGHT_MODE_COLOR = {$/;"	kind:variable	line:25
+FORMAT_TO_STRUCT	test/sdlog2_dump.py	/^    FORMAT_TO_STRUCT = {$/;"	kind:variable	line:43
+IEKF_ERROR_STATES	px4tools/ulog.py	/^IEKF_ERROR_STATES = {$/;"	kind:variable	line:47
+IEKF_STATES	px4tools/ulog.py	/^IEKF_STATES = {$/;"	kind:variable	line:23
+ISRELEASED	setup.py	/^ISRELEASED = True$/;"	kind:variable	line:18
+MAJOR	setup.py	/^MAJOR = 0$/;"	kind:variable	line:15
+MICRO	setup.py	/^MICRO = 9$/;"	kind:variable	line:17
+MINOR	setup.py	/^MINOR = 7$/;"	kind:variable	line:16
+MSG_FORMAT_PACKET_LEN	test/sdlog2_dump.py	/^    MSG_FORMAT_PACKET_LEN = 89$/;"	kind:variable	line:40
+MSG_FORMAT_STRUCT	test/sdlog2_dump.py	/^    MSG_FORMAT_STRUCT = "BB4s16s64s"$/;"	kind:variable	line:41
+MSG_HEAD1	test/sdlog2_dump.py	/^    MSG_HEAD1 = 0xA3$/;"	kind:variable	line:38
+MSG_HEAD2	test/sdlog2_dump.py	/^    MSG_HEAD2 = 0x95$/;"	kind:variable	line:39
+MSG_HEADER_LEN	test/sdlog2_dump.py	/^    MSG_HEADER_LEN = 3$/;"	kind:variable	line:37
+MSG_TYPE_FORMAT	test/sdlog2_dump.py	/^    MSG_TYPE_FORMAT = 0x80$/;"	kind:variable	line:42
+PX4MessageDict	px4tools/ulog.py	/^class PX4MessageDict(dict):$/;"	kind:class	line:334
+SDLog2Parser	test/sdlog2_dump.py	/^class SDLog2Parser:$/;"	kind:class	line:35
+TEST_PATH	test/test_analysis.py	/^TEST_PATH = os.path.dirname(os.path.abspath($/;"	kind:variable	line:14
+TEST_PATH	test/test_px42csv.py	/^TEST_PATH = os.path.dirname(os.path.abspath($/;"	kind:variable	line:7
+Test	test/test_analysis.py	/^class Test(unittest.TestCase):$/;"	kind:class	line:18
+Test	test/test_px42csv.py	/^class Test(unittest.TestCase):$/;"	kind:class	line:10
+TimeSeries_TimedeltaFormatter	px4tools/pandas_monkeypatch.py	/^        class TimeSeries_TimedeltaFormatter(Formatter):$/;"	kind:class	line:16
+VERSION	setup.py	/^VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)$/;"	kind:variable	line:19
+__author__	test/sdlog2_dump.py	/^__author__  = "Anton Babushkin"$/;"	kind:variable	line:21
+__bytesLeft	test/sdlog2_dump.py	/^    def __bytesLeft(self):$/;"	kind:member	line:160
+__call__	px4tools/pandas_monkeypatch.py	/^            def __call__(self, x, pos=0):$/;"	kind:member	line:38
+__correct_errors	test/sdlog2_dump.py	/^    __correct_errors = False$/;"	kind:variable	line:68
+__csv_delim	test/sdlog2_dump.py	/^    __csv_delim = ","$/;"	kind:variable	line:63
+__csv_null	test/sdlog2_dump.py	/^    __csv_null = ""$/;"	kind:variable	line:64
+__debug_out	test/sdlog2_dump.py	/^    __debug_out = False$/;"	kind:variable	line:67
+__file	test/sdlog2_dump.py	/^    __file = None$/;"	kind:variable	line:70
+__file_name	test/sdlog2_dump.py	/^    __file_name = None$/;"	kind:variable	line:69
+__filterMsg	test/sdlog2_dump.py	/^    def __filterMsg(self, msg_name):$/;"	kind:member	line:163
+__initCSV	test/sdlog2_dump.py	/^    def __initCSV(self):$/;"	kind:member	line:169
+__init__	px4tools/ulog.py	/^    def __init__(self, d):$/;"	kind:member	line:342
+__init__	test/sdlog2_dump.py	/^    def __init__(self):$/;"	kind:member	line:72
+__init__.py	px4tools/__init__.py	1;"	kind:file	line:1
+__init__.py	test/__init__.py	1;"	kind:file	line:1
+__msg_filter	test/sdlog2_dump.py	/^    __msg_filter = []$/;"	kind:variable	line:65
+__parseMsg	test/sdlog2_dump.py	/^    def __parseMsg(self, msg_descr):$/;"	kind:member	line:232
+__parseMsgDescr	test/sdlog2_dump.py	/^    def __parseMsgDescr(self):$/;"	kind:member	line:201
+__printCSVRow	test/sdlog2_dump.py	/^    def __printCSVRow(self):$/;"	kind:member	line:186
+__time_msg	test/sdlog2_dump.py	/^    __time_msg = None$/;"	kind:variable	line:66
+__version__	test/sdlog2_dump.py	/^__version__ = "1.2"$/;"	kind:variable	line:22
+_main	test/sdlog2_dump.py	/^def _main():$/;"	kind:function	line:268
+_minimal_ext_cmd	setup.py	/^    def _minimal_ext_cmd(cmd):$/;"	kind:function	line:46
+_parseCString	test/sdlog2_dump.py	/^    def _parseCString(cstr):$/;"	kind:function	line:28
+_parseCString	test/sdlog2_dump.py	/^    def _parseCString(cstr):$/;"	kind:function	line:32
+_smallest_positive_real_root	px4tools/ulog.py	/^def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):$/;"	kind:function	line:445
+_ts_plot	px4tools/pandas_monkeypatch.py	/^        def _ts_plot(cls, ax, x, data, style=None, **kwds):$/;"	kind:function	line:45
+all_new_sample	px4tools/analysis.py	/^def all_new_sample(df):$/;"	kind:function	line:376
+alt_analysis	px4tools/analysis.py	/^def alt_analysis(data, min_alt=None, max_alt=None):$/;"	kind:function	line:94
+analysis.py	px4tools/analysis.py	1;"	kind:file	line:1
+angle_wrap	px4tools/ulog.py	/^def angle_wrap(x):$/;"	kind:function	line:106
+attitude_control_design	px4tools/logsysid.py	/^def attitude_control_design($/;"	kind:function	line:314
+attitude_sysid	px4tools/logsysid.py	/^def attitude_sysid(y_acc, u_mix, verbose=False):$/;"	kind:function	line:217
+background_flight_modes	px4tools/analysis.py	/^def background_flight_modes(data):$/;"	kind:function	line:394
+cached_log_processing	px4tools/ulog.py	/^def cached_log_processing($/;"	kind:function	line:750
+calculate_fitness	px4tools/logsysid.py	/^def calculate_fitness(k, delay, y, u, dt):$/;"	kind:function	line:100
+compute_data	px4tools/ulog.py	/^def compute_data(df):$/;"	kind:function	line:71
+concat	px4tools/ulog.py	/^    def concat(self, topics=None, on=None, dt=None, verbose=False):$/;"	kind:member	line:355
+control_design	px4tools/logsysid.py	/^def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):$/;"	kind:function	line:362
+control_design_ulog	px4tools/logsysid.py	/^def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):$/;"	kind:function	line:419
+create_map	px4tools/mapping.py	/^def create_map(lon, lat):$/;"	kind:function	line:12
+delay_and_gain_fit_fun	px4tools/logsysid.py	/^def delay_and_gain_fit_fun(x, y, u, dt):$/;"	kind:function	line:41
+delay_and_gain_sysid	px4tools/logsysid.py	/^def delay_and_gain_sysid(y, u, verbose=False):$/;"	kind:function	line:71
+estimator_analysis	px4tools/ulog.py	/^def estimator_analysis(df, plot=True):$/;"	kind:function	line:282
+extract_P	px4tools/ulog.py	/^def extract_P(df, msg_name='t_estimator_status_0__f_covariances_',num_states=19):$/;"	kind:function	line:140
+filter_finite	px4tools/analysis.py	/^def filter_finite(data):$/;"	kind:function	line:42
+find_lpe_gains	px4tools/analysis.py	/^def find_lpe_gains(df, printing=False):$/;"	kind:function	line:345
+find_meas_period	px4tools/analysis.py	/^def find_meas_period(series):$/;"	kind:function	line:382
+format_dateaxis	px4tools/pandas_monkeypatch.py	/^        def format_dateaxis(subplot, freq, index):$/;"	kind:function	line:68
+format_timedelta_ticks	px4tools/pandas_monkeypatch.py	/^            def format_timedelta_ticks(x, pos, n_decimals):$/;"	kind:member	line:22
+full_version	px4tools/version.py	/^full_version = '0.7.9'$/;"	kind:variable	line:5
+get_auto_data	px4tools/analysis.py	/^def get_auto_data(data):$/;"	kind:function	line:166
+get_float_data	px4tools/analysis.py	/^def get_float_data(dataframe):$/;"	kind:function	line:158
+get_version_info	setup.py	/^def get_version_info():$/;"	kind:function	line:73
+git_revision	px4tools/version.py	/^git_revision = 'd0f2701f578e25367f8f8e8e326c054c7c3de5da'$/;"	kind:variable	line:6
+git_version	setup.py	/^def git_version():$/;"	kind:function	line:44
+have_control	test/test_analysis.py	/^    have_control = True$/;"	kind:variable	line:10
+have_control	test/test_analysis.py	/^have_control = False$/;"	kind:variable	line:7
+isfloatarray	px4tools/analysis.py	/^def isfloatarray(cell):$/;"	kind:function	line:148
+logsysid.py	px4tools/logsysid.py	1;"	kind:file	line:1
+lqr_ofb_con	px4tools/logsysid.py	/^def lqr_ofb_con(K, R, Q, X, ss_o):$/;"	kind:function	line:120
+lqr_ofb_cost	px4tools/logsysid.py	/^def lqr_ofb_cost(K, R, Q, X, ss_o):$/;"	kind:function	line:139
+lqr_ofb_design	px4tools/logsysid.py	/^def lqr_ofb_design(K_guess, ss_o, verbose=False):$/;"	kind:function	line:175
+lqr_ofb_jac	px4tools/logsysid.py	/^def lqr_ofb_jac(K, R, Q, X, ss_o):$/;"	kind:function	line:158
+main	px4tools/px42csv.py	/^def main():$/;"	kind:function	line:25
+mapping.py	px4tools/mapping.py	1;"	kind:file	line:1
+new_sample	px4tools/analysis.py	/^def new_sample(series):$/;"	kind:function	line:373
+noise_analysis_sensor	px4tools/ulog.py	/^def noise_analysis_sensor($/;"	kind:function	line:604
+noise_analysis_sensor_combined	px4tools/ulog.py	/^def noise_analysis_sensor_combined(df, plot=True):$/;"	kind:function	line:646
+octa_cox_data_to_ss	px4tools/analysis.py	/^def octa_cox_data_to_ss(data):$/;"	kind:function	line:46
+pandas_monkeypatch.py	px4tools/pandas_monkeypatch.py	1;"	kind:file	line:1
+pid_design	px4tools/logsysid.py	/^def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=True):$/;"	kind:function	line:244
+plot_allan_std_dev	px4tools/ulog.py	/^def plot_allan_std_dev($/;"	kind:function	line:462
+plot_altitude	px4tools/ulog.py	/^def plot_altitude(df, plot_groundtruth=False):$/;"	kind:function	line:111
+plot_attitude_loops	px4tools/analysis.py	/^def plot_attitude_loops(data):$/;"	kind:function	line:192
+plot_attitude_rate_loops	px4tools/analysis.py	/^def plot_attitude_rate_loops(data):$/;"	kind:function	line:219
+plot_autocorrelation	px4tools/ulog.py	/^def plot_autocorrelation(data, plot=True, poly_order=1):$/;"	kind:function	line:557
+plot_control_loops	px4tools/analysis.py	/^def plot_control_loops(data):$/;"	kind:function	line:304
+plot_delay_and_gain_fit	px4tools/logsysid.py	/^def plot_delay_and_gain_fit(k, delay, y, u, dt=0.001):$/;"	kind:function	line:111
+plot_euler	px4tools/ulog.py	/^def plot_euler(df, plot_groundtruth=False):$/;"	kind:function	line:203
+plot_euler_error	px4tools/ulog.py	/^def plot_euler_error(df):$/;"	kind:function	line:227
+plot_faults	px4tools/analysis.py	/^def plot_faults(data):$/;"	kind:function	line:440
+plot_iekf_states	px4tools/ulog.py	/^def plot_iekf_states(df):$/;"	kind:function	line:172
+plot_iekf_std_dev	px4tools/ulog.py	/^def plot_iekf_std_dev(df):$/;"	kind:function	line:126
+plot_local_position	px4tools/ulog.py	/^def plot_local_position(df, plot_groundtruth=False):$/;"	kind:function	line:186
+plot_loops	px4tools/logsysid.py	/^def plot_loops(name, G_ol, G_cl):$/;"	kind:function	line:289
+plot_modes	px4tools/analysis.py	/^def plot_modes(data):$/;"	kind:function	line:387
+plot_position_loops	px4tools/analysis.py	/^def plot_position_loops(data):$/;"	kind:function	line:276
+plot_timeouts	px4tools/analysis.py	/^def plot_timeouts(data):$/;"	kind:function	line:453
+plot_velocity	px4tools/ulog.py	/^def plot_velocity(df, plot_groundtruth=False):$/;"	kind:function	line:244
+plot_velocity_loops	px4tools/analysis.py	/^def plot_velocity_loops(data):$/;"	kind:function	line:248
+pos_analysis	px4tools/analysis.py	/^def pos_analysis(data):$/;"	kind:function	line:123
+power_spectrum	px4tools/ulog.py	/^def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):$/;"	kind:function	line:782
+process	test/sdlog2_dump.py	/^    def process(self, fn):$/;"	kind:member	line:112
+process_all	px4tools/analysis.py	/^def process_all(data_frame, project_lat_lon=True, lpe_health=True):$/;"	kind:function	line:410
+process_data	px4tools/analysis.py	/^def process_data(data):$/;"	kind:function	line:189
+process_lpe_health	px4tools/analysis.py	/^def process_lpe_health(data):$/;"	kind:function	line:418
+project_lat_lon	px4tools/mapping.py	/^def project_lat_lon(df):$/;"	kind:function	line:24
+px42csv.py	px4tools/px42csv.py	1;"	kind:file	line:1
+read_ulog	px4tools/ulog.py	/^def read_ulog(ulog_filename, messages='', verbose=False):$/;"	kind:function	line:399
+release	px4tools/version.py	/^release = True$/;"	kind:variable	line:7
+reset	test/sdlog2_dump.py	/^    def reset(self):$/;"	kind:member	line:75
+run_sdlog_dump	px4tools/px42csv.py	/^def run_sdlog_dump(file_path, sdlog2_path="sdlog2_dump.py"):$/;"	kind:function	line:13
+runningPython3	test/sdlog2_dump.py	/^    runningPython3 = False$/;"	kind:variable	line:31
+runningPython3	test/sdlog2_dump.py	/^    runningPython3 = True$/;"	kind:variable	line:27
+sdlog2_dump.py	test/sdlog2_dump.py	1;"	kind:file	line:1
+series_quat2euler	px4tools/ulog.py	/^def series_quat2euler(q0, q1, q2, q3, msg_name):$/;"	kind:function	line:269
+setCSVDelimiter	test/sdlog2_dump.py	/^    def setCSVDelimiter(self, csv_delim):$/;"	kind:member	line:86
+setCSVNull	test/sdlog2_dump.py	/^    def setCSVNull(self, csv_null):$/;"	kind:member	line:89
+setCorrectErrors	test/sdlog2_dump.py	/^    def setCorrectErrors(self, correct_errors):$/;"	kind:member	line:101
+setDebugOut	test/sdlog2_dump.py	/^    def setDebugOut(self, debug_out):$/;"	kind:member	line:98
+setFileName	test/sdlog2_dump.py	/^    def setFileName(self, file_name):$/;"	kind:member	line:104
+setMsgFilter	test/sdlog2_dump.py	/^    def setMsgFilter(self, msg_filter):$/;"	kind:member	line:92
+setTimeMsg	test/sdlog2_dump.py	/^    def setTimeMsg(self, time_msg):$/;"	kind:member	line:95
+set_time_series	px4tools/analysis.py	/^def set_time_series(data):$/;"	kind:function	line:177
+setup.py	setup.py	1;"	kind:file	line:1
+setup_data	px4tools/logsysid.py	/^def setup_data(df):$/;"	kind:function	line:18
+setup_package	setup.py	/^def setup_package():$/;"	kind:function	line:128
+short_version	px4tools/version.py	/^short_version = '0.7.9'$/;"	kind:variable	line:3
+statistics	px4tools/analysis.py	/^def statistics(df, keys=None, plot=False):$/;"	kind:function	line:313
+test_analysis.py	test/test_analysis.py	1;"	kind:file	line:1
+test_logsysid	test/test_analysis.py	/^    def test_logsysid(self):$/;"	kind:member	line:40
+test_plotting	test/test_analysis.py	/^    def test_plotting(self):$/;"	kind:member	line:50
+test_process_data	test/test_analysis.py	/^    def test_process_data(self):$/;"	kind:member	line:20
+test_px42csv	test/test_px42csv.py	/^    def test_px42csv(self):$/;"	kind:member	line:12
+test_px42csv.py	test/test_px42csv.py	1;"	kind:file	line:1
+ulog.py	px4tools/ulog.py	1;"	kind:file	line:1
+version	px4tools/version.py	/^    version = full_version$/;"	kind:variable	line:10
+version	px4tools/version.py	/^version = '0.7.9'$/;"	kind:variable	line:4
+version.py	px4tools/version.py	1;"	kind:file	line:1
+write_version_py	setup.py	/^def write_version_py(filename='px4tools\/version.py'):$/;"	kind:function	line:101

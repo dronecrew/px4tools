@@ -4,6 +4,7 @@ import unittest
 import inspect
 from px4tools.analysis import *
 from px4tools.mapping import *
+from px4tools.ulog import *
 have_control = False
 try:
     from px4tools.logsysid import *
@@ -21,14 +22,11 @@ class Test(unittest.TestCase):
         filename = os.path.join(TEST_PATH, 'log', 'vx0_vy1_vz0_alt3.ulg')
         print("filename{:s}".format(filename))
         with open(filename, 'r') as f:
-            dt = 0.1
-            data = px4tools.ulog.read_ulog(f).concat(dt=0.1)
-            data = px4tools.ulog.compute_data(data)
-            res = px4tools.ulog.estimator_analysis(data, plot=False)
-            px4tools.ulog.extract_P(
-                data,
-                num_states=28,
-                msg_name='t_estimator_status_0__f_covariances_')
+            data = read_ulog(filename).concat(dt=dt)
+            data = compute_data(data)
+            res = estimator_analysis(data, plot=False)
+            covariance_list = extract_P(
+                data, msg_name='t_estimator_status_0__f_covariances_', num_states=28)
 
     def test_process_data(self):
         filename = os.path.join(TEST_PATH, 'log', '01_07_59.csv')

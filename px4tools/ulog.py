@@ -74,12 +74,12 @@ def compute_data(df):
     converting quaternions to euler angles etc.
     """
     series = [df]
-    msg = 't_vehicle_attitude_0'
+    msg_att = 't_vehicle_attitude_0'
     roll, pitch, yaw = series_quat2euler(
         df.t_vehicle_attitude_0__f_q_0_,
         df.t_vehicle_attitude_0__f_q_1_,
         df.t_vehicle_attitude_0__f_q_2_,
-        df.t_vehicle_attitude_0__f_q_3_, msg)
+        df.t_vehicle_attitude_0__f_q_3_, msg_att)
     series += [roll, pitch, yaw]
 
     try:
@@ -91,12 +91,66 @@ def compute_data(df):
             df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
 
         e_roll = pd.Series(angle_wrap(roll - roll_gt),
-                           name=msg + '__f_roll_error')
+                           name=msg_att + '__f_roll_error')
         e_pitch = pd.Series(angle_wrap(pitch - pitch_gt),
-                            name=msg + '__f_pitch_error')
-        e_yaw = pd.Series(angle_wrap(yaw - yaw_gt), name=msg + '__f_yaw_error')
+                            name=msg_att + '__f_pitch_error')
+        e_yaw = pd.Series(angle_wrap(yaw - yaw_gt),
+                          name=msg_att + '__f_yaw_error')
 
-        series += [roll_gt, pitch_gt, yaw_gt, e_roll, e_pitch, e_yaw]
+        msg_lpos = 't_vehicle_local_position_0'
+        msg_lpos_gt = 't_vehicle_local_position_groundtruth_0'
+
+        e_x = pd.Series(
+            df.t_vehicle_local_position_0__f_x -
+            df.t_vehicle_local_position_groundtruth_0__f_x,
+            name=msg_lpos + '__f_x_error')
+
+        e_y = pd.Series(
+            df.t_vehicle_local_position_0__f_y -
+            df.t_vehicle_local_position_groundtruth_0__f_y,
+            name=msg_lpos + '__f_y_error')
+
+        e_z = pd.Series(
+            df.t_vehicle_local_position_0__f_z -
+            df.t_vehicle_local_position_groundtruth_0__f_z,
+            name=msg_lpos + '__f_z_error')
+
+        e_vx = pd.Series(
+            df.t_vehicle_local_position_0__f_vx -
+            df.t_vehicle_local_position_groundtruth_0__f_vx,
+            name=msg_lpos + '__f_vx_error')
+
+        e_vy = pd.Series(
+            df.t_vehicle_local_position_0__f_vy -
+            df.t_vehicle_local_position_groundtruth_0__f_vy,
+            name=msg_lpos + '__f_vy_error')
+
+        e_vz = pd.Series(
+            df.t_vehicle_local_position_0__f_vz -
+            df.t_vehicle_local_position_groundtruth_0__f_vz,
+            name=msg_lpos + '__f_vz_error')
+
+        speed = pd.Series(np.sqrt(
+            df.t_vehicle_local_position_0__f_vx**2 +
+            df.t_vehicle_local_position_0__f_vy**2 +
+            df.t_vehicle_local_position_0__f_vz**2),
+                          name=msg_lpos + '__f_speed')
+
+        speed_gt = pd.Series(np.sqrt(
+            df.t_vehicle_local_position_groundtruth_0__f_vx**2 +
+            df.t_vehicle_local_position_groundtruth_0__f_vy**2 +
+            df.t_vehicle_local_position_groundtruth_0__f_vz**2),
+                          name=msg_lpos_gt + '__f_speed')
+
+        e_speed = pd.Series(
+            speed - speed_gt,
+            name=msg_lpos + '__f_speed_error')
+
+        series += [
+            roll_gt, pitch_gt, yaw_gt,
+            e_roll, e_pitch, e_yaw,
+            e_x, e_y, e_z,
+            e_vx, e_vy, e_vz, speed, speed_gt, e_speed]
     except Exception as ex:
         print(ex)
 
@@ -121,6 +175,7 @@ def plot_altitude(df, plot_groundtruth=False):
     plt.legend(loc='best', ncol=3)
     plt.xlabel('t, sec')
     plt.ylabel('m')
+    plt.gcf().autofmt_xdate()
 
 
 def plot_iekf_std_dev(df):
@@ -136,6 +191,7 @@ def plot_iekf_std_dev(df):
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF est std. dev.')
     plt.grid()
+    plt.gcf().autofmt_xdate()
 
 
 def plot_iekf_states(df):
@@ -150,6 +206,7 @@ def plot_iekf_states(df):
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF states')
     plt.grid()
+    plt.gcf().autofmt_xdate()
 
 
 def plot_local_position(df, plot_groundtruth=False):
@@ -157,15 +214,15 @@ def plot_local_position(df, plot_groundtruth=False):
     Plot local position
     """
     plt.title('local position')
-    plt.plot(df.t_vehicle_local_position_0__f_x,
-             df.t_vehicle_local_position_0__f_y, label='estimate')
+    plt.plot(df.t_vehicle_local_position_0__f_y,
+             df.t_vehicle_local_position_0__f_x, label='estimate')
     if plot_groundtruth:
-        plt.plot(df.t_vehicle_local_position_groundtruth_0__f_x,
-                 df.t_vehicle_local_position_groundtruth_0__f_y, 'r--',
+        plt.plot(df.t_vehicle_local_position_groundtruth_0__f_y,
+                 df.t_vehicle_local_position_groundtruth_0__f_x, 'r--',
                  label='true')
     plt.grid()
-    plt.xlabel('N, m')
-    plt.ylabel('E, m')
+    plt.xlabel('E, m')
+    plt.ylabel('N, m')
     plt.legend(loc='best')
 
 
@@ -189,8 +246,9 @@ def plot_euler(df, plot_groundtruth=False):
             label='yaw true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)
-    plt.xlabel('t, sec')
+    plt.xlabel('time')
     plt.ylabel('deg')
+    plt.gcf().autofmt_xdate()
 
 
 def plot_euler_error(df):
@@ -206,8 +264,9 @@ def plot_euler_error(df):
         label='yaw error', style='b-')
     plt.grid()
     plt.legend(loc='best', ncol=3)
-    plt.xlabel('t, sec')
+    plt.xlabel('time')
     plt.ylabel('deg')
+    plt.gcf().autofmt_xdate()
 
 
 def plot_velocity(df, plot_groundtruth=False):
@@ -231,9 +290,16 @@ def plot_velocity(df, plot_groundtruth=False):
             label='vel_d-true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)
-    plt.xlabel('t, sec')
+    plt.xlabel('time')
     plt.ylabel('m/s')
+    plt.gcf().autofmt_xdate()
 
+def plot_speed(df):
+    d.t_vehicle_local_position_0__f_speed.plot()
+    plt.gcf().autofmt_xdate()
+    plt.ylabel('speed, m/s')
+    plt.xlabel('time')
+    plt.grid()
 
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """
@@ -260,26 +326,56 @@ def estimator_analysis(df, plot=True):
             df.t_vehicle_attitude_0__f_pitch_error.mean()),
         'yaw_error_mean': np.rad2deg(
             df.t_vehicle_attitude_0__f_yaw_error.mean()),
-        'roll_error_std': np.rad2deg(np.sqrt(
-            df.t_vehicle_attitude_0__f_roll_error.var())),
-        'pitch_error_std': np.rad2deg(np.sqrt(
-            df.t_vehicle_attitude_0__f_pitch_error.var())),
-        'yaw_error_std': np.rad2deg(np.sqrt(
-            df.t_vehicle_attitude_0__f_yaw_error.var())),
+        'roll_error_std': np.rad2deg(
+            df.t_vehicle_attitude_0__f_roll_error.std()),
+        'pitch_error_std': np.rad2deg(
+            df.t_vehicle_attitude_0__f_pitch_error.std()),
+        'yaw_error_std': np.rad2deg(
+            df.t_vehicle_attitude_0__f_yaw_error.std()),
+        'x_error_mean':
+            df.t_vehicle_local_position_0__f_x_error.mean(),
+        'y_error_mean':
+            df.t_vehicle_local_position_0__f_y_error.mean(),
+        'z_error_mean':
+            df.t_vehicle_local_position_0__f_z_error.mean(),
+        'vx_error_mean':
+            df.t_vehicle_local_position_0__f_vx_error.mean(),
+        'vy_error_mean':
+            df.t_vehicle_local_position_0__f_vy_error.mean(),
+        'vz_error_mean':
+            df.t_vehicle_local_position_0__f_vz_error.mean(),
+        'x_error_std':
+            df.t_vehicle_local_position_0__f_x_error.std(),
+        'y_error_std':
+            df.t_vehicle_local_position_0__f_y_error.std(),
+        'z_error_std':
+            df.t_vehicle_local_position_0__f_z_error.std(),
+        'vx_error_std':
+            df.t_vehicle_local_position_0__f_vx_error.std(),
+        'vy_error_std':
+            df.t_vehicle_local_position_0__f_vy_error.std(),
+        'vz_error_std':
+            df.t_vehicle_local_position_0__f_vz_error.std(),
     }
     if plot:
         print('''
 ESTIMATOR ANALYSIS
 -----------------------------------
-mean euler error:
-\t{roll_error_mean:10f}\t deg
-\t{pitch_error_mean:10f}\t deg
-\t{yaw_error_mean:10f}\t deg
 
-standard deviation euler error:
-\t{roll_error_std:10f}\t deg
-\t{pitch_error_std:10f}\t deg
-\t{yaw_error_std:10f}\t deg
+attitude error:
+\troll  mean: {roll_error_mean:10f}\tstd:\t{roll_error_std:10f}\tdeg
+\tpitch mean: {pitch_error_mean:10f}\tstd:\t{pitch_error_std:10f}\tdeg
+\tyaw   mean: {yaw_error_mean:10f}\tstd:\t{yaw_error_std:10f}\tdeg
+
+position error:
+\tx mean: {x_error_mean:10f}\tstd:\t{x_error_std:10f}\tm
+\ty mean: {y_error_mean:10f}\tstd:\t{y_error_std:10f}\tm
+\tz mean: {z_error_mean:10f}\tstd:\t{z_error_std:10f}\tm
+
+velocity error:
+\tx mean: {vx_error_mean:10f}\tstd:\t{vx_error_std:10f}\tm/s
+\ty mean: {vy_error_mean:10f}\tstd:\t{vy_error_std:10f}\tm/s
+\tz mean: {vz_error_mean:10f}\tstd:\t{vz_error_std:10f}\tm/s
 '''.format(**data))
 
         plt.figure()

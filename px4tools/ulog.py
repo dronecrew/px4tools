@@ -138,12 +138,17 @@ def plot_iekf_std_dev(df):
     plt.grid()
 
 def extract_P(df, msg_name='t_estimator_status_0__f_covariances_',num_states=19):
-    '''Extract the covariance matrices P for at each time step of the log data df. P is a diagonal matrix sized by the number of states num_states. Data is extracted from the t_estimator_status topic for num_states topics.F'''
-    states=np.arange(0,num_states,1) #states go from 0 to 27 
-    # initialize list of covariances for each state at each time step 
+    '''
+    Extract the covariance matrices P for at each time step
+    of the log data df. P is a diagonal matrix sized by the
+    number of states num_states. Data is extracted from the
+    t_estimator_status topic for num_states topics.
+    '''
+    states = np.arange(0, num_states, 1)
+    # initialize list of covariances for each state at each time step
     estimator_status_list=[]
     for k in range(len(states)):
-        estimator_name=msg_name+states.astype('string')[k]+'_'
+        estimator_name=msg_name + states.astype('string')[k] + '_'
         attribute = np.array([getattr(df,estimator_name).values]).T
         estimator_status_list+=[attribute]
     # covariance ndimensional array of size (num_states/no.(df points),1)

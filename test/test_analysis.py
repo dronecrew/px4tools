@@ -1,5 +1,5 @@
 import os
-import pandas 
+import pandas
 import unittest
 import inspect
 from px4tools.analysis import *
@@ -17,6 +17,19 @@ TEST_PATH = os.path.dirname(os.path.abspath(
 
 class Test(unittest.TestCase):
 
+    def test_iekf_extract_P(self):
+        filename = os.path.join(TEST_PATH, 'log', 'vx0_vy1_vz0_alt3.ulg')
+        print("filename{:s}".format(filename))
+        with open(filename, 'r') as f:
+            dt = 0.1
+            data = px4tools.ulog.read_ulog(f).concat(dt=0.1)
+            data = px4tools.ulog.compute_data(data)
+            res = px4tools.ulog.estimator_analysis(data, plot=False)
+            px4tools.ulog.extract_P(
+                data,
+                num_states=28,
+                msg_name='t_estimator_status_0__f_covariances_')
+
     def test_process_data(self):
         filename = os.path.join(TEST_PATH, 'log', '01_07_59.csv')
         print("filename: {:s}".format(filename))
@@ -26,7 +39,7 @@ class Test(unittest.TestCase):
             data = project_lat_lon(data)
             data = process_lpe_health(data)
             find_meas_period(data['LPOS_VX'])
-            #all_new_sample(data['LPOS_VX'])
+            # all_new_sample(data['LPOS_VX'])
             new_sample(data['LPOS_VX'])
             find_lpe_gains(data, printing=True)
             set_time_series(data)
@@ -66,5 +79,3 @@ class Test(unittest.TestCase):
             plot_attitude_loops(data)
             plot_faults(data)
             pos_analysis(data)
-
-

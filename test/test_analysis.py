@@ -22,12 +22,11 @@ class Test(unittest.TestCase):
         dt = 0.1
         filename = os.path.join(TEST_PATH, 'log', 'vx0_vy1_vz0_alt3.ulg')
         print("filename{:s}".format(filename))
-        with open(filename, 'r') as f:
-            data = read_ulog(filename).concat(dt=dt)
-            data = compute_data(data)
-            res = estimator_analysis(data, plot=False)
-            covariance_list = extract_P(
-                data, msg_name='t_estimator_status_0__f_covariances_', num_states=28)
+        data = read_ulog(filename).concat(dt=dt)
+        data = compute_data(data)
+        res = estimator_analysis(data, plot=False)
+        covariance_list = extract_P(
+            data, msg_name='t_estimator_status_0__f_covariances_', num_states=28)
 
     def test_process_data(self):
         filename = os.path.join(TEST_PATH, 'log', '01_07_59.csv')

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.signal
-import pyulog
+from pyulog import ulog2csv
 import transforms3d.taitbryan as tf
 
 IEKF_STATES = {
@@ -500,7 +500,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     """
 
     tmp_dir = tempfile.mkdtemp()
-    pyulog.ulog2csv.convert_ulog2csv(
+    ulog2csv.convert_ulog2csv(
         ulog_filename, messages, tmp_dir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
     data = {}

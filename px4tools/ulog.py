@@ -19,7 +19,6 @@ import numpy as np
 import pandas as pd
 import scipy.signal
 import pyulog
-import pyulog.ulog2csv
 import transforms3d.taitbryan as tf
 
 IEKF_STATES = {

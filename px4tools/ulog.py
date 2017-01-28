@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.signal
-from pyulog import ulog2csv
+import pyulog
+import pyulog.ulog2csv
 import transforms3d.taitbryan as tf
 
 IEKF_STATES = {
@@ -500,7 +501,7 @@ def read_ulog(ulog_filename, messages='', verbose=False):
     """
 
     tmp_dir = tempfile.mkdtemp()
-    ulog2csv.convert_ulog2csv(
+    pyulog.ulog2csv.convert_ulog2csv(
         ulog_filename, messages, tmp_dir, ',')
     log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
     data = {}
@@ -538,6 +539,53 @@ def read_ulog(ulog_filename, messages='', verbose=False):
 
     shutil.rmtree(tmp_dir)
     return PX4MessageDict(data)
+
+
+class Structure(dict, object):
+    """
+    A 'fancy' dictionary that provides 'MatLab' structure-like
+    referencing.
+    """
+    def __getattr__(self, attr):
+        # Fake a __getstate__ method that returns None
+        if attr == "__getstate__":
+            return lambda: None
+        return self[attr]
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
+
+    def set_with_dict(self, D):
+        """ set attributes with a dict """
+        for k in D.keys():
+            self.__setattr__(k, D[k])
+
+    def __dir__(self):
+        return self.keys()
+
+
+def read_ulog2(ulog_filename):
+    """
+    Convert from ulog to pandas using dictionary
+    """
+    log = pyulog.ULog(ulog_filename)
+    data = {}
+    for msg in log.data_list:
+        if msg.name not in data.keys():
+            data[msg.name] = {}
+        msg_data = pd.DataFrame.from_dict(msg.data, dtype=float)
+
+        data[msg.name]['id_{:d}'.format(msg.multi_id)] = msg_data
+
+    d = Structure()
+    for msg in data.keys():
+        d[msg] = Structure()
+        for multi_id in data[msg].keys():
+            msg_df = data[msg][multi_id]
+            msg_df.columns = [ c.replace('[', '_').replace(']','')
+                for c in msg_df.columns]
+            d[msg][multi_id] = msg_df
+    return d
 
 
 def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):

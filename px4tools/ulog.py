@@ -12,6 +12,7 @@ import re
 import glob
 import shutil
 import pickle
+import copy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -445,8 +446,8 @@ class PX4MessageDict(dict):
             for col in self[topic].columns:
                 if col == 'timestamp':
                     new_cols[col] = col
-                else:
-                    new_cols[col] = 't_' + topic + '__f_' + col
+                elif col[:2] != 'f_':
+                    new_cols[col] = 'f_' + col
             df = self[topic].rename(columns=new_cols)
             df.index = pd.TimedeltaIndex(df.timestamp * 1e3, unit='ns')
             self[topic] = df
@@ -463,89 +464,50 @@ class PX4MessageDict(dict):
 
         @param verbose: show status
         """
+
+        d = PX4MessageDict(self)
+
+        for topic in d.keys():
+            new_cols = {}
+            for col in d[topic].columns:
+                if col == 'timestamp':
+                    new_cols[col] = col
+                else:
+                    new_cols[col] = topic + '__' + col
+            df = d[topic].rename(columns=new_cols)
+            d[topic] = df
+
         # define timestamps to merge on
         if dt is not None:
             ts_min = None
             ts_max = None
-            for topic in sorted(self.keys()):
-                ts_t_min = self[topic]['timestamp'].min()
-                ts_t_max = self[topic]['timestamp'].max()
+            for topic in sorted(d.keys()):
+                ts_t_min = d[topic]['timestamp'].min()
+                ts_t_max = d[topic]['timestamp'].max()
                 if ts_min is None or ts_t_min < ts_min:
                     ts_min = ts_t_min
                 if ts_max is None or ts_t_max > ts_max:
                     ts_max = ts_t_max
             timestamps = np.arange(
-                ts_min, ts_max - dt * 1e6, dt * 1e6, dtype=np.int64)
+                ts_min, ts_max - dt * 1e6, dt * 1e6, dtype=np.uint64)
         elif on is not None:
-            timestamps = self[on].timestamp
+            timestamps = d[on].timestamp
         else:
             raise IOError('must pass dt or on')
 
         # concat
         m = pd.DataFrame(data=timestamps, columns=['timestamp'])
         if topics is None:
-            topics = self.keys()
+            topics = d.keys()
         for topic in topics:
             if verbose:
                 print('merging {:s} as of timestamp'.format(topic))
-            df = self[topic]
+            df = d[topic]
             df.sort_values(by='timestamp', inplace=True)
             m = pd.merge_asof(m, df, 'timestamp')
         m.index = pd.TimedeltaIndex(m.timestamp * 1e3, unit='ns')
         return m
 
-
-def read_ulog(ulog_filename, messages='', verbose=False):
-    """
-    Convert ulog to pandas dataframe.
-    """
-
-    tmp_dir = tempfile.mkdtemp()
-    pyulog.ulog2csv.convert_ulog2csv(
-        ulog_filename, messages, tmp_dir, ',')
-    log_name = os.path.splitext(os.path.basename(ulog_filename))[0]
-    data = {}
-    glob_expr = '{:s}*.csv'.format(
-        os.path.join(tmp_dir, log_name))
-
-    # column naming
-    d_col_rename = {
-        '[': '_',
-        ']': '_',
-    }
-    col_rename_pattern = re.compile(
-        r'(' + '|'.join([
-            re.escape(key)
-            for key in d_col_rename.keys()]) + r')')
-
-    for filename in sorted(glob.glob(glob_expr)):
-        if verbose:
-            print('processing', filename)
-        file_name = os.path.splitext(os.path.basename(filename))[0]
-        topic_name = file_name.replace(log_name + '_', '')
-
-        # read data
-        data_new = pd.read_csv(filename)
-        data_new.columns = [
-            col_rename_pattern.sub(
-                lambda x: d_col_rename[x.group()], col)
-            for col in data_new.columns
-        ]
-
-        data[topic_name] = data_new
-
-    if verbose:
-        print(log_name, 'data loaded')
-
-    shutil.rmtree(tmp_dir)
-    return PX4MessageDict(data)
-
-
-class Structure(dict, object):
-    """
-    A 'fancy' dictionary that provides 'MatLab' structure-like
-    referencing.
-    """
     def __getattr__(self, attr):
         # Fake a __getstate__ method that returns None
         if attr == "__getstate__":
@@ -561,31 +523,37 @@ class Structure(dict, object):
             self.__setattr__(k, D[k])
 
     def __dir__(self):
-        return self.keys()
+        return super(PX4MessageDict, self).__dir__() + list(self.keys())
 
 
-def read_ulog2(ulog_filename):
+def read_ulog(ulog_filename, messages='', verbose=False):
     """
-    Convert from ulog to pandas using dictionary
+    Convert ulog to pandas dataframe.
     """
     log = pyulog.ULog(ulog_filename)
+
+    # column naming
+    d_col_rename = {
+        '[': '_',
+        ']': '_',
+    }
+    col_rename_pattern = re.compile(
+        r'(' + '|'.join([
+            re.escape(key)
+            for key in d_col_rename.keys()]) + r')')
+
     data = {}
     for msg in log.data_list:
-        if msg.name not in data.keys():
-            data[msg.name] = {}
-        msg_data = pd.DataFrame.from_dict(msg.data, dtype=float)
+        msg_data = pd.DataFrame.from_dict(msg.data)
+        msg_data.columns = [
+            col_rename_pattern.sub(
+                lambda x: d_col_rename[x.group()], col)
+            for col in msg_data.columns
+        ]
+        msg_data.index = pd.TimedeltaIndex(msg_data['timestamp']*1e3, unit='ns')
+        data['t_{:s}_{:d}'.format(msg.name, msg.multi_id)] = msg_data
 
-        data[msg.name]['id_{:d}'.format(msg.multi_id)] = msg_data
-
-    d = Structure()
-    for msg in data.keys():
-        d[msg] = Structure()
-        for multi_id in data[msg].keys():
-            msg_df = data[msg][multi_id]
-            msg_df.columns = [ c.replace('[', '_').replace(']','')
-                for c in msg_df.columns]
-            d[msg][multi_id] = msg_df
-    return d
+    return PX4MessageDict(data)
 
 
 def _smallest_positive_real_root(roots, min_val=0, max_val=1e6):

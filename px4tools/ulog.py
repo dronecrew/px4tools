@@ -20,6 +20,7 @@ import pandas as pd
 import scipy.signal
 import pyulog
 import transforms3d.taitbryan as tf
+import transforms3d.quaternions as quat
 
 IEKF_STATES = {
     0: 'q_nb_0',
@@ -334,6 +335,23 @@ def plot_speed(df):
     plt.ylabel('speed, m/s')
     plt.xlabel('time')
     plt.grid()
+    
+def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
+    """
+    Given pandas series x-z and quaternion q0-q4, 
+    compute rotated vector x_r, y_r, z_r
+    """    
+    vec = np.array([ 
+        quat.rotate_vector([xi,yi,zi], [q0i,q1i,q2i,q3i]) 
+        for xi,yi,zi,q0i,q1i,q2i,q3i in zip(x,y,z,q0,q1,q2,q3) 
+        ])
+    x_r = pd.Series(name=x.name + '_'+rot_name, data= vec[:,0],index=x.index) 
+    y_r = pd.Series(name=y.name + '_'+rot_name, data= vec[:,1],index=y.index) 
+    z_r = pd.Series(name=z.name + '_'+rot_name, data= vec[:,2],index=z.index) 
+    return x_r, y_r, z_r
+
+def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):  
+    return series_quatrot(x, y, z, q0, -q1, -q2, -q3, rot_name)
 
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """

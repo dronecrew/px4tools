@@ -525,11 +525,11 @@ class PX4MessageDict(dict):
         return super(PX4MessageDict, self).__dir__() + list(self.keys())
 
 
-def read_ulog(ulog_filename, messages='', verbose=False):
+def read_ulog(ulog_filename, messages=None, verbose=False):
     """
     Convert ulog to pandas dataframe.
     """
-    log = pyulog.ULog(ulog_filename)
+    log = pyulog.ULog(ulog_filename, messages)
 
     # column naming
     d_col_rename = {

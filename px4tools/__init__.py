@@ -41,6 +41,17 @@ WARNING: logsysid module requires python-control
 please install:
     pip install control
 ''')
+    
+try:
+    from .logdynamicpressure import *
+except ImportError as ex:
+    print(ex)
+    print('''
+WARNING: ulog module requires pyulog
+
+please install:
+    pip install pyulog
+''')
 
 from ._version import get_versions
 __version__ = get_versions()['version']

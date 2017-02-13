@@ -3,19 +3,10 @@ Analyze ulog for dynamic pressure
 """
 from __future__ import print_function
 
-from px4tools import logdynamicpressure as ldp
-import pandas
-from bokeh.plotting import figure, output_notebook, show
-from bokeh.palettes import Spectral11
-output_notebook()
 import pandas as pd
 import numpy as np
-from scipy.optimize import curve_fit
 import os
 import glob
-
-
-import scipy.optimize
 from scipy.interpolate import interp1d
 import pandas as pd
 import numpy as np
@@ -199,15 +190,15 @@ def angle_wrap(angle):
 if __name__ == "__main__":  
     
     # ulog filename
-    path = 'path to folder with log files'
+    path = '/home/dennis/src/px4Analysis/log/altitude'
     files = glob.glob(os.path.join(path,"*.ulg"))
     
     # loop through all files
     df = pd.DataFrame()
     for file in files:
-        data = ldp.load_data(file)
-        data = ldp.estimate_airspeed(data)
-        data = ldp.prepare_dynamicaltitude_data(data)
+        data = load_data(file)
+        data = estimate_airspeed(data)
+        data = prepare_dynamicaltitude_data(data)
         df = df.append(data)
     df.index = list(range(len(df))) 
  

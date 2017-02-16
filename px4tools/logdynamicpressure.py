@@ -24,7 +24,7 @@ AoS_bp_data = [-np.pi, -np.pi/2, 0, np.pi/2, np.pi] # Angle of sideslip breakpoi
 def load_data(f):
     """
     Read log data from a .ulg file and prepare data for dynamic pressure analysis
-    @f global path to file .BulgarianLangModel
+    @f global path to file 
     @retun dataframe to do dynamic pressure on  
     """
     # ulog topics needed
@@ -190,7 +190,7 @@ def angle_wrap(angle):
 if __name__ == "__main__":  
     
     # ulog filename
-    path = '/home/dennis/src/px4Analysis/log/altitude'
+    path = 'path to ulog directory'
     files = glob.glob(os.path.join(path,"*.ulg"))
     
     # loop through all files

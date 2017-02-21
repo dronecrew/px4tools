@@ -353,6 +353,21 @@ def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
 def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):  
     return series_quatrot(x, y, z, q0, -q1, -q2, -q3, rot_name)
 
+def series_axangle2quat(x, y, z, yaw, msg_name):
+    ''' 
+    Given pandas series x-z and yaw
+    return quaternion
+    '''
+    vec = np.array([
+        quat.axangle2quat([xi, yi, zi], yawi)
+        for xi,yi,zi,yawi in zip(x,y,z,yaw)
+        ])
+    q0 = pd.Series(name=msg_name, data=vec[:,0],index=yaw.index)
+    q1 = pd.Series(name=msg_name, data=vec[:,1],index=yaw.index)
+    q2 = pd.Series(name=msg_name, data=vec[:,2],index=yaw.index)
+    q3 = pd.Series(name=msg_name, data=vec[:,3],index=yaw.index)
+    return q0, q1, q2, q3
+
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """
     Given pandas series q0-q4, compute series roll, pitch, yaw

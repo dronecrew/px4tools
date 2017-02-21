@@ -25,7 +25,7 @@ def load_data(f):
     """
     Read log data from a .ulg file and prepare data for dynamic pressure analysis
     @f global path to file 
-    @retun dataframe to do dynamic pressure on  
+    @return dataframe to do dynamic pressure on  
     """
     # ulog topics needed
     px4topics = ['vehicle_local_position','vehicle_local_position_setpoint',
@@ -78,9 +78,13 @@ def prepare_dynamicaltitude_data(df):
     # only consider parts where acceleration in z is low
     df = df[df.t_vehicle_local_position_0__f_vz.diff().abs() < 2.0]
     
-    # we are not interested in time series, shorter names
+    # magnitude in xy
+    v_xy_mag = np.linalg.norm(df[['t_vehicle_local_position_0__f_vx','t_vehicle_local_position_0__f_vy']], axis = 1)
+    
+    # we are not interested in time series and want shorter names
     d = {'vx': df.t_vehicle_local_position_0__f_vx.values,
          'vy': df.t_vehicle_local_position_0__f_vy.values,
+         'vxy_mag': v_xy_mag,
          'vx_b_yaw': df.t_vehicle_local_position_0__f_vx_body_yaw.values,
          'vy_b_yaw': df.t_vehicle_local_position_0__f_vy_body_yaw.values,
          'v_airx': df.t_vehicle_altitude_hold_0__f_v_airx.values,
@@ -95,7 +99,7 @@ def prepare_dynamicaltitude_data(df):
     group = df.groupby(df.z_sp) 
     # subtract "static" altitude with assumption that at low speed no dynamic pressure change is present
     for g, data in group:
-        df.loc[df.z_sp == g,'baro_alt'] -=  data.baro_alt.mean()   
+        df.loc[df.z_sp == g ,'baro_alt'] -=  data[data.vxy_mag < 1.0].baro_alt.mean()   
     return df
 
 def estimate_airspeed(df):
@@ -190,7 +194,7 @@ def angle_wrap(angle):
 if __name__ == "__main__":  
     
     # ulog filename
-    path = 'path to ulog directory'
+    path =  '../examples/ulog/dynamic_alt'
     files = glob.glob(os.path.join(path,"*.ulg"))
     
     # loop through all files

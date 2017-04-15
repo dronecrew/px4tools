@@ -177,9 +177,8 @@ def plot_iekf_std_dev(df):
     """
     # pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_ERROR_STATES)):
-        d = getattr(
-            df, 't_estimator_status_0__f_covariances_{:d}_'.format(i))
-        getattr(np.sqrt(d), 'plot')(label='IEKF_ERROR_STATES[{:d}]'.format(i))
+        d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
+        np.sqrt(d).plot(label=IEKF_ERROR_STATES[i])
     plt.gca().set_ylim(0, 4)
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF est std. dev.')
@@ -226,7 +225,7 @@ def plot_iekf_states(df):
     """
     for i in range(len(IEKF_STATES)):
         d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
-        d.plot(label='IEKF_STATES[{:d}]'.format(i))
+        d.plot(label=IEKF_STATES[i])
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF states')
     plt.grid()

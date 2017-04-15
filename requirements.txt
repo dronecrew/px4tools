@@ -1,3 +1,6 @@
+transforms3d
+pyulog
+control
 scipy
 numpy
 pandas

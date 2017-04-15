@@ -5,7 +5,11 @@
     <option name="CUSTOM_SCOPE_NAME" value="default" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9ddf9b9a-0028-4ffb-a315-dabcfdadd6f0" name="Default" comment="" />
+    <list default="true" id="9ddf9b9a-0028-4ffb-a315-dabcfdadd6f0" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/px4tools/analysis.py" afterPath="$PROJECT_DIR$/px4tools/analysis.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/px4tools/ulog.py" afterPath="$PROJECT_DIR$/px4tools/ulog.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -49,18 +53,28 @@
       <file leaf-file-name="ulog.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/px4tools/ulog.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="195">
-              <caret line="620" column="59" lean-forward="false" selection-start-line="620" selection-start-column="59" selection-end-line="620" selection-end-column="59" />
+            <state relative-caret-position="-54">
+              <caret line="18" column="13" lean-forward="true" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="requirements.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/requirements.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/px4tools/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+            <state relative-caret-position="54">
+              <caret line="3" column="19" lean-forward="false" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -76,12 +90,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="analysis.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="analysis.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/px4tools/analysis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="19" column="27" lean-forward="true" selection-start-line="19" selection-start-column="27" selection-end-line="19" selection-end-column="27" />
-              <folding />
+            <state relative-caret-position="195">
+              <caret line="100" column="4" lean-forward="false" selection-start-line="100" selection-start-column="4" selection-end-line="100" selection-end-column="4" />
+              <folding>
+                <element signature="e#164#201#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -111,6 +127,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>succes</find>
+      <find>iekf</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -120,13 +137,14 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/px4tools/pandas_monkeypatch.py" />
-        <option value="$PROJECT_DIR$/px4tools/analysis.py" />
         <option value="$PROJECT_DIR$/px4tools/mapping.py" />
         <option value="$PROJECT_DIR$/px4tools/px42csv.py" />
-        <option value="$PROJECT_DIR$/px4tools/ulog.py" />
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/px4tools/logsysid.py" />
         <option value="$PROJECT_DIR$/px4tools/__init__.py" />
+        <option value="$PROJECT_DIR$/px4tools/ulog.py" />
+        <option value="$PROJECT_DIR$/requirements.txt" />
+        <option value="$PROJECT_DIR$/px4tools/analysis.py" />
       </list>
     </option>
   </component>
@@ -313,6 +331,9 @@
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="9ddf9b9a-0028-4ffb-a315-dabcfdadd6f0" name="Default" comment="" />
@@ -332,15 +353,6 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Test - 2017.04.14 at 22h 55m 17s.xml">
-      <configuration name="Test" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Test - 2017.04.14 at 22h 59m 22s.xml">
-      <configuration name="Test" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Test - 2017.04.14 at 23h 01m 42s.xml">
-      <configuration name="Test" configurationId="tests" />
-    </history-entry>
     <history-entry file="Test - 2017.04.14 at 23h 05m 39s.xml">
       <configuration name="Test" configurationId="tests" />
     </history-entry>
@@ -362,14 +374,22 @@
     <history-entry file="Test - 2017.04.14 at 23h 15m 32s.xml">
       <configuration name="Test" configurationId="tests" />
     </history-entry>
+    <history-entry file="Test - 2017.04.14 at 23h 19m 59s.xml">
+      <configuration name="Test" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Test - 2017.04.14 at 23h 20m 32s.xml">
+      <configuration name="Test" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Test - 2017.04.14 at 23h 22m 44s.xml">
+      <configuration name="Test" configurationId="tests" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32985386" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32985386" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
@@ -428,14 +448,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/px4tools/analysis.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="19" column="27" lean-forward="true" selection-start-line="19" selection-start-column="27" selection-end-line="19" selection-end-column="27" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/px4tools/mapping.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -452,18 +464,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/px4tools/ulog.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="620" column="59" lean-forward="false" selection-start-line="620" selection-start-column="59" selection-end-line="620" selection-end-column="59" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-351">
           <caret line="15" column="18" lean-forward="true" selection-start-line="15" selection-start-column="18" selection-end-line="15" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/px4tools/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="54">
+          <caret line="3" column="19" lean-forward="false" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
           <folding />
         </state>
       </provider>
@@ -476,11 +488,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/px4tools/__init__.py">
+    <entry file="file://$PROJECT_DIR$/px4tools/ulog.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+        <state relative-caret-position="-54">
+          <caret line="18" column="13" lean-forward="true" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/px4tools/analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="100" column="4" lean-forward="false" selection-start-line="100" selection-start-column="4" selection-end-line="100" selection-end-column="4" />
+          <folding>
+            <element signature="e#164#201#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

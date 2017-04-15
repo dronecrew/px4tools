@@ -80,14 +80,14 @@ def octa_cox_data_to_ss(data):
             'OUT0_Out3', 'OUT0_Out4', 'OUT0_Out5', 'OUT0_Out6',
             'OUT0_Out7']] - 1000.0) / 1000.0).values,
         columns=['1', '2', '3', '4', '5', '6', '7', '8'], index=t)
-    C_mix_octo = np.array([
+    c_mix_octo = np.array([
         [1, 1, 1, 1, 1, 1, 1, 1],  # thrust
         [-1, 1, 1, -1, -1, 1, 1, -1],  # roll
         [-1, -1, 1, 1, -1, -1, 1, 1],  # pitch
         [1, -1, 1, -1, 1, -1, 1, -1],  # yaw
     ]) / 8.0
     u = pandas.DataFrame(
-        C_mix_octo.dot(u_raw.T).T,
+        c_mix_octo.dot(u_raw.T).T,
         columns=['thrust', 'roll', 'pitch', 'yaw'],
         index=t)
     return t, xh, u, y, u_raw

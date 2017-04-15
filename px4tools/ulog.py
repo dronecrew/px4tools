@@ -41,7 +41,7 @@ EST_NAME = {
         'baro_bias',
         # 'wind_N', 'wind_E', 'wind_D',
         ],
-    'ekf': [
+    'ekf2': [
         'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
         'vel_N', 'vel_E', 'vel_D',
         'pos_N', 'pos_E', 'pos_D',
@@ -50,7 +50,7 @@ EST_NAME = {
         'mag_N', 'mag_E', 'mag_D',
         'wind_N', 'wind_E', 'wind_D'
         ],
-    'ekf_error': [
+    'ekf2_error': [
         'rot_N', 'rot_E', 'rot_D',
         'vel_N', 'vel_E', 'vel_D',
         'pos_N', 'pos_E', 'pos_D',
@@ -61,11 +61,13 @@ EST_NAME = {
         ]
 }
 
-# create state to index dict
-EST_INDEX = {}
-for key in EST_NAME.keys():
-    l = EST_NAME[key]
-    EST_INDEX[key] = {l[i]: i for i, name in enumerate(l)}
+
+def state_to_index(l):
+    """
+    Given 
+    """
+    return {l[i]: i for i, name in enumerate(l)}
+
 
 def compute_data(df):
     """
@@ -210,39 +212,49 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
     return P_list
 
 
-def plot_estimator_state(df, names, indices):
+def plot_estimator_state(df, est, states=()):
     # type: (pandas.DataFrame, list, list) -> None
     """
     Plot States with a give set of labels
     :param df: pandas DataFrame
-    :param names: list of state name strings
-    :param indices: indices of state to plot
+    :param est: name of estmator (iekf, ekf2)
+    :param states: tuple of states to plot, see EST_NAME
     :return: None
     """
-    for i in indices:
-        name = names[i]
-        d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
-        d.plot(label=name)
+    state_list = EST_NAME[est]
+    if len(states) == 0:
+        plot_states = state_list
+    else:
+        plot_states = states
+    name_to_index = {plot_states[i]: i for i, state in enumerate(plot_states)}
+    for state in plot_states:
+        d = df['t_estimator_status_0__f_states_{:d}_'.format(name_to_index[state])]
+        d.plot(label=state)
     plt.legend(ncol=3, loc='best')
     plt.title('estimator state')
     plt.grid()
     plt.gcf().autofmt_xdate()
 
 
-def plot_estimator_state_uncertainty(df, names, indices):
+def plot_estimator_state_uncertainty(df, est, states=()):
     # type: (pandas.DataFrame, list, list) -> None
     """
-    Plot estimator state uncertainty
+    Plot States with a give set of labels
     :param df: pandas DataFrame
-    :param names: list of state name strings
-    :param indices: indices of state to plot
-    :return:
+    :param est: name of estmator (iekf, ekf2)
+    :param states: tuple of states to plot, see EST_NAME
+    :return: None
     """
-    for i in indices:
-        name = names[i]
-        d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
+    state_list = EST_NAME[est + '_error']
+    if len(states) == 0:
+        plot_states = state_list
+    else:
+        plot_states = states
+    name_to_index = {plot_states[i]: i for i, state in enumerate(plot_states)}
+    for state in plot_states:
+        d = df['t_estimator_status_0__f_covariances_{:d}_'.format(name_to_index[state])]
         np.sqrt(d).plot(label=name)
-    plt.gca().set_ylim(0, 4)
+
     plt.legend(ncol=3, loc='best')
     plt.title('estimator state uncertainty')
     plt.grid()

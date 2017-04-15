@@ -225,8 +225,8 @@ def plot_estimator_state(df, est, states=()):
     if len(states) == 0:
         plot_states = state_list
     else:
-        plot_states = states
-    name_to_index = {plot_states[i]: i for i, state in enumerate(plot_states)}
+        plot_states = list(states)
+    name_to_index = {state_list[i]: i for i, state in enumerate(state_list)}
     for state in plot_states:
         d = df['t_estimator_status_0__f_states_{:d}_'.format(name_to_index[state])]
         d.plot(label=state)
@@ -249,8 +249,8 @@ def plot_estimator_state_uncertainty(df, est, states=()):
     if len(states) == 0:
         plot_states = state_list
     else:
-        plot_states = states
-    name_to_index = {plot_states[i]: i for i, state in enumerate(plot_states)}
+        plot_states = list(states)
+    name_to_index = {state_list[i]: i for i, state in enumerate(state_list)}
     for state in plot_states:
         d = df['t_estimator_status_0__f_covariances_{:d}_'.format(name_to_index[state])]
         np.sqrt(d).plot(label=state)

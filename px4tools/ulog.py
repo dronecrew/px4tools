@@ -253,7 +253,7 @@ def plot_estimator_state_uncertainty(df, est, states=()):
     name_to_index = {plot_states[i]: i for i, state in enumerate(plot_states)}
     for state in plot_states:
         d = df['t_estimator_status_0__f_covariances_{:d}_'.format(name_to_index[state])]
-        np.sqrt(d).plot(label=name)
+        np.sqrt(d).plot(label=state)
 
     plt.legend(ncol=3, loc='best')
     plt.title('estimator state uncertainty')

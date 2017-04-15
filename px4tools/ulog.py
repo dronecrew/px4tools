@@ -171,21 +171,6 @@ def plot_altitude(df, plot_groundtruth=False):
     plt.gcf().autofmt_xdate()
 
 
-def plot_iekf_std_dev(df):
-    """
-    Plot IEKF standard deviation.
-    """
-    # pylint: disable=exec-used, unused-argument
-    for i in range(len(IEKF_ERROR_STATES)):
-        d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
-        np.sqrt(d).plot(label=IEKF_ERROR_STATES[i])
-    plt.gca().set_ylim(0, 4)
-    plt.legend(ncol=3, loc='best')
-    plt.title('IEKF est std. dev.')
-    plt.grid()
-    plt.gcf().autofmt_xdate()
-
-
 def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19):
     '''
     Extract the covariance matrices P for at each time step
@@ -219,15 +204,36 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
     return P_list
 
 
-def plot_iekf_states(df):
+def plot_estimator_state(df, state_list):
+    # type: (pandas.DataFrame, list) -> None
     """
-    Plot IEKF states
+    Plot States with a give set of labels
+    :param df: pandas DataFrame
+    :param state_list: list of states as strings
+    :return: None
     """
-    for i in range(len(IEKF_STATES)):
+    for i in range(len(state_list)):
         d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
         d.plot(label=IEKF_STATES[i])
     plt.legend(ncol=3, loc='best')
-    plt.title('IEKF states')
+    plt.title('estimator state')
+    plt.grid()
+    plt.gcf().autofmt_xdate()
+
+
+def plot_estimator_state_uncertainty(df, state_list):
+    """
+    Plot estimator state uncertainty
+    :param df: pandas DataFrame
+    :param state_list: list of states as strings
+    :return: 
+    """
+    for i in range(len(state_list)):
+        d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
+        np.sqrt(d).plot(label=state_list[i])
+    plt.gca().set_ylim(0, 4)
+    plt.legend(ncol=3, loc='best')
+    plt.title('estimator state uncertainty')
     plt.grid()
     plt.gcf().autofmt_xdate()
 

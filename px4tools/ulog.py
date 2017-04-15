@@ -126,14 +126,14 @@ def compute_data(df):
         speed = pd.Series(np.sqrt(
             df.t_vehicle_local_position_0__f_vx ** 2 +
             df.t_vehicle_local_position_0__f_vy ** 2 +
-            df.t_vehicle_local_position_0__f_vz ** 2),
-            name=msg_lpos + '__f_speed')
+            df.t_vehicle_local_position_0__f_vz ** 2
+            ), name=msg_lpos + '__f_speed')
 
         speed_gt = pd.Series(np.sqrt(
             df.t_vehicle_local_position_groundtruth_0__f_vx ** 2 +
             df.t_vehicle_local_position_groundtruth_0__f_vy ** 2 +
-            df.t_vehicle_local_position_groundtruth_0__f_vz ** 2),
-            name=msg_lpos_gt + '__f_speed')
+            df.t_vehicle_local_position_groundtruth_0__f_vz ** 2
+            ), name=msg_lpos_gt + '__f_speed')
 
         e_speed = pd.Series(
             speed - speed_gt,
@@ -204,33 +204,33 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
     return P_list
 
 
-def plot_estimator_state(df, state_list):
+def plot_estimator_state(df, names):
     # type: (pandas.DataFrame, list) -> None
     """
     Plot States with a give set of labels
     :param df: pandas DataFrame
-    :param state_list: list of states as strings
+    :param names: list of state name strings
     :return: None
     """
-    for i in range(len(state_list)):
+    for i, name in enumerate(names):
         d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
-        d.plot(label=IEKF_STATES[i])
+        d.plot(label=name)
     plt.legend(ncol=3, loc='best')
     plt.title('estimator state')
     plt.grid()
     plt.gcf().autofmt_xdate()
 
 
-def plot_estimator_state_uncertainty(df, state_list):
+def plot_estimator_state_uncertainty(df, names):
     """
     Plot estimator state uncertainty
     :param df: pandas DataFrame
-    :param state_list: list of states as strings
-    :return: 
+    :param names: list of state name strings
+    :return:
     """
-    for i in range(len(state_list)):
+    for i, name in enumerate(names):
         d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
-        np.sqrt(d).plot(label=state_list[i])
+        np.sqrt(d).plot(label=name)
     plt.gca().set_ylim(0, 4)
     plt.legend(ncol=3, loc='best')
     plt.title('estimator state uncertainty')
@@ -325,6 +325,9 @@ def plot_velocity(df, plot_groundtruth=False):
 
 
 def plot_speed(df):
+    """
+    Plot speed.
+    """
     df.t_vehicle_local_position_0__f_speed.plot()
     plt.gcf().autofmt_xdate()
     plt.ylabel('speed, m/s')
@@ -334,7 +337,7 @@ def plot_speed(df):
 
 def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
     """
-    Given pandas series x-z and quaternion q0-q4, 
+    Given pandas series x-z and quaternion q0-q4,
     compute rotated vector x_r, y_r, z_r
     """
     vec = np.array([
@@ -348,6 +351,10 @@ def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
 
 
 def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):
+    """
+    Given pandas series x-z and quaternion q0-q4,
+    compute reversed rotated vector x_r, y_r, z_r
+    """
     return series_quatrot(x, y, z, q0, -q1, -q2, -q3, rot_name)
 
 

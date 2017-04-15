@@ -95,7 +95,7 @@ def delay_and_gain_sysid(y, u, verbose=False):
     print('fit quality', round(fit*100, 2), '%')
     if fit < 0.75:
         print('WARNING: poor sysid fit')
-    return k, delay
+    return k, delay, fit
 
 def calculate_fitness(k, delay, y, u, dt):
     """
@@ -227,7 +227,7 @@ def attitude_sysid(y_acc, u_mix, verbose=False):
     """
     if verbose:
         print('solving for plant model ', end='')
-    k, delay = delay_and_gain_sysid(y_acc, u_mix, verbose)
+    k, delay, fit = delay_and_gain_sysid(y_acc, u_mix, verbose)
     if verbose:
         print('done')
 
@@ -238,7 +238,7 @@ def attitude_sysid(y_acc, u_mix, verbose=False):
     tf_integrator = control.tf((1), (1, 0))
     G_ol = tf_acc * tf_integrator
 
-    return G_ol, delay, k
+    return G_ol, delay, k, fit
 
 
 def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=True):
@@ -296,19 +296,24 @@ def plot_loops(name, G_ol, G_cl):
     plt.figure()
     plt.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
     plt.title(name + ' step resposne')
+    plt.xlabel('t, sec')
+    plt.ylabel('rad')
     plt.grid()
+    plt.savefig(name + '-closed-step.pdf')
 
     plt.figure()
     control.bode(G_ol)
     print('margins', control.margin(G_ol))
     plt.subplot(211)
     plt.title(name + ' open loop bode plot')
+    plt.savefig(name + '-open-bode.pdf')
 
     plt.figure()
     control.rlocus(G_ol, np.logspace(-2, 0, 1000))
     for pole in G_cl.pole():
         plt.plot(np.real(pole), np.imag(pole), 'rs')
     plt.title(name + ' root locus')
+    plt.savefig(name + '-rlocus.pdf')
     plt.grid()
 
 def attitude_control_design(
@@ -325,36 +330,41 @@ def attitude_control_design(
     u_bias = u.rolling(rolling_mean_window).mean()
     u_debiased = u - u_bias
 
-    G_ol, delay, k = attitude_sysid(
+    G_ol, delay, k, fit = attitude_sysid(
         y_debiased, u_debiased, verbose)
 
     K, G_ol_rate, G_cl_rate = pid_design(
         G_ol, K_guess, d_tc, verbose)
 
     if do_plot:
-
         plt.figure()
         u_debiased.plot(label='debiased input')
         u.plot(label='input')
         plt.legend()
         plt.xlabel('t, sec')
+        plt.ylabel('mix')
         plt.title(name + ' input')
         plt.grid()
+        plt.savefig(name + '-debiased-input.pdf')
 
         plt.figure()
         y_debiased.plot(label='debiased output')
         y.plot(label='output')
         plt.legend()
         plt.xlabel('t, sec')
+        plt.ylabel('$rad/sec^2$')
         plt.title(name + ' output')
         plt.grid()
+        plt.savefig(name + '-debiased-output.pdf')
 
         plt.figure()
         plot_delay_and_gain_fit(k, delay, y_debiased, u_debiased)
-        plt.title(name + ' fit')
+        plt.title(name + ' fitness {:d} %'.format(int(100*fit)))
         plt.grid()
+        plt.xlabel('t, sec')
+        plt.ylabel('$rad/sec^2$')
+        plt.savefig(name + '-fit.pdf')
 
-        plt.figure()
         plot_loops(name, G_ol_rate, G_cl_rate)
 
     return K, G_cl_rate
@@ -380,7 +390,6 @@ def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=Fal
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
-        plt.figure()
         plot_loops('roll', G_roll, G_cl_roll)
 
     pitch_acc = data.ATT_PitchRate.diff()/dt
@@ -394,7 +403,6 @@ def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=Fal
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
-        plt.figure()
         plot_loops('pitch', G_pitch, G_cl_pitch)
 
     if verbose:
@@ -437,7 +445,6 @@ def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbos
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
-        plt.figure()
         plot_loops('roll', G_roll, G_cl_roll)
 
     pitch_acc = data.ATT_PitchRate.diff()/dt
@@ -451,7 +458,6 @@ def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbos
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
-        plt.figure()
         plot_loops('pitch', G_pitch, G_cl_pitch)
 
     if verbose:

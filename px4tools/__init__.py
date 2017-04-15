@@ -1,8 +1,7 @@
 from __future__ import print_function
 
-from .pandas_monkeypatch import *
-
 from ._version import *
+from .pandas_monkeypatch import *
 
 try:
     from .mapping import *
@@ -43,5 +42,6 @@ please install:
 ''')
 
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions

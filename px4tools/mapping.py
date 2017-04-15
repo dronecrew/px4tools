@@ -2,11 +2,12 @@
 Mapping functions
 """
 
-#pylint: disable=invalid-name, missing-docstring, no-member
+# pylint: disable=invalid-name, missing-docstring, no-member
 
 from __future__ import print_function
-from mpl_toolkits.basemap import Basemap
+
 import pandas
+from mpl_toolkits.basemap import Basemap
 
 
 def create_map(lon, lat):
@@ -23,8 +24,8 @@ def create_map(lon, lat):
 
 def project_lat_lon(df):
     gps_map = Basemap(lat_0=df.GPS_Lat.values[0],
-            lon_0=df.GPS_Lon.values[0],
-            width=11e-5, height=1e-5, projection='tmerc')
+                      lon_0=df.GPS_Lon.values[0],
+                      width=11e-5, height=1e-5, projection='tmerc')
     gps_y, gps_x = gps_map(df.GPS_Lon.values, df.GPS_Lat.values)
     gps_z = df.GPS_Alt - df.GPS_Alt.values[0]
     df_new = pandas.DataFrame(pandas.DataFrame({

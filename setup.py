@@ -6,11 +6,10 @@ This module allows you to do control and statistical analysis for the PX4.
 """
 
 from __future__ import print_function
-import os
-import sys
-import versioneer
 
 from setuptools import setup, find_packages
+
+import versioneer
 
 DOCLINES = __doc__.split("\n")
 

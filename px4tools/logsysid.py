@@ -2,24 +2,27 @@
 Analyze a PX4 log to perform sysid and control design.
 """
 from __future__ import print_function
+
 from collections import OrderedDict
 
-import pandas
 import control
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas
 import scipy.optimize
 import scipy.signal
-import numpy as np
-import matplotlib.pyplot as plt
 
 import px4tools
+
 
 # pylint: disable=invalid-name, no-member, too-many-locals, too-many-arguments
 
 def setup_data(df):
+    # type: (pandas.DataFrame) -> (pandas.DataFrame, int)
     """
     Resample a dataframe at 1 ms to prep for sysid.
-    @df pandas DataFrame of px4log
-    @return (df_rs, dt) resample dataframe and period (1 ms)
+    :param df: pandas DataFrame of px4log
+    :return: (df_rs, dt) resample dataframe and period (1 ms)
     """
     df = px4tools.get_float_data(df)
 
@@ -34,46 +37,51 @@ def setup_data(df):
     # resample dataframe at 1 millisecond
     df_rs = df.resample('1L').mean().interpolate()
 
-    dt = 1.0/1000.0 # resampled at 1 millisecond
-    df_rs.index = [i/1.0e3 for i in range(len(df_rs.index))]
+    dt = 1.0 / 1000.0  # resampled at 1 millisecond
+    df_rs.index = [i / 1.0e3 for i in range(len(df_rs.index))]
     return df_rs, dt
 
+
 def delay_and_gain_fit_fun(x, y, u, dt):
+    # type: (np.array, np.array, np.array, float) -> float
     """
-    Fitness function for dealy_and_gain_sysid
-    @x state (k, delay)
-    @y output
-    @u input
-    @dt period (sec)
-    @return the fitness cost
+    Fitness function for delay_and_gain_sysid
+    :param x: state (k, delay)
+    :param y: output
+    :param u: input
+    :param dt: period (sec)
+    :return: the fitness cost
     """
     k = x[0]
     delay = x[1]
 
     # cost at start of interval
-    delay1_periods = int(np.floor(delay/dt))
-    delay1 = delay1_periods*dt
-    uf1 = k*u.shift(delay1_periods)
+    delay1_periods = int(np.floor(delay / dt))
+    delay1 = delay1_periods * dt
+    uf1 = k * u.shift(delay1_periods)
     err1 = (y - uf1)
-    fit1 = (err1**2).sum()
+    fit1 = (err1 ** 2).sum()
 
     # cost at end of interval
     delay2_periods = delay1_periods + 1
-    delay2 = delay2_periods*dt
-    uf2 = k*u.shift(delay2_periods)
+    delay2 = delay2_periods * dt
+    uf2 = k * u.shift(delay2_periods)
     err2 = (y - uf2)
-    fit2 = (err2**2).sum()
+    fit2 = (err2 ** 2).sum()
 
     # interpolate
-    fit = fit1 + (delay - delay1)*(fit2 - fit1)/(delay2 - delay1)
+    fit = fit1 + (delay - delay1) * (fit2 - fit1) / (delay2 - delay1)
     return fit
 
+
 def delay_and_gain_sysid(y, u, verbose=False):
+    # type: (np.array, np.array, bool) -> (float, float)
     """
-    Finds gain and time dellay to best fit output y to input u
-    @y output
-    @u input
-    @return (k, delay)
+    Finds gain and time delay to best fit output y to input u
+    :param y: output
+    :param u: input
+    :param verbose: show debug output
+    :return: (k, delay)
     """
     dt = 0.001
     k_guess = 154.45
@@ -83,7 +91,7 @@ def delay_and_gain_sysid(y, u, verbose=False):
         x0=[k_guess, delay_guess],
         bounds=[[0, 1000], [0.001, 0.050]],
         args=(y, u, dt))
-    if res['success'] != True:
+    if not res['success']:
         print(res)
         raise RuntimeError('optimization failed')
     elif verbose:
@@ -92,35 +100,42 @@ def delay_and_gain_sysid(y, u, verbose=False):
     k = res['x'][0]
     delay = res['x'][1]
     fit = calculate_fitness(k, delay, y, u, dt)
-    print('fit quality', round(fit*100, 2), '%')
+    print('fit quality', round(fit * 100, 2), '%')
     if fit < 0.75:
         print('WARNING: poor sysid fit')
     return k, delay
 
+
 def calculate_fitness(k, delay, y, u, dt):
+    # type: (float, float, np.array, np.array, float) -> float
     """
     Find how well the function fits the data
     """
-    delay_periods = int(delay/dt)
-    e = y - k*u.shift(delay_periods)
+    delay_periods = int(delay / dt)
+    e = y - k * u.shift(delay_periods)
     # print('e var', e.var())
     # print('y var', y.var())
-    fit = 1 - (e.var()/y.var())**2
+    fit = 1 - (e.var() / y.var()) ** 2
     return fit
 
+
 def plot_delay_and_gain_fit(k, delay, y, u, dt=0.001):
+    # type: (float, float, np.array, np.array, float) -> float
     """
     Plot the delay and gain fit vs the actual output.
     """
-    delay_periods = int(delay/dt)
-    uf = k*u.shift(delay_periods)
+    delay_periods = int(delay / dt)
+    uf = k * u.shift(delay_periods)
     y.plot()
     uf.plot()
 
+
+# noinspection PyUnusedLocal,PyUnusedLocal,PyUnusedLocal
 def lqr_ofb_con(K, R, Q, X, ss_o):
+    # type: (np.array, np.array, np.array, np.array, control.ss) -> np.array
     """
     Constraint for LQR output feedback optimization.
-    This asserts that all eignvalues are negative so that
+    This asserts that all eigenvalues are negative so that
     the system is stable.
     @K gain matrix
     @Q process noise covariance matrix
@@ -128,15 +143,17 @@ def lqr_ofb_con(K, R, Q, X, ss_o):
     @ss_o open loop state space system
     @return constraint
     """
-    #pylint: disable=unused-argument
+    # pylint: disable=unused-argument
     K = np.matrix(K).T
     A = np.matrix(ss_o.A)
     B = np.matrix(ss_o.B)
     C = np.matrix(ss_o.C)
-    A_c = A - B*K*C
+    A_c = A - B * K * C
     return -np.real(np.linalg.eig(A_c)[0])
 
+
 def lqr_ofb_cost(K, R, Q, X, ss_o):
+    # type: (np.array, np.array, np.array, np.array, control.ss) -> np.array
     """
     Cost for LQR output feedback optimization.
     @K gain matrix
@@ -149,13 +166,15 @@ def lqr_ofb_cost(K, R, Q, X, ss_o):
     A = np.matrix(ss_o.A)
     B = np.matrix(ss_o.B)
     C = np.matrix(ss_o.C)
-    A_c = A - B*K*C
-    Q_c = C.T*K.T*R*K*C + Q
+    A_c = A - B * K * C
+    Q_c = C.T * K.T * R * K * C + Q
     P = scipy.linalg.solve_lyapunov(A_c.T, -Q_c)
-    J = np.trace(P*X)
+    J = np.trace(P * X)
     return J
 
+
 def lqr_ofb_jac(K, R, Q, X, ss_o):
+    # type: (np.array, np.array, np.array, np.array, control.ss) -> np.array
     """
     Jacobian for LQR Output feedback optimization.
     TODO: might be an error here, doesn't not help optim
@@ -164,13 +183,14 @@ def lqr_ofb_jac(K, R, Q, X, ss_o):
     A = np.matrix(ss_o.A)
     B = np.matrix(ss_o.B)
     C = np.matrix(ss_o.C)
-    A_c = A - B*K*C
-    Q_c = C.T*K.T*R*K*C + Q
+    A_c = A - B * K * C
+    Q_c = C.T * K.T * R * K * C + Q
     P = scipy.linalg.solve_lyapunov(A_c.T, -Q_c)
     S = scipy.linalg.solve_lyapunov(A_c, -X)
-    J = 2*(R*K*C*S*C.T - B.T*P*S*C.T)
+    J = 2 * (R * K * C * S * C.T - B.T * P * S * C.T)
     J = np.array(J)[:, 0]
     return J
+
 
 def lqr_ofb_design(K_guess, ss_o, verbose=False):
     """
@@ -181,15 +201,15 @@ def lqr_ofb_design(K_guess, ss_o, verbose=False):
     """
     n_x = ss_o.A.shape[0]
     n_u = ss_o.B.shape[1]
-    R = 1e-6*np.eye(n_u)
+    R = 1e-6 * np.eye(n_u)
     Q = np.eye(n_x)
-    X = 1e-3*np.eye(n_x)
+    X = 1e-3 * np.eye(n_x)
 
     constraints = [
-        {'type':'ineq',
-         'fun':lqr_ofb_con,
-         'args':(R, Q, X, ss_o),
-        }
+        {'type': 'ineq',
+         'fun': lqr_ofb_con,
+         'args': (R, Q, X, ss_o),
+         }
     ]
 
     res = scipy.optimize.minimize(
@@ -198,14 +218,14 @@ def lqr_ofb_design(K_guess, ss_o, verbose=False):
         args=(R, Q, X, ss_o),
         x0=K_guess,
         # jac=lqr_ofb_jac,
-        bounds=len(K_guess)*[[1e-6, 100]],
+        bounds=len(K_guess) * [[1e-6, 100]],
         constraints=constraints
-        )
+    )
     K = np.matrix(res['x'])
 
     if verbose:
         print(res)
-    if  res['success'] != True:
+    if not res['success']:
         print('cost', lqr_ofb_cost(K, R, Q, X, ss_o))
         print('jac', lqr_ofb_jac(K, R, Q, X, ss_o))
         print('constraint', lqr_ofb_con(K, R, Q, X, ss_o))
@@ -215,11 +235,12 @@ def lqr_ofb_design(K_guess, ss_o, verbose=False):
 
 
 def attitude_sysid(y_acc, u_mix, verbose=False):
+    # type: (np.array, np.array, bool) -> (control.tf, float, float)
     """
     roll/pitch system id assuming delay/gain model
     :param y_acc: (roll or pitch acceleration)
     :param u_mix: (roll or pitch acceleration command)
-
+    :param verbose: show debug output
     :return: (G_ol, delay, k)
         G_ol: open loop plant
         delay: time delay (sec)
@@ -231,9 +252,8 @@ def attitude_sysid(y_acc, u_mix, verbose=False):
     if verbose:
         print('done')
 
-
     # open loop, rate output, mix input plant
-    tf_acc = k*control.tf(*control.pade(delay, 1)) # order 1 approx
+    tf_acc = k * control.tf(*control.pade(delay, 1))  # order 1 approx
     # can neglect motor, pole too fast to matter compared to delay, not used in sysid either
     tf_integrator = control.tf((1), (1, 0))
     G_ol = tf_acc * tf_integrator
@@ -242,14 +262,15 @@ def attitude_sysid(y_acc, u_mix, verbose=False):
 
 
 def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=True):
+    # type: (control.tf, np.array, float, bool, bool, bool, bool) -> (np.array, control.tf, control.tf)
     """
     :param G: transfer function
     :param K_guess: gain matrix guess
     :param d_tc: time constant for derivative
+    :param verbose: show debug output
     :param use_P: use p gain in design
     :param use_I: use i gain in design
     :param use_D: use d gain in design
-
     :return: (K, G_comp, Gc_comp)
         K: gain matrix
         G_comp: open loop compensated plant
@@ -271,7 +292,7 @@ def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=Tr
     # print('G', G)
     # print('H', H)
 
-    ss_open = control.tf2ss(G*H)
+    ss_open = control.tf2ss(G * H)
 
     if verbose:
         print('optimizing controller')
@@ -281,12 +302,14 @@ def pid_design(G, K_guess, d_tc, verbose=False, use_P=True, use_I=True, use_D=Tr
 
     # print('K', K)
     # print('H', H)
-    G_comp = control.series(G, H*K)
+    G_comp = control.series(G, H * K)
     Gc_comp = control.feedback(G_comp, 1)
 
     return K, G_comp, Gc_comp
 
+
 def plot_loops(name, G_ol, G_cl):
+    # type: (str, control.tf, control.tf) -> None
     """
     Plot loops
     :param name: Name of axis
@@ -295,7 +318,7 @@ def plot_loops(name, G_ol, G_cl):
     """
     plt.figure()
     plt.plot(*control.step_response(G_cl, np.linspace(0, 1, 1000)))
-    plt.title(name + ' step resposne')
+    plt.title(name + ' step response')
     plt.grid()
 
     plt.figure()
@@ -311,11 +334,21 @@ def plot_loops(name, G_ol, G_cl):
     plt.title(name + ' root locus')
     plt.grid()
 
+
 def attitude_control_design(
         name, y, u, rolling_mean_window=100,
-        do_plot=False, verbose=False, d_tc=1.0/125):
+        do_plot=False, verbose=False, d_tc=1.0 / 125):
+    # type: (str, np.array, np.array, int, bool, bool, float) -> (np.array, control.tf)
     """
     Do sysid and control design for roll/pitch rate loops.
+    :param name: 
+    :param y: output
+    :param u: input
+    :param rolling_mean_window: number of samples in rolling mean
+    :param do_plot: controls plotting
+    :param verbose: show debug output
+    :param d_tc: derivative time constant
+    :return: (gain, closed loop transfer function)
     """
     K_guess = np.matrix([[0.1, 0.1, 0.001]]).T
 
@@ -332,7 +365,6 @@ def attitude_control_design(
         G_ol, K_guess, d_tc, verbose)
 
     if do_plot:
-
         plt.figure()
         u_debiased.plot(label='debiased input')
         u.plot(label='input')
@@ -359,15 +391,22 @@ def attitude_control_design(
 
     return K, G_cl_rate
 
+
 def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):
+    # type: (pd.DataFrame, bool, int, bool) -> (OrderedDict, dict)
     """
     Design a PID controller from log file.
+    :param raw_data: data frame
+    :param do_plot: controls plotting
+    :param rolling_mean_window: number of rolling mean samples
+    :param verbose: show debug output
+    :return: (gain ordered dict, local variables)
     """
     data, dt = setup_data(raw_data)
-    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+    d_tc = 1.0 / 125  # nyquist frequency of derivative in PID, (250 Hz/2)
     K_guess_att = np.matrix([[1.0]]).T
 
-    roll_acc = data.ATT_RollRate.diff()/dt
+    roll_acc = data.ATT_RollRate.diff() / dt
     K_rollrate, G_cl_rollrate = attitude_control_design(
         'roll rate', roll_acc, data.ATTC_Roll,
         rolling_mean_window=rolling_mean_window,
@@ -376,21 +415,21 @@ def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=Fal
     tf_integrator = control.tf((1), (1, 0))
 
     K_roll, G_roll, G_cl_roll = pid_design(
-        G_cl_rollrate*tf_integrator, K_guess_att, d_tc,
+        G_cl_rollrate * tf_integrator, K_guess_att, d_tc,
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
         plt.figure()
         plot_loops('roll', G_roll, G_cl_roll)
 
-    pitch_acc = data.ATT_PitchRate.diff()/dt
+    pitch_acc = data.ATT_PitchRate.diff() / dt
     K_pitchrate, G_cl_pitchrate = attitude_control_design(
         'pitch rate', pitch_acc, data.ATTC_Pitch,
         rolling_mean_window=rolling_mean_window,
         do_plot=do_plot, d_tc=d_tc, verbose=verbose)
 
     K_pitch, G_pitch, G_cl_pitch = pid_design(
-        G_cl_pitchrate*tf_integrator, K_guess_att, d_tc,
+        G_cl_pitchrate * tf_integrator, K_guess_att, d_tc,
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
@@ -416,15 +455,24 @@ def control_design(raw_data, do_plot=False, rolling_mean_window=100, verbose=Fal
         ('MC_PITCHRATE_D', round(K_pitchrate[2, 0], 3)),
     ]), locals()
 
+
 def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbose=False):
+    # type: (pd.DataFrame, bool, int, bool) -> (OrderedDict, dict)
+
     """
     Design a PID controller from log file.
+    TODO, debug this
+    :param raw_data: data frame
+    :param do_plot: controls plotting
+    :param rolling_mean_window: number of rolling mean samples
+    :param verbose: show debug output
+    :return: (gain ordered dict, local variables)
     """
     data, dt = setup_data(raw_data)
-    d_tc = 1.0/125 # nyquist frequency of derivative in PID, (250 Hz/2)
+    d_tc = 1.0 / 125  # nyquist frequency of derivative in PID, (250 Hz/2)
     K_guess_att = np.matrix([[1.0]]).T
 
-    roll_acc = data.ATT_RollRate.diff()/dt
+    roll_acc = data.ATT_RollRate.diff() / dt
     K_rollrate, G_cl_rollrate = attitude_control_design(
         'roll rate', roll_acc, data.ATTC_Roll,
         rolling_mean_window=rolling_mean_window,
@@ -433,21 +481,21 @@ def control_design_ulog(raw_data, do_plot=False, rolling_mean_window=100, verbos
     tf_integrator = control.tf((1), (1, 0))
 
     K_roll, G_roll, G_cl_roll = pid_design(
-        G_cl_rollrate*tf_integrator, K_guess_att, d_tc,
+        G_cl_rollrate * tf_integrator, K_guess_att, d_tc,
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:
         plt.figure()
         plot_loops('roll', G_roll, G_cl_roll)
 
-    pitch_acc = data.ATT_PitchRate.diff()/dt
+    pitch_acc = data.ATT_PitchRate.diff() / dt
     K_pitchrate, G_cl_pitchrate = attitude_control_design(
         'pitch rate', pitch_acc, data.ATTC_Pitch,
         rolling_mean_window=rolling_mean_window,
         do_plot=do_plot, d_tc=d_tc, verbose=verbose)
 
     K_pitch, G_pitch, G_cl_pitch = pid_design(
-        G_cl_pitchrate*tf_integrator, K_guess_att, d_tc,
+        G_cl_pitchrate * tf_integrator, K_guess_att, d_tc,
         verbose=verbose, use_I=False, use_D=False)
 
     if do_plot:

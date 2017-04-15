@@ -115,7 +115,7 @@ if pandas.__version__ < "0.19.99":
         pandas.tseries.plotting.format_dateaxis = format_dateaxis
         pandas.tools.plotting.LinePlot._ts_plot = _ts_plot
 
-        print("monkey patch suceeded")
+        print("monkey patch succeeded")
 
     except Exception as e:
         print("monkey patch failed", e)

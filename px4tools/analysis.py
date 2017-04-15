@@ -2,13 +2,14 @@
 Analysis of px4 logs
 """
 
-#pylint: disable=invalid-name, missing-docstring, no-member, broad-except
-#pylint: disable=wildcard-import, unused-wildcard-import
+# pylint: disable=invalid-name, missing-docstring, no-member, broad-except
+# pylint: disable=wildcard-import, unused-wildcard-import
 
 from __future__ import print_function
-import pandas
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas
 
 try:
     from . import mapping
@@ -25,31 +26,31 @@ FLIGHT_MODES = [
 FLIGHT_MODE_COLOR = {
     'MANUAL': 'white',
     'ALTCTL': 'red',
-    'POSCTL' : 'green',
-    'AUTO_MISSION' : 'blue',
-    'AUTO_LOITER' : 'cyan',
+    'POSCTL': 'green',
+    'AUTO_MISSION': 'blue',
+    'AUTO_LOITER': 'cyan',
     'AUTO_RTL': 'magenta',
-    'ACRO' : 'yellow',
-    'OFFBOARD' : 'black',
-    'STAB' : 'grey',
-    'RATTITUDE' : 'brown',
-    'AUTO_TAKEOFF' : 'lime',
-    'AUTO_LAND' : 'violet',
-    'AUTO_FOLLOW_TARGET' : 'orange',
+    'ACRO': 'yellow',
+    'OFFBOARD': 'black',
+    'STAB': 'grey',
+    'RATTITUDE': 'brown',
+    'AUTO_TAKEOFF': 'lime',
+    'AUTO_LAND': 'violet',
+    'AUTO_FOLLOW_TARGET': 'orange',
 }
 
 
 def filter_finite(data):
-
     return np.all(data[np.isfinite(data.values.astype(float))], axis=1)
+
 
 def octa_cox_data_to_ss(data):
     """
     Extracts state space model data from octa cox log.
     """
     t = pandas.Series((
-        data['TIME_StartTime'] -
-        data['TIME_StartTime'].values[0])/1.0e6, name='t, sec')
+                          data['TIME_StartTime'] -
+                          data['TIME_StartTime'].values[0]) / 1.0e6, name='t, sec')
     xh = pandas.DataFrame(
         data[[
             'LPOS_X', 'LPOS_Y', 'LPOS_Z',
@@ -77,19 +78,20 @@ def octa_cox_data_to_ss(data):
         ((data[[
             'OUT0_Out0', 'OUT0_Out1', 'OUT0_Out2',
             'OUT0_Out3', 'OUT0_Out4', 'OUT0_Out5', 'OUT0_Out6',
-            'OUT0_Out7']] - 1000.0)/1000.0).values,
+            'OUT0_Out7']] - 1000.0) / 1000.0).values,
         columns=['1', '2', '3', '4', '5', '6', '7', '8'], index=t)
     C_mix_octo = np.array([
-        [1, 1, 1, 1, 1, 1, 1, 1], # thrust
-        [-1, 1, 1, -1, -1, 1, 1, -1], # roll
-        [-1, -1, 1, 1, -1, -1, 1, 1], # pitch
-        [1, -1, 1, -1, 1, -1, 1, -1], # yaw
-        ])/8.0
+        [1, 1, 1, 1, 1, 1, 1, 1],  # thrust
+        [-1, 1, 1, -1, -1, 1, 1, -1],  # roll
+        [-1, -1, 1, 1, -1, -1, 1, 1],  # pitch
+        [1, -1, 1, -1, 1, -1, 1, -1],  # yaw
+    ]) / 8.0
     u = pandas.DataFrame(
         C_mix_octo.dot(u_raw.T).T,
         columns=['thrust', 'roll', 'pitch', 'yaw'],
         index=t)
     return t, xh, u, y, u_raw
+
 
 def alt_analysis(data, min_alt=None, max_alt=None):
     """
@@ -105,10 +107,10 @@ def alt_analysis(data, min_alt=None, max_alt=None):
         data.DIST_Bottom.plot(legend=True)
     except Exception:
         pass
-    (-1*data.LPSP_Z).plot(legend=True)
+    (-1 * data.LPSP_Z).plot(legend=True)
     (data.SENS_BaroAlt - data.SENS_BaroAlt[i0_Baro].values[0]).plot(legend=True)
     (data.GPS_Alt - data.GPS_Alt[i0_GPS].values[0]).plot(legend=True)
-    (-1*data).LPOS_Z.plot(legend=True)
+    (-1 * data).LPOS_Z.plot(legend=True)
 
     import matplotlib.pyplot as plt
 
@@ -119,6 +121,7 @@ def alt_analysis(data, min_alt=None, max_alt=None):
     plt.ylabel('altitude, m')
     background_flight_modes(data)
     plt.legend(loc='best', ncol=3)
+
 
 def pos_analysis(data):
     """
@@ -145,6 +148,7 @@ def pos_analysis(data):
     plt.legend(loc='best')
     return locals()
 
+
 def isfloatarray(cell):
     """
     Convert cell to float if possible.
@@ -155,6 +159,7 @@ def isfloatarray(cell):
     except ValueError:
         return False
 
+
 def get_float_data(dataframe):
     """
     Get float data out of dataframe.
@@ -162,6 +167,7 @@ def get_float_data(dataframe):
     dataframe = dataframe[np.isfinite(dataframe.TIME_StartTime)]
     float_cols = [isfloatarray(col) for col in dataframe.values.T]
     return (dataframe.T[float_cols].T).astype(float)
+
 
 def get_auto_data(data):
     """
@@ -174,20 +180,23 @@ def get_auto_data(data):
         raise RuntimeError('no auto mode detected')
     return data
 
+
 def set_time_series(data):
     """
     Set data to use time series
     """
     t = pandas.Series(
         (data['TIME_StartTime'] -
-         data['TIME_StartTime'].values[0])/1.0e6, name='t, sec')
+         data['TIME_StartTime'].values[0]) / 1.0e6, name='t, sec')
     data = pandas.DataFrame(
         data.values,
         columns=data.columns, index=t)
     return data
 
+
 def process_data(data):
     return set_time_series(get_float_data(data))
+
 
 def plot_attitude_loops(data):
     """
@@ -215,6 +224,7 @@ def plot_attitude_loops(data):
     plt.grid(True)
     plt.ylabel('yaw, deg')
     background_flight_modes(data)
+
 
 def plot_attitude_rate_loops(data):
     """
@@ -245,6 +255,7 @@ def plot_attitude_rate_loops(data):
     plt.grid(True)
     background_flight_modes(data)
 
+
 def plot_velocity_loops(data):
     """
     Plot velocity loops.
@@ -272,6 +283,7 @@ def plot_velocity_loops(data):
     plt.ylabel('z, m/s')
     plt.grid(True)
     background_flight_modes(data)
+
 
 def plot_position_loops(data):
     """
@@ -310,6 +322,7 @@ def plot_control_loops(data):
     plot_velocity_loops(data)
     plot_position_loops(data)
 
+
 def statistics(df, keys=None, plot=False):
     data = {}
     for key in keys:
@@ -318,20 +331,19 @@ def statistics(df, keys=None, plot=False):
             dt = find_meas_period(df_meas)
             stddev = np.sqrt(df_meas.var())
             mean = df_meas.mean()
-            variance = stddev**2
-            noise_power = variance*dt
+            variance = stddev ** 2
+            noise_power = variance * dt
         except Exception:
-            df_meas = 0
             dt = 0
             stddev = 0
             mean = 0
             noise_power = 0
             variance = 0
-        data[key+'_stddev'] = stddev
-        data[key+'_variance'] = variance
-        data[key+'_mean'] = mean
-        data[key+'_dt'] = dt
-        data[key+'_noise_power'] = noise_power
+        data[key + '_stddev'] = stddev
+        data[key + '_variance'] = variance
+        data[key + '_mean'] = mean
+        data[key + '_dt'] = dt
+        data[key + '_noise_power'] = noise_power
         if plot:
             import matplotlib.pyplot as plt
             plt.figure()
@@ -341,6 +353,7 @@ def statistics(df, keys=None, plot=False):
             plt.hlines([mean + stddev, mean - stddev],
                        df.index[0], df.index[-1], 'r')
     return data
+
 
 def find_lpe_gains(df, printing=False):
     keys = ['GPS_X', 'GPS_Y', 'GPS_Z', 'GPS_VelN', 'GPS_VelE', 'GPS_VelD',
@@ -359,10 +372,10 @@ def find_lpe_gains(df, printing=False):
             stats['GPS_X_stddev'],
             stats['GPS_Y_stddev']]).max(),
         'LPE_GPS_Z': stats['GPS_Z_stddev'],
-        'LPE_GPS_VXY':  np.array([
+        'LPE_GPS_VXY': np.array([
             stats['GPS_VelN_stddev'],
             stats['GPS_VelE_stddev']]).max(),
-        'LPE_GPS_VZ':  stats['GPS_VelD_stddev']
+        'LPE_GPS_VZ': stats['GPS_VelD_stddev']
     }
 
     if printing:
@@ -370,8 +383,10 @@ def find_lpe_gains(df, printing=False):
             print("{:s}\t=\t{:0.3g}".format(key, params[key]))
     return params
 
+
 def new_sample(series):
     return series[np.absolute(series.diff()) > 0]
+
 
 def all_new_sample(df):
     df_new = pandas.DataFrame(df)
@@ -379,10 +394,12 @@ def all_new_sample(df):
         df_new[key] = new_sample(df[key])
     return df_new
 
+
 def find_meas_period(series):
     new = new_sample(series)
-    return ((new.index[-1] - new.index[0])/
+    return ((new.index[-1] - new.index[0]) /
             len(new))
+
 
 def plot_modes(data):
     import matplotlib.pyplot as plt
@@ -390,6 +407,7 @@ def plot_modes(data):
     plt.ylim([0, 13])
     plt.yticks(range(0, 13), FLIGHT_MODES)
     background_flight_modes(data)
+
 
 def background_flight_modes(data):
     """
@@ -407,6 +425,7 @@ def background_flight_modes(data):
             t_min, t_max, alpha=0.1, color=mode_color,
             label=mode_name, zorder=0)
 
+
 def process_all(data_frame, project_lat_lon=True, lpe_health=True):
     data = process_data(data_frame)
     if project_lat_lon:
@@ -415,10 +434,11 @@ def process_all(data_frame, project_lat_lon=True, lpe_health=True):
         data = process_lpe_health(data)
     return data
 
+
 def process_lpe_health(data):
     names = ['baro', 'gps', 'lidar', 'flow', 'sonar', 'vision', 'mocap']
     try:
-        faults = np.array([[1 if (int(data.EST2_fHealth.values[i]) & 2**j) else 0
+        faults = np.array([[1 if (int(data.EST2_fHealth.values[i]) & 2 ** j) else 0
                             for j in range(7)]
                            for i in range(len(data.EST2_fHealth.notnull().index))])
         for i in range(7):
@@ -427,7 +447,7 @@ def process_lpe_health(data):
     except Exception as e:
         print(e)
     try:
-        timeouts = np.array([[0 if (int(data.EST0_fTOut.values[i]) & 2**j) else 1
+        timeouts = np.array([[0 if (int(data.EST0_fTOut.values[i]) & 2 ** j) else 1
                               for j in range(7)]
                              for i in range(len(data.EST0_fTOut.notnull().index))])
         for i in range(7):
@@ -437,31 +457,32 @@ def process_lpe_health(data):
         print(e)
     return data
 
+
 def plot_faults(data):
     try:
-        (1*data.fault_sonar).plot()
-        (2*data.fault_baro).plot()
-        (3*data.fault_gps).plot()
-        (4*data.fault_flow).plot()
-        (5*data.fault_vision).plot()
-        (6*data.fault_mocap).plot()
-        (7*data.fault_lidar).plot()
+        (1 * data.fault_sonar).plot()
+        (2 * data.fault_baro).plot()
+        (3 * data.fault_gps).plot()
+        (4 * data.fault_flow).plot()
+        (5 * data.fault_vision).plot()
+        (6 * data.fault_mocap).plot()
+        (7 * data.fault_lidar).plot()
     except AttributeError as e:
         print(e)
     plt.gca().set_ylim(-1, 8)
+
 
 def plot_timeouts(data):
     try:
-        (1*data.timeout_sonar).plot()
-        (2*data.timeout_baro).plot()
-        (3*data.timeout_gps).plot()
-        (4*data.timeout_flow).plot()
-        (5*data.timeout_vision).plot()
-        (6*data.timeout_mocap).plot()
-        (7*data.timeout_lidar).plot()
+        (1 * data.timeout_sonar).plot()
+        (2 * data.timeout_baro).plot()
+        (3 * data.timeout_gps).plot()
+        (4 * data.timeout_flow).plot()
+        (5 * data.timeout_vision).plot()
+        (6 * data.timeout_mocap).plot()
+        (7 * data.timeout_lidar).plot()
     except AttributeError as e:
         print(e)
     plt.gca().set_ylim(-1, 8)
-
 
 # vim: set et fenc= ft=python ff=unix sts=0 sw=4 ts=4 :

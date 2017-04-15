@@ -7,67 +7,58 @@ ulog2pandas converter
 from __future__ import print_function
 
 import os
-import tempfile
-import re
-import glob
-import shutil
 import pickle
-import copy
+import re
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy.signal
 import pyulog
-import transforms3d.taitbryan as tf
+import scipy.signal
 import transforms3d.quaternions as quat
+import transforms3d.taitbryan as tf
 
-IEKF_STATES = {
-    0: 'q_nb_0',
-    1: 'q_nb_1',
-    2: 'q_nb_2',
-    3: 'q_nb_3',
-    4: 'vel_N',
-    5: 'vel_E',
-    6: 'vel_D',
-    7: 'gyro_bias_bx',
-    8: 'gyro_bias_by',
-    9: 'gyro_bias_bz',
-    10: 'accel_bias_bx',
-    11: 'accel_bias_by',
-    12: 'accel_bias_bz',
-    13: 'pos_N',
-    14: 'pos_E',
-    15: 'pos_D',
-    16: 'terrain_alt',
-    17: 'baro_bias',
-    # 18: 'wind_N',
-    # 19: 'wind_E',
-    # 20: 'wind_D',
-}
+IEKF_STATES = [
+    'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
+    'vel_N', 'vel_E', 'vel_D',
+    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+    'pos_N', 'pos_E', 'pos_D',
+    'terrain_alt',
+    'baro_bias',
+    # 'wind_N', 'wind_E', 'wind_D',
+]
 
-IEKF_ERROR_STATES = {
-    0: 'rot_N',
-    1: 'rot_E',
-    2: 'rot_D',
-    3: 'vel_N',
-    4: 'vel_E',
-    5: 'vel_D',
-    6: 'gyro_bias_N',
-    7: 'gyro_bias_E',
-    8: 'gyro_bias_D',
-    9: 'accel_bias_N',
-    10: 'accel_bias_E',
-    11: 'accel_bias_D',
-    12: 'pos_N',
-    13: 'pos_E',
-    14: 'pos_D',
-    15: 'terrain_alt',
-    16: 'baro_bias',
-    # 17: 'wind_N',
-    # 18: 'wind_E',
-    # 19: 'wind_D',
-}
+IEKF_ERROR_STATES = [
+    'rot_N', 'rot_E', 'rot_D',
+    'vel_N', 'vel_E', 'vel_D',
+    'gyro_bias_N', 'gyro_bias_E', 'gyro_bias_D',
+    'accel_bias_N', 'accel_bias_E', 'accel_bias_D',
+    'pos_N', 'pos_E', 'pos_D',
+    'terrain_alt',
+    'baro_bias',
+    # 'wind_N', 'wind_E', 'wind_D',
+]
+
+EKF2_STATES = [
+    'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
+    'vel_N', 'vel_E', 'vel_D',
+    'pos_N', 'pos_E', 'pos_D',
+    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+    'mag_N', 'mag_E', 'mag_D',
+    'wind_N', 'wind_E', 'wind_D'
+]
+
+EKF2_ERROR_STATES = [
+    'rot_N', 'rot_E', 'rot_D',
+    'vel_N', 'vel_E', 'vel_D',
+    'pos_N', 'pos_E', 'pos_D',
+    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+    'mag_N', 'mag_E', 'mag_D',
+    'wind_N', 'wind_E', 'wind_D'
+]
 
 
 def compute_data(df):
@@ -133,16 +124,16 @@ def compute_data(df):
             name=msg_lpos + '__f_vz_error')
 
         speed = pd.Series(np.sqrt(
-            df.t_vehicle_local_position_0__f_vx**2 +
-            df.t_vehicle_local_position_0__f_vy**2 +
-            df.t_vehicle_local_position_0__f_vz**2),
-                          name=msg_lpos + '__f_speed')
+            df.t_vehicle_local_position_0__f_vx ** 2 +
+            df.t_vehicle_local_position_0__f_vy ** 2 +
+            df.t_vehicle_local_position_0__f_vz ** 2),
+            name=msg_lpos + '__f_speed')
 
         speed_gt = pd.Series(np.sqrt(
-            df.t_vehicle_local_position_groundtruth_0__f_vx**2 +
-            df.t_vehicle_local_position_groundtruth_0__f_vy**2 +
-            df.t_vehicle_local_position_groundtruth_0__f_vz**2),
-                          name=msg_lpos_gt + '__f_speed')
+            df.t_vehicle_local_position_groundtruth_0__f_vx ** 2 +
+            df.t_vehicle_local_position_groundtruth_0__f_vy ** 2 +
+            df.t_vehicle_local_position_groundtruth_0__f_vz ** 2),
+            name=msg_lpos_gt + '__f_speed')
 
         e_speed = pd.Series(
             speed - speed_gt,
@@ -160,7 +151,7 @@ def compute_data(df):
 
 
 def angle_wrap(x):
-    """wrap angle betwe -pi and pi"""
+    """wrap angle between -pi and pi"""
     return np.arcsin(np.sin(x))
 
 
@@ -210,7 +201,7 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
         estimator_name = msg_name + states.astype('unicode')[k] + '_'
         attribute = np.array([getattr(df, estimator_name).values]).T
         estimator_status_list += [attribute]
-    # covariance ndimensional array of size (num_states/no.(df points),1)
+    # covariance n-dimensional array of size (num_states/no.(df points),1)
 
     covariance_nd_array = np.ascontiguousarray(estimator_status_list)
     # print(covariance_nd_array.shape)
@@ -233,11 +224,9 @@ def plot_iekf_states(df):
     """
     Plot IEKF states
     """
-    # pylint: disable=exec-used, unused-argument
     for i in range(len(IEKF_STATES)):
-        d = getattr(
-            df, 't_estimator_status_0__f_states_{:d}_'.format(i))
-        getattr(d, 'plot')(label='IEKF_STATES[{:d}]'.format(i))
+        d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
+        d.plot(label='IEKF_STATES[{:d}]'.format(i))
     plt.legend(ncol=3, loc='best')
     plt.title('IEKF states')
     plt.grid()
@@ -329,29 +318,33 @@ def plot_velocity(df, plot_groundtruth=False):
     plt.ylabel('m/s')
     plt.gcf().autofmt_xdate()
 
+
 def plot_speed(df):
-    d.t_vehicle_local_position_0__f_speed.plot()
+    df.t_vehicle_local_position_0__f_speed.plot()
     plt.gcf().autofmt_xdate()
     plt.ylabel('speed, m/s')
     plt.xlabel('time')
     plt.grid()
-    
+
+
 def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
     """
     Given pandas series x-z and quaternion q0-q4, 
     compute rotated vector x_r, y_r, z_r
-    """    
-    vec = np.array([ 
-        quat.rotate_vector([xi,yi,zi], [q0i,q1i,q2i,q3i]) 
-        for xi,yi,zi,q0i,q1i,q2i,q3i in zip(x,y,z,q0,q1,q2,q3) 
-        ])
-    x_r = pd.Series(name=x.name + '_'+rot_name, data= vec[:,0],index=x.index) 
-    y_r = pd.Series(name=y.name + '_'+rot_name, data= vec[:,1],index=y.index) 
-    z_r = pd.Series(name=z.name + '_'+rot_name, data= vec[:,2],index=z.index) 
+    """
+    vec = np.array([
+        quat.rotate_vector([xi, yi, zi], [q0i, q1i, q2i, q3i])
+        for xi, yi, zi, q0i, q1i, q2i, q3i in zip(x, y, z, q0, q1, q2, q3)
+    ])
+    x_r = pd.Series(name=x.name + '_' + rot_name, data=vec[:, 0], index=x.index)
+    y_r = pd.Series(name=y.name + '_' + rot_name, data=vec[:, 1], index=y.index)
+    z_r = pd.Series(name=z.name + '_' + rot_name, data=vec[:, 2], index=z.index)
     return x_r, y_r, z_r
 
-def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):  
+
+def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):
     return series_quatrot(x, y, z, q0, -q1, -q2, -q3, rot_name)
+
 
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """
@@ -449,7 +442,6 @@ velocity error:
 
 
 class PX4MessageDict(dict):
-
     """
     PX4 has several data frames in a log and they don't all have the same
     index, so this structure is used to manipulate the resulting dictionary
@@ -543,7 +535,7 @@ class PX4MessageDict(dict):
         return super(PX4MessageDict, self).__dir__() + list(self.keys())
 
 
-def read_ulog(ulog_filename, messages=None, verbose=False):
+def read_ulog(ulog_filename, messages=None):
     """
     Convert ulog to pandas dataframe.
     """
@@ -567,7 +559,7 @@ def read_ulog(ulog_filename, messages=None, verbose=False):
                 lambda x: d_col_rename[x.group()], col)
             for col in msg_data.columns
         ]
-        msg_data.index = pd.TimedeltaIndex(msg_data['timestamp']*1e3, unit='ns')
+        msg_data.index = pd.TimedeltaIndex(msg_data['timestamp'] * 1e3, unit='ns')
         data['t_{:s}_{:d}'.format(msg.name, msg.multi_id)] = msg_data
 
     return PX4MessageDict(data)
@@ -607,10 +599,10 @@ def plot_allan_std_dev(
     c_vals = []
     # require at least 9 clusters for < 25% error:
     # source:
-    # http://www.afahc.ro/ro/afases/2014/mecanica/marinov_petrov_allan.pdf
+    # http://www.afahc.ro/ro/afases/2014/mecanica/marinov_rov_allan.pdf
     t_len = (data.index.values[-1] - data.index.values[0]) / 1e9
-    while 10**c < float(t_len / min_intervals):
-        c_vals += [10**c]
+    while 10 ** c < float(t_len / min_intervals):
+        c_vals += [10 ** c]
         c += 0.2
     for c_i in c_vals:
         allan_std = float(np.sqrt(data.resample(
@@ -627,26 +619,26 @@ def plot_allan_std_dev(
     pdiff = p.deriv()
 
     log_tau_0 = _smallest_positive_real_root((pdiff + 0.5).roots(), -5, 5)
-    tau_0 = 10**log_tau_0
+    tau_0 = 10 ** log_tau_0
     if tau_0 > 0 and np.isfinite(tau_0):
-        sig_rw = 10**p(log_tau_0) * np.sqrt(tau_0)
+        sig_rw = 10 ** p(log_tau_0) * np.sqrt(tau_0)
     else:
         # if intersect fails, evaluate slope at tau=1
         tau_0 = 1
-        sig_rw = 10**p(np.log10(tau_0)) * np.sqrt(tau_0)
+        sig_rw = 10 ** p(np.log10(tau_0)) * np.sqrt(tau_0)
 
     log_tau_1 = _smallest_positive_real_root((pdiff).roots(), log_tau_0, 5)
-    tau_1 = 10**log_tau_1
+    tau_1 = 10 ** log_tau_1
     if tau_1 > 0 and np.isfinite(tau_1):
-        sig_bi = (10**p(log_tau_1)) * np.sqrt(np.pi / (2 * np.log(2)))
+        sig_bi = (10 ** p(log_tau_1)) * np.sqrt(np.pi / (2 * np.log(2)))
     else:
         sig_bi = 0
 
     log_tau_2 = _smallest_positive_real_root(
         (pdiff - 0.5).roots(), log_tau_1, 5)
-    tau_2 = 10**log_tau_2
+    tau_2 = 10 ** log_tau_2
     if tau_2 > 0 and np.isfinite(tau_2):
-        sig_rrw = (10**p(log_tau_2)) * np.sqrt(3 / tau_2)
+        sig_rrw = (10 ** p(log_tau_2)) * np.sqrt(3 / tau_2)
     else:
         sig_rrw = 0
 
@@ -659,18 +651,18 @@ def plot_allan_std_dev(
         plt.loglog(dt_vals, data_vals, '.', label='raw')
         plt.xlabel('Averaging Time, $\\tau$, sec')
         plt.ylabel('Allan Deviation $\\sigma(\\tau)$')
-        plt.loglog(10**x2, 10**y2, '-', label='fit')
+        plt.loglog(10 ** x2, 10 ** y2, '-', label='fit')
         if plot_deriv:
             ydiff = pdiff(x2)
-            plt.loglog(10**x2, 10**ydiff, '--', label='fit deriv')
+            plt.loglog(10 ** x2, 10 ** ydiff, '--', label='fit deriv')
         plt.plot(
-            tau_0, 10**p(log_tau_0), 'rx',
+            tau_0, 10 ** p(log_tau_0), 'rx',
             label='$\\sigma_{rw}$', markeredgewidth=3)
         plt.plot(
-            tau_1, 10**p(log_tau_1), 'bx',
+            tau_1, 10 ** p(log_tau_1), 'bx',
             label='$\\sigma_{bi}$', markeredgewidth=3)
         plt.plot(
-            tau_2, 10**p(log_tau_2), 'gx',
+            tau_2, 10 ** p(log_tau_2), 'gx',
             label='$\\sigma_{rrw}$', markeredgewidth=3)
         plt.grid(True, which='both')
         plt.minorticks_on()
@@ -824,7 +816,7 @@ def noise_analysis_sensor_combined(df, plot=True):
         df.t_sensor_combined_0__f_accelerometer_m_s2_1_, plot)
     res3 = plot_allan_std_dev(
         df.t_sensor_combined_0__f_accelerometer_m_s2_2_, plot)
-    res = np.array([res1, res2, res3])
+    # res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - accelerometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
@@ -851,7 +843,7 @@ def noise_analysis_sensor_combined(df, plot=True):
         df.t_sensor_combined_0__f_magnetometer_ga_1_, plot)
     res3 = plot_allan_std_dev(
         df.t_sensor_combined_0__f_magnetometer_ga_2_, plot)
-    res = np.array([res1, res2, res3])
+    # res = np.array([res1, res2, res3])
     plt.title('Allan variance plot - magnetometer')
     plt.legend(handles, labels, loc='best', ncol=3)
     for key in res1.keys():
@@ -933,8 +925,7 @@ def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
     p = np.polynomial.Polynomial.fit(log_freq, log_power, poly_order)
     dpdf = p.deriv()
     freq_lin = np.logspace(log_freq.min(), log_freq.max())
-    plt.loglog(freq_lin, 10**p(np.log10(freq_lin)))
-    # plt.loglog(freq_lin, 10**dpdf(np.log10(freq_lin)))
+    plt.loglog(freq_lin, 10 ** p(np.log10(freq_lin)))
 
     for cross in cross_points:
         data_cross = []
@@ -945,8 +936,8 @@ def power_spectrum(x, cross_points=(-1, 0, 1), poly_order=4, freq_max=0.1):
         # print('\troots', 10**roots)
         # print('\tvals', 10**vals)
         for root, val in zip(roots, vals):
-            plt.loglog(10**root, 10**val, 'rx', markeredgewidth=2)
-            data_cross += [{'root': 10**root, 'val': 10**val}]
+            plt.loglog(10 ** root, 10 ** val, 'rx', markeredgewidth=2)
+            data_cross += [{'root': 10 ** root, 'val': 10 ** val}]
         data[cross] = data_cross
 
     # gca().set_xlim([freq.min(), freq.max()])

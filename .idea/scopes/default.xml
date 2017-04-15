@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="default" pattern="(file[px4tools]:px4tools//*&amp;&amp;!file:px4tools/_version.py||file:setup.py)&amp;&amp;!file:px4tools/pandas_monkeypatch.py" />
+</component>

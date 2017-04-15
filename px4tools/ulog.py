@@ -18,48 +18,54 @@ import scipy.signal
 import transforms3d.quaternions as quat
 import transforms3d.taitbryan as tf
 
-IEKF_STATES = [
-    'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
-    'vel_N', 'vel_E', 'vel_D',
-    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
-    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
-    'pos_N', 'pos_E', 'pos_D',
-    'terrain_alt',
-    'baro_bias',
-    # 'wind_N', 'wind_E', 'wind_D',
-]
 
-IEKF_ERROR_STATES = [
-    'rot_N', 'rot_E', 'rot_D',
-    'vel_N', 'vel_E', 'vel_D',
-    'gyro_bias_N', 'gyro_bias_E', 'gyro_bias_D',
-    'accel_bias_N', 'accel_bias_E', 'accel_bias_D',
-    'pos_N', 'pos_E', 'pos_D',
-    'terrain_alt',
-    'baro_bias',
-    # 'wind_N', 'wind_E', 'wind_D',
-]
+# create index to state lookup for estimators
+EST_NAME = {
+    'iekf': [
+        'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
+        'vel_N', 'vel_E', 'vel_D',
+        'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+        'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+        'pos_N', 'pos_E', 'pos_D',
+        'terrain_alt',
+        'baro_bias',
+        # 'wind_N', 'wind_E', 'wind_D',
+        ],
+    'iekf_error': [
+        'rot_N', 'rot_E', 'rot_D',
+        'vel_N', 'vel_E', 'vel_D',
+        'gyro_bias_N', 'gyro_bias_E', 'gyro_bias_D',
+        'accel_bias_N', 'accel_bias_E', 'accel_bias_D',
+        'pos_N', 'pos_E', 'pos_D',
+        'terrain_alt',
+        'baro_bias',
+        # 'wind_N', 'wind_E', 'wind_D',
+        ],
+    'ekf': [
+        'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
+        'vel_N', 'vel_E', 'vel_D',
+        'pos_N', 'pos_E', 'pos_D',
+        'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+        'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+        'mag_N', 'mag_E', 'mag_D',
+        'wind_N', 'wind_E', 'wind_D'
+        ],
+    'ekf_error': [
+        'rot_N', 'rot_E', 'rot_D',
+        'vel_N', 'vel_E', 'vel_D',
+        'pos_N', 'pos_E', 'pos_D',
+        'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
+        'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
+        'mag_N', 'mag_E', 'mag_D',
+        'wind_N', 'wind_E', 'wind_D'
+        ]
+}
 
-EKF2_STATES = [
-    'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
-    'vel_N', 'vel_E', 'vel_D',
-    'pos_N', 'pos_E', 'pos_D',
-    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
-    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
-    'mag_N', 'mag_E', 'mag_D',
-    'wind_N', 'wind_E', 'wind_D'
-]
-
-EKF2_ERROR_STATES = [
-    'rot_N', 'rot_E', 'rot_D',
-    'vel_N', 'vel_E', 'vel_D',
-    'pos_N', 'pos_E', 'pos_D',
-    'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',
-    'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
-    'mag_N', 'mag_E', 'mag_D',
-    'wind_N', 'wind_E', 'wind_D'
-]
-
+# create state to index dict
+EST_INDEX = {}
+for key in EST_NAME.keys():
+    l = EST_NAME[key]
+    EST_INDEX[key] = {l[i]: i for i, name in enumerate(l)}
 
 def compute_data(df):
     """
@@ -204,15 +210,17 @@ def extract_P(df, msg_name='t_estimator_status_0__f_covariances_', num_states=19
     return P_list
 
 
-def plot_estimator_state(df, names):
-    # type: (pandas.DataFrame, list) -> None
+def plot_estimator_state(df, names, indices):
+    # type: (pandas.DataFrame, list, list) -> None
     """
     Plot States with a give set of labels
     :param df: pandas DataFrame
     :param names: list of state name strings
+    :param indices: indices of state to plot
     :return: None
     """
-    for i, name in enumerate(names):
+    for i in indices:
+        name = names[i]
         d = df['t_estimator_status_0__f_states_{:d}_'.format(i)]
         d.plot(label=name)
     plt.legend(ncol=3, loc='best')
@@ -221,14 +229,17 @@ def plot_estimator_state(df, names):
     plt.gcf().autofmt_xdate()
 
 
-def plot_estimator_state_uncertainty(df, names):
+def plot_estimator_state_uncertainty(df, names, indices):
+    # type: (pandas.DataFrame, list, list) -> None
     """
     Plot estimator state uncertainty
     :param df: pandas DataFrame
     :param names: list of state name strings
+    :param indices: indices of state to plot
     :return:
     """
-    for i, name in enumerate(names):
+    for i in indices:
+        name = names[i]
         d = df['t_estimator_status_0__f_covariances_{:d}_'.format(i)]
         np.sqrt(d).plot(label=name)
     plt.gca().set_ylim(0, 4)

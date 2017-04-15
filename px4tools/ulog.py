@@ -51,7 +51,7 @@ EST_NAME = {
         'wind_N', 'wind_E', 'wind_D'
         ],
     'ekf2_error': [
-        'rot_N', 'rot_E', 'rot_D',
+        'rot_bx', 'rot_by', 'rot_bz',
         'vel_N', 'vel_E', 'vel_D',
         'pos_N', 'pos_E', 'pos_D',
         'gyro_bias_bx', 'gyro_bias_by', 'gyro_bias_bz',

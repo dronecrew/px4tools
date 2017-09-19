@@ -580,6 +580,7 @@ def read_ulog(ulog_filename, messages=None):
     d_col_rename = {
         '[': '_',
         ']': '_',
+        '.': '_',
     }
     col_rename_pattern = re.compile(
         r'(' + '|'.join([

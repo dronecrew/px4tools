@@ -64,7 +64,7 @@ EST_NAME = {
 
 def state_to_index(l):
     """
-    Given 
+    Given
     """
     return {l[i]: i for i, name in enumerate(l)}
 
@@ -84,12 +84,12 @@ def compute_data(df):
     series += [roll, pitch, yaw]
 
     try:
-        msg_gt = 't_vehicle_attitude_groundtruth_0'
+        msg_gt = 't_vehicle_groundtruth_0'
         roll_gt, pitch_gt, yaw_gt = series_quat2euler(
-            df.t_vehicle_attitude_groundtruth_0__f_q_0_,
-            df.t_vehicle_attitude_groundtruth_0__f_q_1_,
-            df.t_vehicle_attitude_groundtruth_0__f_q_2_,
-            df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
+            df.t_vehicle_groundtruth_0__f_q_0_,
+            df.t_vehicle_groundtruth_0__f_q_1_,
+            df.t_vehicle_groundtruth_0__f_q_2_,
+            df.t_vehicle_groundtruth_0__f_q_3_, msg_gt)
 
         e_roll = pd.Series(angle_wrap(roll - roll_gt),
                            name=msg_att + '__f_roll_error')
@@ -99,36 +99,36 @@ def compute_data(df):
                           name=msg_att + '__f_yaw_error')
 
         msg_lpos = 't_vehicle_local_position_0'
-        msg_lpos_gt = 't_vehicle_local_position_groundtruth_0'
+        msg_lpos_gt = 't_vehicle_groundtruth_0'
 
         e_x = pd.Series(
             df.t_vehicle_local_position_0__f_x -
-            df.t_vehicle_local_position_groundtruth_0__f_x,
+            df.t_vehicle_groundtruth_0__f_x,
             name=msg_lpos + '__f_x_error')
 
         e_y = pd.Series(
             df.t_vehicle_local_position_0__f_y -
-            df.t_vehicle_local_position_groundtruth_0__f_y,
+            df.t_vehicle_groundtruth_0__f_y,
             name=msg_lpos + '__f_y_error')
 
         e_z = pd.Series(
             df.t_vehicle_local_position_0__f_z -
-            df.t_vehicle_local_position_groundtruth_0__f_z,
+            df.t_vehicle_groundtruth_0__f_z,
             name=msg_lpos + '__f_z_error')
 
         e_vx = pd.Series(
             df.t_vehicle_local_position_0__f_vx -
-            df.t_vehicle_local_position_groundtruth_0__f_vx,
+            df.t_vehicle_groundtruth_0__f_vx,
             name=msg_lpos + '__f_vx_error')
 
         e_vy = pd.Series(
             df.t_vehicle_local_position_0__f_vy -
-            df.t_vehicle_local_position_groundtruth_0__f_vy,
+            df.t_vehicle_groundtruth_0__f_vy,
             name=msg_lpos + '__f_vy_error')
 
         e_vz = pd.Series(
             df.t_vehicle_local_position_0__f_vz -
-            df.t_vehicle_local_position_groundtruth_0__f_vz,
+            df.t_vehicle_groundtruth_0__f_vz,
             name=msg_lpos + '__f_vz_error')
 
         speed = pd.Series(np.sqrt(
@@ -138,9 +138,9 @@ def compute_data(df):
             ), name=msg_lpos + '__f_speed')
 
         speed_gt = pd.Series(np.sqrt(
-            df.t_vehicle_local_position_groundtruth_0__f_vx ** 2 +
-            df.t_vehicle_local_position_groundtruth_0__f_vy ** 2 +
-            df.t_vehicle_local_position_groundtruth_0__f_vz ** 2
+            df.t_vehicle_groundtruth_0__f_vx ** 2 +
+            df.t_vehicle_groundtruth_0__f_vy ** 2 +
+            df.t_vehicle_groundtruth_0__f_vz ** 2
             ), name=msg_lpos_gt + '__f_speed')
 
         e_speed = pd.Series(
@@ -269,8 +269,8 @@ def plot_local_position(df, plot_groundtruth=False):
     plt.plot(df.t_vehicle_local_position_0__f_y,
              df.t_vehicle_local_position_0__f_x, label='estimate')
     if plot_groundtruth:
-        plt.plot(df.t_vehicle_local_position_groundtruth_0__f_y,
-                 df.t_vehicle_local_position_groundtruth_0__f_x, 'r--',
+        plt.plot(df.t_vehicle_groundtruth_0__f_y,
+                 df.t_vehicle_groundtruth_0__f_x, 'r--',
                  label='true')
     plt.grid()
     plt.xlabel('E, m')
@@ -285,16 +285,16 @@ def plot_euler(df, plot_groundtruth=False):
     plt.title('euler angles')
     np.rad2deg(df.t_vehicle_attitude_0__f_roll).plot(label='roll', style='r-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_roll).plot(
+        np.rad2deg(df.t_vehicle_groundtruth_0__f_roll).plot(
             label='roll true', style='r--')
     np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(
         label='pitch', style='g-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_pitch).plot(
+        np.rad2deg(df.t_vehicle_groundtruth_0__f_pitch).plot(
             label='pitch true', style='g--')
     np.rad2deg(df.t_vehicle_attitude_0__f_yaw).plot(label='yaw', style='b-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_yaw).plot(
+        np.rad2deg(df.t_vehicle_groundtruth_0__f_yaw).plot(
             label='yaw true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)

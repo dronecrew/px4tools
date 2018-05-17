@@ -98,54 +98,54 @@ def compute_data(df):
         e_yaw = pd.Series(angle_wrap(yaw - yaw_gt),
                           name=msg_att + '__f_yaw_error')
 
-        msg_lpos = 't_vehicle_local_position_0'
-        msg_lpos_gt = 't_vehicle_groundtruth_0'
+        msg_odom = 't_vehicle_local_position_0'
+        msg_odom_gt = 't_vehicle_groundtruth_0'
 
         e_x = pd.Series(
             df.t_vehicle_local_position_0__f_x -
             df.t_vehicle_groundtruth_0__f_x,
-            name=msg_lpos + '__f_x_error')
+            name=msg_odom + '__f_x_error')
 
         e_y = pd.Series(
             df.t_vehicle_local_position_0__f_y -
             df.t_vehicle_groundtruth_0__f_y,
-            name=msg_lpos + '__f_y_error')
+            name=msg_odom + '__f_y_error')
 
         e_z = pd.Series(
             df.t_vehicle_local_position_0__f_z -
             df.t_vehicle_groundtruth_0__f_z,
-            name=msg_lpos + '__f_z_error')
+            name=msg_odom + '__f_z_error')
 
         e_vx = pd.Series(
             df.t_vehicle_local_position_0__f_vx -
             df.t_vehicle_groundtruth_0__f_vx,
-            name=msg_lpos + '__f_vx_error')
+            name=msg_odom + '__f_vx_error')
 
         e_vy = pd.Series(
             df.t_vehicle_local_position_0__f_vy -
             df.t_vehicle_groundtruth_0__f_vy,
-            name=msg_lpos + '__f_vy_error')
+            name=msg_odom + '__f_vy_error')
 
         e_vz = pd.Series(
             df.t_vehicle_local_position_0__f_vz -
             df.t_vehicle_groundtruth_0__f_vz,
-            name=msg_lpos + '__f_vz_error')
+            name=msg_odom + '__f_vz_error')
 
         speed = pd.Series(np.sqrt(
             df.t_vehicle_local_position_0__f_vx ** 2 +
             df.t_vehicle_local_position_0__f_vy ** 2 +
             df.t_vehicle_local_position_0__f_vz ** 2
-            ), name=msg_lpos + '__f_speed')
+            ), name=msg_odom + '__f_speed')
 
         speed_gt = pd.Series(np.sqrt(
             df.t_vehicle_groundtruth_0__f_vx ** 2 +
             df.t_vehicle_groundtruth_0__f_vy ** 2 +
             df.t_vehicle_groundtruth_0__f_vz ** 2
-            ), name=msg_lpos_gt + '__f_speed')
+            ), name=msg_odom_gt + '__f_speed')
 
         e_speed = pd.Series(
             speed - speed_gt,
-            name=msg_lpos + '__f_speed_error')
+            name=msg_odom + '__f_speed_error')
 
         series += [
             roll_gt, pitch_gt, yaw_gt,

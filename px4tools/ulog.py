@@ -18,7 +18,6 @@ import scipy.signal
 import transforms3d.quaternions as quat
 import transforms3d.taitbryan as tf
 
-
 # create index to state lookup for estimators
 EST_NAME = {
     'iekf': [
@@ -30,7 +29,7 @@ EST_NAME = {
         'terrain_alt',
         'baro_bias',
         # 'wind_N', 'wind_E', 'wind_D',
-        ],
+    ],
     'iekf_error': [
         'rot_N', 'rot_E', 'rot_D',
         'vel_N', 'vel_E', 'vel_D',
@@ -40,7 +39,7 @@ EST_NAME = {
         'terrain_alt',
         'baro_bias',
         # 'wind_N', 'wind_E', 'wind_D',
-        ],
+    ],
     'ekf2': [
         'q_nb_0', 'q_nb_1', 'q_nb_2', 'q_nb_3',
         'vel_N', 'vel_E', 'vel_D',
@@ -49,7 +48,7 @@ EST_NAME = {
         'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
         'mag_N', 'mag_E', 'mag_D',
         'wind_N', 'wind_E', 'wind_D'
-        ],
+    ],
     'ekf2_error': [
         'rot_N', 'rot_E', 'rot_D',
         'vel_N', 'vel_E', 'vel_D',
@@ -58,7 +57,7 @@ EST_NAME = {
         'accel_bias_bx', 'accel_bias_by', 'accel_bias_bz',
         'mag_N', 'mag_E', 'mag_D',
         'wind_N', 'wind_E', 'wind_D'
-        ]
+    ]
 }
 
 
@@ -84,74 +83,146 @@ def compute_data(df):
     series += [roll, pitch, yaw]
 
     try:
-        msg_gt = 't_vehicle_groundtruth_0'
-        roll_gt, pitch_gt, yaw_gt = series_quat2euler(
-            df.t_vehicle_groundtruth_0__f_q_0_,
-            df.t_vehicle_groundtruth_0__f_q_1_,
-            df.t_vehicle_groundtruth_0__f_q_2_,
-            df.t_vehicle_groundtruth_0__f_q_3_, msg_gt)
+        if 't_vehicle_attitude_groundtruth_0__f_q_0_' in df and 't_vehicle_local_position_groundtruth_0__f_x' in df:
+            msg_gt = 't_vehicle_attitude_groundtruth_0'
+            roll_gt, pitch_gt, yaw_gt = series_quat2euler(
+                df.t_vehicle_attitude_groundtruth_0__f_q_0_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_1_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_2_,
+                df.t_vehicle_attitude_groundtruth_0__f_q_3_, msg_gt)
 
-        e_roll = pd.Series(angle_wrap(roll - roll_gt),
-                           name=msg_att + '__f_roll_error')
-        e_pitch = pd.Series(angle_wrap(pitch - pitch_gt),
-                            name=msg_att + '__f_pitch_error')
-        e_yaw = pd.Series(angle_wrap(yaw - yaw_gt),
-                          name=msg_att + '__f_yaw_error')
+            e_roll = pd.Series(angle_wrap(roll - roll_gt),
+                               name=msg_att + '__f_roll_error')
+            e_pitch = pd.Series(angle_wrap(pitch - pitch_gt),
+                                name=msg_att + '__f_pitch_error')
+            e_yaw = pd.Series(angle_wrap(yaw - yaw_gt),
+                              name=msg_att + '__f_yaw_error')
 
-        msg_odom = 't_vehicle_local_position_0'
-        msg_odom_gt = 't_vehicle_groundtruth_0'
+            msg_lpos = 't_vehicle_local_position_0'
+            msg_lpos_gt = 't_vehicle_local_position_groundtruth_0'
 
-        e_x = pd.Series(
-            df.t_vehicle_local_position_0__f_x -
-            df.t_vehicle_groundtruth_0__f_x,
-            name=msg_odom + '__f_x_error')
+            e_x = pd.Series(
+                df.t_vehicle_local_position_0__f_x -
+                df.t_vehicle_local_position_groundtruth_0__f_x,
+                name=msg_lpos + '__f_x_error')
 
-        e_y = pd.Series(
-            df.t_vehicle_local_position_0__f_y -
-            df.t_vehicle_groundtruth_0__f_y,
-            name=msg_odom + '__f_y_error')
+            e_y = pd.Series(
+                df.t_vehicle_local_position_0__f_y -
+                df.t_vehicle_local_position_groundtruth_0__f_y,
+                name=msg_lpos + '__f_y_error')
 
-        e_z = pd.Series(
-            df.t_vehicle_local_position_0__f_z -
-            df.t_vehicle_groundtruth_0__f_z,
-            name=msg_odom + '__f_z_error')
+            e_z = pd.Series(
+                df.t_vehicle_local_position_0__f_z -
+                df.t_vehicle_local_position_groundtruth_0__f_z,
+                name=msg_lpos + '__f_z_error')
 
-        e_vx = pd.Series(
-            df.t_vehicle_local_position_0__f_vx -
-            df.t_vehicle_groundtruth_0__f_vx,
-            name=msg_odom + '__f_vx_error')
+            e_vx = pd.Series(
+                df.t_vehicle_local_position_0__f_vx -
+                df.t_vehicle_local_position_groundtruth_0__f_vx,
+                name=msg_lpos + '__f_vx_error')
 
-        e_vy = pd.Series(
-            df.t_vehicle_local_position_0__f_vy -
-            df.t_vehicle_groundtruth_0__f_vy,
-            name=msg_odom + '__f_vy_error')
+            e_vy = pd.Series(
+                df.t_vehicle_local_position_0__f_vy -
+                df.t_vehicle_local_position_groundtruth_0__f_vy,
+                name=msg_lpos + '__f_vy_error')
 
-        e_vz = pd.Series(
-            df.t_vehicle_local_position_0__f_vz -
-            df.t_vehicle_groundtruth_0__f_vz,
-            name=msg_odom + '__f_vz_error')
+            e_vz = pd.Series(
+                df.t_vehicle_local_position_0__f_vz -
+                df.t_vehicle_local_position_groundtruth_0__f_vz,
+                name=msg_lpos + '__f_vz_error')
 
-        speed = pd.Series(np.sqrt(
-            df.t_vehicle_local_position_0__f_vx ** 2 +
-            df.t_vehicle_local_position_0__f_vy ** 2 +
-            df.t_vehicle_local_position_0__f_vz ** 2
+            speed = pd.Series(np.sqrt(
+                df.t_vehicle_local_position_0__f_vx ** 2 +
+                df.t_vehicle_local_position_0__f_vy ** 2 +
+                df.t_vehicle_local_position_0__f_vz ** 2
+            ), name=msg_lpos + '__f_speed')
+
+            speed_gt = pd.Series(np.sqrt(
+                df.t_vehicle_local_position_groundtruth_0__f_vx ** 2 +
+                df.t_vehicle_local_position_groundtruth_0__f_vy ** 2 +
+                df.t_vehicle_local_position_groundtruth_0__f_vz ** 2
+            ), name=msg_lpos_gt + '__f_speed')
+
+            e_speed = pd.Series(
+                speed - speed_gt,
+                name=msg_lpos + '__f_speed_error')
+
+            series += [
+                roll_gt, pitch_gt, yaw_gt,
+                e_roll, e_pitch, e_yaw,
+                e_x, e_y, e_z,
+                e_vx, e_vy, e_vz, speed, speed_gt, e_speed]
+
+        elif 't_vehicle_groundtruth_0__f_q_0_' in df or 't_vehicle_local_position_0__f_x' in df:
+            msg_gt = 't_vehicle_groundtruth_0'
+            roll_gt, pitch_gt, yaw_gt = series_quat2euler(
+                df.t_vehicle_groundtruth_0__f_q_0_,
+                df.t_vehicle_groundtruth_0__f_q_1_,
+                df.t_vehicle_groundtruth_0__f_q_2_,
+                df.t_vehicle_groundtruth_0__f_q_3_, msg_gt)
+
+            e_roll = pd.Series(angle_wrap(roll - roll_gt),
+                               name=msg_att + '__f_roll_error')
+            e_pitch = pd.Series(angle_wrap(pitch - pitch_gt),
+                                name=msg_att + '__f_pitch_error')
+            e_yaw = pd.Series(angle_wrap(yaw - yaw_gt),
+                              name=msg_att + '__f_yaw_error')
+
+            msg_odom = 't_vehicle_local_position_0'
+            msg_odom_gt = 't_vehicle_groundtruth_0'
+
+            e_x = pd.Series(
+                df.t_vehicle_local_position_0__f_x -
+                df.t_vehicle_groundtruth_0__f_x,
+                name=msg_odom + '__f_x_error')
+
+            e_y = pd.Series(
+                df.t_vehicle_local_position_0__f_y -
+                df.t_vehicle_groundtruth_0__f_y,
+                name=msg_odom + '__f_y_error')
+
+            e_z = pd.Series(
+                df.t_vehicle_local_position_0__f_z -
+                df.t_vehicle_groundtruth_0__f_z,
+                name=msg_odom + '__f_z_error')
+
+            e_vx = pd.Series(
+                df.t_vehicle_local_position_0__f_vx -
+                df.t_vehicle_groundtruth_0__f_vx,
+                name=msg_odom + '__f_vx_error')
+
+            e_vy = pd.Series(
+                df.t_vehicle_local_position_0__f_vy -
+                df.t_vehicle_groundtruth_0__f_vy,
+                name=msg_odom + '__f_vy_error')
+
+            e_vz = pd.Series(
+                df.t_vehicle_local_position_0__f_vz -
+                df.t_vehicle_groundtruth_0__f_vz,
+                name=msg_odom + '__f_vz_error')
+
+            speed = pd.Series(np.sqrt(
+                df.t_vehicle_local_position_0__f_vx ** 2 +
+                df.t_vehicle_local_position_0__f_vy ** 2 +
+                df.t_vehicle_local_position_0__f_vz ** 2
             ), name=msg_odom + '__f_speed')
 
-        speed_gt = pd.Series(np.sqrt(
-            df.t_vehicle_groundtruth_0__f_vx ** 2 +
-            df.t_vehicle_groundtruth_0__f_vy ** 2 +
-            df.t_vehicle_groundtruth_0__f_vz ** 2
+            speed_gt = pd.Series(np.sqrt(
+                df.t_vehicle_groundtruth_0__f_vx ** 2 +
+                df.t_vehicle_groundtruth_0__f_vy ** 2 +
+                df.t_vehicle_groundtruth_0__f_vz ** 2
             ), name=msg_odom_gt + '__f_speed')
 
-        e_speed = pd.Series(
-            speed - speed_gt,
-            name=msg_odom + '__f_speed_error')
+            e_speed = pd.Series(
+                speed - speed_gt,
+                name=msg_odom + '__f_speed_error')
 
-        series += [
-            roll_gt, pitch_gt, yaw_gt,
-            e_roll, e_pitch, e_yaw,
-            e_x, e_y, e_z,
-            e_vx, e_vy, e_vz, speed, speed_gt, e_speed]
+            series += [
+                roll_gt, pitch_gt, yaw_gt,
+                e_roll, e_pitch, e_yaw,
+                e_x, e_y, e_z,
+                e_vx, e_vy, e_vz, speed, speed_gt, e_speed]
+
     except Exception as ex:
         print(ex)
 
@@ -170,8 +241,12 @@ def plot_altitude(df, plot_groundtruth=False):
     plt.title('altitude')
     df.t_vehicle_global_position_0__f_alt.plot(label='alt', style='b-')
     if plot_groundtruth:
-        df.t_vehicle_global_position_groundtruth_0__f_alt.plot(
-            label='alt-true', style='b--')
+        if 'vehicle_global_groundtruth' in df:
+            df.t_vehicle_global_groundtruth_0__f_alt.plot(
+                label='alt-true', style='b--')
+        elif 'vehicle_global_position_groundtruth' in df:
+            df.t_vehicle_global_position_groundtruth_0__f_alt.plot(
+                label='alt-true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)
     plt.xlabel('t, sec')
@@ -269,9 +344,14 @@ def plot_local_position(df, plot_groundtruth=False):
     plt.plot(df.t_vehicle_local_position_0__f_y,
              df.t_vehicle_local_position_0__f_x, label='estimate')
     if plot_groundtruth:
-        plt.plot(df.t_vehicle_groundtruth_0__f_y,
-                 df.t_vehicle_groundtruth_0__f_x, 'r--',
-                 label='true')
+        if 'vehicle_local_position_groundtruth' in df:
+            plt.plot(df.t_vehicle_local_position_groundtruth_0__f_y,
+                     df.t_vehicle_local_position_groundtruth_0__f_x, 'r--',
+                     label='true')
+        elif 'vehicle_groundtruth' in df:
+            plt.plot(df.t_vehicle_groundtruth_0__f_y,
+                     df.t_vehicle_groundtruth_0__f_x, 'r--',
+                     label='true')
     plt.grid()
     plt.xlabel('E, m')
     plt.ylabel('N, m')
@@ -285,17 +365,28 @@ def plot_euler(df, plot_groundtruth=False):
     plt.title('euler angles')
     np.rad2deg(df.t_vehicle_attitude_0__f_roll).plot(label='roll', style='r-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_groundtruth_0__f_roll).plot(
-            label='roll true', style='r--')
-    np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(
-        label='pitch', style='g-')
+        if 't_vehicle_attitude_groundtruth_0' in df:
+            np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_roll).plot(
+                label='roll true', style='r--')
+        elif 'vehicle_groundtruth' in df:
+            np.rad2deg(df.t_vehicle_groundtruth_0__f_roll).plot(
+                label='roll true', style='r--')
+        np.rad2deg(df.t_vehicle_attitude_0__f_pitch).plot(label='pitch', style='g-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_groundtruth_0__f_pitch).plot(
-            label='pitch true', style='g--')
-    np.rad2deg(df.t_vehicle_attitude_0__f_yaw).plot(label='yaw', style='b-')
+        if 't_vehicle_attitude_groundtruth_0' in df:
+            np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_pitch).plot(
+                label='pitch true', style='g--')
+        elif 'vehicle_groundtruth' in df:
+            np.rad2deg(df.t_vehicle_groundtruth_0__f_pitch).plot(
+                label='pitch true', style='g--')
+        np.rad2deg(df.t_vehicle_attitude_0__f_yaw).plot(label='yaw', style='b-')
     if plot_groundtruth:
-        np.rad2deg(df.t_vehicle_groundtruth_0__f_yaw).plot(
-            label='yaw true', style='b--')
+        if 't_vehicle_attitude_groundtruth_0' in df:
+            np.rad2deg(df.t_vehicle_attitude_groundtruth_0__f_yaw).plot(
+                label='yaw true', style='b--')
+        elif 'vehicle_groundtruth' in df:
+            np.rad2deg(df.t_vehicle_groundtruth_0__f_yaw).plot(
+                label='yaw true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)
     plt.xlabel('time')
@@ -328,18 +419,30 @@ def plot_velocity(df, plot_groundtruth=False):
     plt.title('velocity')
     df.t_vehicle_global_position_0__f_vel_n.plot(label='vel_n', style='r-')
     if plot_groundtruth:
-        df.t_vehicle_global_position_groundtruth_0__f_vel_n.plot(
-            label='vel_n-true', style='r--')
+        if 'vehicle_global_position_groundtruth' in df:
+            df.t_vehicle_global_position_groundtruth_0__f_vel_n.plot(
+                label='vel_n-true', style='r--')
+        elif 'vehicle_global_groundtruth' in df:
+            df.t_vehicle_global_groundtruth_0__f_vel_n.plot(
+                label='vel_n-true', style='r--')
     df.t_vehicle_global_position_0__f_vel_e.plot(
         label='vel_e', style='g-')
     if plot_groundtruth:
-        df.t_vehicle_global_position_groundtruth_0__f_vel_e.plot(
-            label='vel_e-true', style='g--')
+        if 'vehicle_global_position_groundtruth' in df:
+            df.t_vehicle_global_position_groundtruth_0__f_vel_e.plot(
+                label='vel_e-true', style='g--')
+        elif 'vehicle_global_groundtruth' in df:
+            df.t_vehicle_global_groundtruth_0__f_vel_e.plot(
+                label='vel_e-true', style='g--')
     df.t_vehicle_global_position_0__f_vel_d.plot(
         label='vel_d', style='b-')
     if plot_groundtruth:
-        df.t_vehicle_global_position_groundtruth_0__f_vel_d.plot(
-            label='vel_d-true', style='b--')
+        if 'vehicle_global_position_groundtruth' in df:
+            df.t_vehicle_global_position_groundtruth_0__f_vel_d.plot(
+                label='vel_d-true', style='b--')
+        elif 'vehicle_global_groundtruth' in df:
+            df.t_vehicle_global_groundtruth_0__f_vel_d.plot(
+                label='vel_d-true', style='b--')
     plt.grid()
     plt.legend(loc='best', ncol=3)
     plt.xlabel('time')
@@ -364,9 +467,9 @@ def series_quatrot(x, y, z, q0, q1, q2, q3, rot_name):
     compute rotated vector x_r, y_r, z_r
     """
     vec = np.array([
-        quat.rotate_vector([xi, yi, zi], [q0i, q1i, q2i, q3i])
-        for xi, yi, zi, q0i, q1i, q2i, q3i in zip(x, y, z, q0, q1, q2, q3)
-    ])
+                       quat.rotate_vector([xi, yi, zi], [q0i, q1i, q2i, q3i])
+                       for xi, yi, zi, q0i, q1i, q2i, q3i in zip(x, y, z, q0, q1, q2, q3)
+                       ])
     x_r = pd.Series(name=x.name + '_' + rot_name, data=vec[:, 0], index=x.index)
     y_r = pd.Series(name=y.name + '_' + rot_name, data=vec[:, 1], index=y.index)
     z_r = pd.Series(name=z.name + '_' + rot_name, data=vec[:, 2], index=z.index)
@@ -386,8 +489,8 @@ def series_quat2euler(q0, q1, q2, q3, msg_name):
     Given pandas series q0-q4, compute series roll, pitch, yaw
     """
     yaw, pitch, roll = np.array([
-        tf.quat2euler([q0i, q1i, q2i, q3i]) for
-        q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
+                                    tf.quat2euler([q0i, q1i, q2i, q3i]) for
+                                    q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
     yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
     pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
     roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
@@ -439,24 +542,24 @@ def estimator_analysis(df, plot=True):
     }
     if plot:
         print('''
-ESTIMATOR ANALYSIS
------------------------------------
+        ESTIMATOR ANALYSIS
+        -----------------------------------
 
-attitude error:
-\troll  mean: {roll_error_mean:10f}\tstd:\t{roll_error_std:10f}\tdeg
-\tpitch mean: {pitch_error_mean:10f}\tstd:\t{pitch_error_std:10f}\tdeg
-\tyaw   mean: {yaw_error_mean:10f}\tstd:\t{yaw_error_std:10f}\tdeg
+        attitude error:
+        \troll  mean: {roll_error_mean:10f}\tstd:\t{roll_error_std:10f}\tdeg
+        \tpitch mean: {pitch_error_mean:10f}\tstd:\t{pitch_error_std:10f}\tdeg
+        \tyaw   mean: {yaw_error_mean:10f}\tstd:\t{yaw_error_std:10f}\tdeg
 
-position error:
-\tx mean: {x_error_mean:10f}\tstd:\t{x_error_std:10f}\tm
-\ty mean: {y_error_mean:10f}\tstd:\t{y_error_std:10f}\tm
-\tz mean: {z_error_mean:10f}\tstd:\t{z_error_std:10f}\tm
+        position error:
+        \tx mean: {x_error_mean:10f}\tstd:\t{x_error_std:10f}\tm
+        \ty mean: {y_error_mean:10f}\tstd:\t{y_error_std:10f}\tm
+        \tz mean: {z_error_mean:10f}\tstd:\t{z_error_std:10f}\tm
 
-velocity error:
-\tx mean: {vx_error_mean:10f}\tstd:\t{vx_error_std:10f}\tm/s
-\ty mean: {vy_error_mean:10f}\tstd:\t{vy_error_std:10f}\tm/s
-\tz mean: {vz_error_mean:10f}\tstd:\t{vz_error_std:10f}\tm/s
-'''.format(**data))
+        velocity error:
+        \tx mean: {vx_error_mean:10f}\tstd:\t{vx_error_std:10f}\tm/s
+        \ty mean: {vy_error_mean:10f}\tstd:\t{vy_error_std:10f}\tm/s
+        \tz mean: {vz_error_mean:10f}\tstd:\t{vz_error_std:10f}\tm/s
+        '''.format(**data))
 
         plt.figure()
         plot_altitude(df, plot_groundtruth=True)
@@ -584,8 +687,8 @@ def read_ulog(ulog_filename, messages=None):
     }
     col_rename_pattern = re.compile(
         r'(' + '|'.join([
-            re.escape(key)
-            for key in d_col_rename.keys()]) + r')')
+                            re.escape(key)
+                            for key in d_col_rename.keys()]) + r')')
 
     data = {}
     for msg in log.data_list:
@@ -594,7 +697,7 @@ def read_ulog(ulog_filename, messages=None):
             col_rename_pattern.sub(
                 lambda x: d_col_rename[x.group()], col)
             for col in msg_data.columns
-        ]
+            ]
         msg_data.index = pd.TimedeltaIndex(msg_data['timestamp'] * 1e3, unit='ns')
         data['t_{:s}_{:d}'.format(msg.name, msg.multi_id)] = msg_data
 

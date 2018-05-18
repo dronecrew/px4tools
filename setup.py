@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Python log crunching for PX4.
 
-This module allows you to do control and statistical analysis for the PX4.
+A PX4 flight log analyzer that supports pandas.
 
 """
 

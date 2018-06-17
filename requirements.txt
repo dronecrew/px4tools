@@ -1,7 +1,8 @@
-transforms3d
-pyulog
-control
-scipy
-numpy
-pandas
-matplotlib
+transforms3d>=0.3.1
+pyulog>=0.6.0
+control>=0.7.0
+scipy>=1.1.0
+numpy>=1.14.5
+python-dateutil>=2.5.0
+pandas>=0.23.1
+matplotlib>=2.2.2

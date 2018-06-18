@@ -48,6 +48,7 @@ class Test(unittest.TestCase):
             # fails on miniconda, windows
             # filter_finite(data)
 
+    @unittest.skip("skip sysid, controllib issue")
     def test_logsysid(self):
         if not have_control:
             return

@@ -55,7 +55,7 @@ A log analysis toolbox for the [PX4 autopilot](http://px4.io/) written in python
 
 ### Dependencies
 
-1. See requirements.txt
+1. See setup.py install_requires
 
 	For pandas, to fix time series plotting memory 
 	[issue](https://github.com/pandas-dev/pandas/pull/15067) with time delta index you need this branch:

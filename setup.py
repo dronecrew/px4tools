@@ -48,8 +48,14 @@ setup(
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
     platforms=["Windows", "Linux", "Solaris", "Mac OS-X", "Unix"],
     install_requires=[
-        'scipy', 'numpy',
-        'pandas >= 0.19.2', 'transforms3d', 'pyulog'],
+        'control >= 0.7.0',
+        'matplotlib >= 2.2.2',
+        'numpy >= 1.13.3',
+        'pandas >= 0.23.1',
+        'python-dateutil >= 2.5.0',
+        'pyulog >= 0.6.0',
+        'scipy >= 1.1.0',
+        'transforms3d >= 0.3.1'],
     tests_require=['nose'],
     test_suite='nose.collector',
     entry_points={

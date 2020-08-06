@@ -51,7 +51,7 @@ setup(
         'control >= 0.7.0',
         'matplotlib >= 2.2.2',
         'numpy >= 1.13.3',
-        'pandas >= 0.23.1',
+        'pandas >= 0.23.1, < 1.0.0',
         'python-dateutil >= 2.5.0',
         'pyulog >= 0.6.0',
         'scipy >= 1.1.0',

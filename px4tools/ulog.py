@@ -649,7 +649,13 @@ class PX4MessageDict(dict):
         for topic in topics:
             if verbose:
                 print('merging {:s} as of timestamp'.format(topic))
-            df = d[topic]
+            # Copy original dataframe before modification
+            df = d[topic].copy(deep=True)
+            if df.index.name == 'timestamp':
+                # With pandas version >1.0.0 we can set ignore_index=True,
+                # but for older version compatibility, we choose to temporarily set index.name to None.
+                # Since df is a copy, this operation won't affect original dataframe.
+                df.index.name = None
             df.sort_values(by='timestamp', inplace=True)
             m = pd.merge_asof(m, df, 'timestamp')
         m.index = pd.TimedeltaIndex(m.timestamp * 1e3, unit='ns')

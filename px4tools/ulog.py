@@ -16,7 +16,7 @@ import pandas as pd
 import pyulog
 import scipy.signal
 import transforms3d.quaternions as quat
-import transforms3d.taitbryan as tf
+import transforms3d.euler as tf
 
 # create index to state lookup for estimators
 EST_NAME = {
@@ -486,14 +486,15 @@ def series_quatrot_inverse(x, y, z, q0, q1, q2, q3, rot_name):
 
 def series_quat2euler(q0, q1, q2, q3, msg_name):
     """
-    Given pandas series q0-q4, compute series roll, pitch, yaw
+    Given pandas series q0-q3, compute series roll, pitch, yaw
     """
-    yaw, pitch, roll = np.array([
-                                    tf.quat2euler([q0i, q1i, q2i, q3i]) for
-                                    q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
-    yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
-    pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
+    roll, pitch, yaw = np.array([
+        tf.quat2euler([q0i, q1i, q2i, q3i], axes='sxyz') for
+        q0i, q1i, q2i, q3i in zip(q0, q1, q2, q3)]).T
     roll = pd.Series(name=msg_name + '__f_roll', data=roll, index=q0.index)
+    pitch = pd.Series(name=msg_name + '__f_pitch', data=pitch, index=q0.index)
+    yaw = pd.Series(name=msg_name + '__f_yaw', data=yaw, index=q0.index)
+
     return roll, pitch, yaw
 
 
